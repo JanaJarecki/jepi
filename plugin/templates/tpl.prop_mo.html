@@ -1,0 +1,106 @@
+<label for="MOID">{EXERCISE}<span class="asterisk">*</span></label> <input type="text" id="MOID" name="MOID" size="5"{VALUE_EXERCISE}  /> 
+<label for="MOVARIANT">{VARIANT}</label> <input type="text" id="MOVARIANT" name="MOVARIANT" size="2"{VALUE_VARIANT}  /> 
+<input style="visibility: hidden;" type="button" class="submit" id="addMOID" value="{DOWNLOAD_EXERCISE}" onclick="retreiveQuestion();" />
+		<script>
+button = YAHOO.util.Dom.get("addMOID");
+button.style.visibility = 'visible';
+		</script><noscript></noscript>
+		<script language="javascript" type="text/javascript">
+		var aurl = "./Customizing/global/plugins/Modules/TestQuestionPool/Questions/assMathematikOnline/classes/importQuestion.php";
+		var titleurl = "./Customizing/global/plugins/Modules/TestQuestionPool/Questions/assMathematikOnline/classes/importQuestionTitle.php";
+		var pointurl = "./Customizing/global/plugins/Modules/TestQuestionPool/Questions/assMathematikOnline/classes/importQuestionPoints.php";
+
+		var handleSuccess = function(o){
+			if(o.responseText !== undefined){
+				if (typeof tinyMCE != 'undefined')
+				{
+					tinyMCE.activeEditor.setContent(o.responseText);
+				}
+				else
+				{
+					question = YAHOO.util.Dom.get("question");
+					question.value = o.responseText;
+				}
+			}
+		}
+
+		var titleHandleSuccess = function(o){
+			if(o.responseText !== undefined){
+				title = YAHOO.util.Dom.get("title");
+				if (title)
+				{
+					pos = o.responseText.indexOf('::::');
+					questiontitle = o.responseText.substr(0, pos);
+					variant = o.responseText.substr(pos+4);
+					title.value = questiontitle;
+					if (variant.length > 0)
+					{
+						variantfield = YAHOO.util.Dom.get("MOVARIANT");
+						if (variantfield)
+						{
+							variantfield.value = variant;
+						}
+					}
+				}
+			}
+		}
+
+		var pointHandleSuccess = function(o){
+			if(o.responseText !== undefined){
+				points = YAHOO.util.Dom.get("points");
+				if (points)
+				{
+					points.value = o.responseText;
+				}
+			}
+		}
+
+		var handleFailure = function(o){
+			if(o.responseText !== undefined){
+				alert('failure');
+			}
+		}
+
+		var callback =
+		{
+			success:handleSuccess,
+			failure: handleFailure,
+			argument: {}
+		};
+
+		var titlecallback =
+		{
+			success:titleHandleSuccess,
+			failure: handleFailure,
+			argument: {}
+		};
+
+		var pointcallback =
+		{
+			success:pointHandleSuccess,
+			failure: handleFailure,
+			argument: {}
+		};
+
+		function retreiveQuestion()
+		{
+			input = YAHOO.util.Dom.get("MOID");
+			inputvariant = YAHOO.util.Dom.get("MOVARIANT");
+			if (input && inputvariant)
+			{
+				if (input.value.length && inputvariant.value.length)
+				{
+					request = YAHOO.util.Connect.asyncRequest('GET', aurl + "?MOID=" + input.value + "&MOVARIANT=" + inputvariant.value, callback); 
+					titlerequest = YAHOO.util.Connect.asyncRequest('GET', titleurl + "?MOID=" + input.value + "&MOVARIANT=" + inputvariant.value, titlecallback); 
+					pointrequest = YAHOO.util.Connect.asyncRequest('GET', pointurl + "?MOID=" + input.value + "&MOVARIANT=" + inputvariant.value, pointcallback); 
+				}
+				else
+				{
+					request = YAHOO.util.Connect.asyncRequest('GET', aurl + "?MOID=" + input.value, callback); 
+					titlerequest = YAHOO.util.Connect.asyncRequest('GET', titleurl + "?MOID=" + input.value, titlecallback); 
+					pointrequest = YAHOO.util.Connect.asyncRequest('GET', pointurl + "?MOID=" + input.value, pointcallback); 
+				}
+			}
+		}
+
+		</script>

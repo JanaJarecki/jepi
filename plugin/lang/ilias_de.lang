@@ -1,0 +1,42 @@
+// 
+// German Language File for assProgQuestion Plugin
+//
+
+<!-- language file start -->
+assProgQuestion#:#Programmierfrage
+solution#:#Lösung
+testparams#:#Testparameter
+paramvalues#:#Testargumente
+paraminfo#:#Die Lösung des Testteilnehmers wird mit der obigen Lösung verglichen, indem beide mit den angegebenen Testwerten ausgeführt werden. Sind die zurückgegebenen Werte gleich, werden die angegebenen Punkte hinzuaddiert. Benötigt die Methode mehr als ein Argument, so trennen Sie diese durch Kommata (,). Sie können mehrere Parametertests in einer einzelnen Zeile angeben, so dass die zugehörigen Punkte nur vergeben werden, wenn die Ergebnisse aller Tests der Zeile erfolgreich sind. Trennen Sie dazu die Argument-Mengen durch Semikolons. Um z.B. eine Funktion f(int a, String b) zu testen, können Sie eingeben: 3,"foo";4,"bar".
+solutioninfo#:#Diese Funktion sollte genau die Werte zurückgeben, die vom Code des Teilnehmers erwartet werden. Beachten Sie, dass NICHT der Code selbst, sondern nur die Rückgabewerte verglichen werden. Sie können die Funktion mit den unten angegebenen Parametern testen, indem Sie auf "Speichern und Compilieren" drücken.
+compile#:#Speichern und Compilieren
+connectionfail#:#Konnte keine Verbindung zum Bewertungssystem aufbauen. Bitte prüfen Sie, ob das System läuft und unter der angegebenen Adresse erreichbar ist.
+emptyresponse#:#Das Bewertungssystem sendete keine Antwort.
+errorresponse#:#Das Bewertungssystem meldete einen Fehler.
+studcompile#:#Compilieren
+studparams#:#Geben Sie Parameterwerte zum Testen ein. Falls Ihre Methode mehrere Parameter benötigt, trennen Sie diese durch Kommata (,).
+studcodecompiles#:#Ihr Code wurde erfolgreich kompiliert.
+studcodedoesnotcompile#:#Ihr Code konnte nicht kompiliert werden.
+codestructure#:#Strukturanforderungen
+nostructure#:#Keine Anforderungen
+nostructureinfo#:#Es werden keine zusätzlichen Prüfungen ausgeführt. Code wird ausschließlich durch Prüfung der Ergebnisse bewertet.
+recursive#:#Rekursion
+recursiveinfo#:#Der Code wird auf Selbsaufrufe untersucht. Werden keine gefunden, werden für die Aufgabe keine Punkte vergeben.
+recursivenoiterative#:#Rekursion, keine Iteration
+recursivenoiterativeinfo#:#Der Code wird auf Selbsaufrufe untersucht. Werden keine gefunden, werden für die Aufgabe keine Punkte vergeben. Es werden außerdem keine Punkte vergeben, wenn Schleifen verwendet wurden.
+iterative#:#Iteration
+iterativeinfo#:#Der Code wird auf Schleifen untersucht. Werden keine gefunden, werden für die Aufgabe keine Punkte vergeben.
+iterativenorecursive#:#Iteration, keine Rekursion
+iterativenorecursiveinfo#:#Der Code wird auf Schleifen untersucht. Werden keine gefunden, werden für die Aufgabe keine Punkte vergeben. Es werden außerdem keine Punkte vergeben, wenn Selbstaufrufe gefunden wurden.
+solutionoutput_label_solution#:#Antwort:
+solutionoutput_label_points#:#Punkte:
+xls_label_solution#:#Antwort
+xls_label_points#:#Punkte
+settings#:#Einstellungen
+ratingsystem_address#:#URL zum Bewertungssystem
+save#:#Speichern
+cancel#:#Abbrechen
+default_settings#:#Standard wiederherstellen
+ratingsystem_address_info#:#Adresse, unter der das Bewertungssystem vom ILIAS-Server aus erreichbar ist
+config_changed_message#:#Die Einstellungen wurden gespeichert
+config_error_message#:#Beim Speichern der Einstellungen ist ein Fehler aufgetreten

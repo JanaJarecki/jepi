@@ -1,0 +1,42 @@
+// 
+// English Language File for assProgQuestion Plugin
+//
+
+<!-- language file start -->
+assProgQuestion#:#Programming Question
+solution#:#Solution
+testparams#:#Test Parameters
+paramvalues#:#Test values
+paraminfo#:#The learner-supplied function is compared to the above solution by executing it with the given values. For each line here, if the returned values are the same, points are added to the student’s score. For functions that require more than one parameter, separate values by commas (,).  You can use several testing values in a single line, only giving points if all tests succeed. To do so, separate sets of parameters by semi-colons (;). E.g., to test a function f(int a, String b) using two sets of values, you can enter: 3,"foo";4,"bar"
+solutioninfo#:#This function should return the same values that you want the learner's function to return. Note that the actual code is NOT compared, only the return values. You can test your function using the parameters below by clicking "Save and Compile".
+compile#:#Save and Compile
+connectionfail#:#Could not connect to rating system. Please check that the rating system is running and reachable at the configured address.
+emptyresponse#:#The rating system did not respond.
+errorresponse#:#The rating system gave an error response.
+studcompile#:#Compile
+studparams#:#Enter parameter values for testing. If your method uses multiple parameters, seperate them by comma (,).
+studcodecompiles#:#Your code was successfully compiled.
+studcodedoesnotcompile#:#Your code could not be compiled.
+codestructure#:#Code structure
+nostructure#:#Do not check
+nostructureinfo#:#Code will only be rated based on its return values. 
+recursive#:#Require recursion
+recursiveinfo#:#Code will be checked for function calls to itself. If none are found, no points are awarded.
+recursivenoiterative#:#Require recursion, do not allow loops
+recursivenoiterativeinfo#:#Code will be checked for function calls to itself. If none are found, no points are awarded. No points will be awarded if loops are found.
+iterative#:#Require iteration
+iterativeinfo#:#Code will be checked for loops. If none are found, no points are awarded.
+iterativenorecursive#:#Require iteration, do not allow recursion
+iterativenorecursiveinfo#:#Code will be checked for loops. If none are found, no points are awarded. No points will be awarded if recursive function calls are found.
+solutionoutput_label_solution#:#Answer:
+solutionoutput_label_points#:#Points:
+xls_label_solution#:#Answer
+xls_label_points#:#Points
+settings#:#Settings
+ratingsystem_address#:#Rating System Address
+save#:#Save
+cancel#:#Cancel
+default_settings#:#Restore defaults
+ratingsystem_address_info#:#URL which can be used by the ILIAS server to connect to the rating system
+config_changed_message#:#Your settings were saved
+config_error_message#:#An error occured during saving
