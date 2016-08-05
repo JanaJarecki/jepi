@@ -246,7 +246,7 @@ class assProgQuestion extends assQuestion {
 	 *
 	 * @access public
 	 */
-	function duplicate($for_test = true, $title = "", $author = "", $owner = "") {
+	function duplicate($for_test = true, $title = "", $author = "", $owner = "", $testObjId= NULL) {
 		if ($this->id <= 0) {
 			// The question has not been saved. It cannot be duplicated
 			return;
