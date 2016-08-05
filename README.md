@@ -4,7 +4,13 @@ This is a question type for the Ilias e-learning platform.
 
 ## State ##
 
-under development
+under development:
+
+* ilias-4.4.15: branch should work now (fixed interface)
+
+## Ongoing ##
+
+* started different branches for each ilias version
 
 ## Former work ##
 
