@@ -358,6 +358,20 @@ class assProgQuestion extends assQuestion {
 	}
 	
 	/**
+	 * Calculate the reached points for a submitted user input
+	 *
+	 * @param mixed user input (scalar, object or array)
+	 * 
+	 * @todo implement this new required function
+	 * // This function is not pre-defined in assQuestion but must be present in a question type for "check" 
+	 * // functionality on a question pools "preview" screen. It gets a posted user solution and calculates 
+	 * // the reached points for it. The actual data type of solution is not defined but must match the type 
+	 * // returned by getSolutionSubmit().
+	 */
+	public function calculateReachedPointsforSolution($solution) {
+	}
+	
+	/**
 	 * Speichert die Eingabe des Studenten in der Datenbank
 	 *
 	 * @param integer $test_id
@@ -602,6 +616,21 @@ class assProgQuestion extends assQuestion {
 	 */
 	public function getSolution() {
 		return $this->solution;
+	}
+	
+	/**
+	 * Get the submitted user input as a serializable value 
+     *
+     * @return mixed user input (scalar, object or array)
+     * 
+	 * @todo implement this new function (do we need functionality?)
+	 * // This function is not pre-defined in assQuestion but must be present in a question type for "check"
+	 * // functionality on a question pools "preview" screen. It should provide the posted user input in a
+     * // data structure that can be stored in the user session. The actual data type is not defined  but must be
+     * // known by the corresponding function calculateReachedPointsforSolution().
+	 */
+	public function getSolutionSubmit() {
+		
 	}
 	
 	/**

@@ -360,34 +360,6 @@ class ilProgQuestionParaInputGUI extends ilTextInputGUI
 		{
 			if ($this->getSingleline())
 			{
-				// if (!$this->hideImages)
-				// {
-					// if (strlen($value->getImage()))
-					// {
-						// $imagename = $this->qstObject->getImagePathWeb() . $value->getImage();
-						// if (($this->getSingleline()) && ($this->qstObject->getThumbSize()))
-						// {
-							// if (@file_exists($this->qstObject->getImagePath() . $this->qstObject->getThumbPrefix() . $value->getImage()))
-							// {
-								// $imagename = $this->qstObject->getImagePathWeb() . $this->qstObject->getThumbPrefix() . $value->getImage();
-							// }
-						// }
-						// $tpl->setCurrentBlock('image');
-						// $tpl->setVariable('SRC_IMAGE', $imagename);
-						// $tpl->setVariable('IMAGE_NAME', $value->getImage());
-						// $tpl->setVariable('ALT_IMAGE', ilUtil::prepareFormOutput($value->getAnswertext()));
-						// $tpl->setVariable("TXT_DELETE_EXISTING", $lng->txt("delete_existing_file"));
-						// $tpl->setVariable("IMAGE_ROW_NUMBER", $i);
-						// $tpl->setVariable("IMAGE_POST_VAR", $this->getPostVar());
-						// $tpl->parseCurrentBlock();
-					// }
-					// $tpl->setCurrentBlock('addimage');
-					// $tpl->setVariable("IMAGE_ID", $this->getPostVar() . "[image][$i]");
-					// $tpl->setVariable("IMAGE_SUBMIT", $lng->txt("upload"));
-					// $tpl->setVariable("IMAGE_ROW_NUMBER", $i);
-					// $tpl->setVariable("IMAGE_POST_VAR", $this->getPostVar());
-					// $tpl->parseCurrentBlock();
-				// }
 
 				if (is_object($value))
 				{
@@ -399,7 +371,8 @@ class ilProgQuestionParaInputGUI extends ilTextInputGUI
 						$tpl->setVariable("PROPERTY_VALUE", ilUtil::prepareFormOutput($value->getPoints()));
 						$tpl->parseCurrentBlock();
 					}
-				} 
+				}
+				
 				$tpl->setCurrentBlock('singleline');
 				$tpl->setVariable("SIZE", $this->getSize());
 				$tpl->setVariable("SINGLELINE_ID", $this->getPostVar() . "[answer][$i]");
@@ -440,8 +413,6 @@ class ilProgQuestionParaInputGUI extends ilTextInputGUI
 				$tpl->setVariable("CMD_UP", "cmd[up" . $this->getFieldId() . "][$i]");
 				$tpl->setVariable("CMD_DOWN", "cmd[down" . $this->getFieldId() . "][$i]");
 				$tpl->setVariable("ID", $this->getPostVar() . "[$i]");
-				$tpl->setVariable("UP_BUTTON", ilUtil::getImagePath('a_up.png'));
-				$tpl->setVariable("DOWN_BUTTON", ilUtil::getImagePath('a_down.png'));
 				$tpl->parseCurrentBlock();
 			}
 			if ($this->getShowPoints())
@@ -453,10 +424,8 @@ class ilProgQuestionParaInputGUI extends ilTextInputGUI
 				$tpl->parseCurrentBlock();
 			}
 			$tpl->setCurrentBlock("row");
-			$class = ($i % 2 == 0) ? "even" : "odd";
 			if ($i == 0) $class .= " first";
 			if ($i == count($this->values)-1) $class .= " last";
-			$tpl->setVariable("ROW_CLASS", $class);
 			$tpl->setVariable("POST_VAR", $this->getPostVar());
 			$tpl->setVariable("ROW_NUMBER", $i);
 			$tpl->setVariable("ID", $this->getPostVar() . "[answer][$i]");
@@ -466,8 +435,6 @@ class ilProgQuestionParaInputGUI extends ilTextInputGUI
 			{
 				$tpl->setVariable("DISABLED_POINTS", " disabled=\"disabled\"");
 			}
-			$tpl->setVariable("ADD_BUTTON", ilUtil::getImagePath('edit_add.png'));
-			$tpl->setVariable("REMOVE_BUTTON", ilUtil::getImagePath('edit_remove.png'));
 			$tpl->parseCurrentBlock();
 			$i++;
 		}
@@ -520,5 +487,6 @@ class ilProgQuestionParaInputGUI extends ilTextInputGUI
 		include_once "./Services/YUI/classes/class.ilYuiUtil.php";
 		ilYuiUtil::initDomEvent();
 		$tpl->addJavascript("./Modules/TestQuestionPool/templates/default/singlechoicewizard.js");
+		$tpl->addJavascript("./Services/Form/js/ServiceFormWizardInput.js");
 	}
 }
