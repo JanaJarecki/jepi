@@ -15,7 +15,7 @@
 class ilProgQuestionParaInputGUI extends ilTextInputGUI
 {
 	protected $values = array();
-	protected $allowMove = false;
+	protected $allowMove = true;
 	protected $singleline = true;
 	protected $qstObject = null;
 	protected $suffixes = array();

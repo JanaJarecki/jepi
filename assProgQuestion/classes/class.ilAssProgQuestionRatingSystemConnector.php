@@ -92,7 +92,6 @@ class ilAssProgQuestionRatingSystemConnector {
 				$paramsarray = explode ( ';', $paramgroup );
 				$paramsid = 1;
 				foreach ( $paramsarray as $ps ) {
-					if (! empty ( $ps )) { // TODO was ist mit parameterlosen methoden?
 						$xmlparams = $xmlparamgroup->addChild ( 'params' );
 						
 						$paramsbyid[$pid][$paramsid] = $ps;
@@ -102,7 +101,6 @@ class ilAssProgQuestionRatingSystemConnector {
 						foreach ( $param as $p ) {
 							$xmlparam = $xmlparams->addChild ( 'param', str_replace ( '&', '&amp;', $p ) );
 						}
-					}
 				}
 			}
 		}

@@ -338,7 +338,7 @@ class assProgQuestionGUI extends assQuestionGUI {
 		$choices->setRequired ( false );
 		$choices->setQuestionObject ( $this->object );
 		$choices->setSingleline ( true );
-		$choices->setAllowMove ( false );
+		$choices->setAllowMove ( true );
 		$choices->setInfo ( $this->object->getPlugin ()->txt ( "paraminfo" ) );
 		if ($this->object->getSelfAssessmentEditingMode ()) {
 			$choices->setSize ( 40 );
