@@ -97,13 +97,13 @@ class assProgQuestion extends assQuestion {
 		
 		// save additional data
 		// Musterloesung
-		$affectedRows = $ilDB->manipulateF ( "DELETE FROM " . $this->getAdditionalTableName () . " WHERE question_fi = %s", array (
+		$affectedRows = $ilDB->manipulateF ( "DELETE FROM " . $this->getFunctionQuestionTableName () . " WHERE question_fi = %s", array (
 				"integer" 
 		), array (
 				$this->getId () 
 		) );
 		
-		$affectedRows = $ilDB->manipulateF ( "INSERT INTO " . $this->getAdditionalTableName () . " (question_fi, solution, check_recursive, check_iterative, forbid_recursive, forbid_iterative) VALUES (%s, %s, %s, %s, %s, %s)", array (
+		$affectedRows = $ilDB->manipulateF ( "INSERT INTO " . $this->getFunctionQuestionTableName () . " (question_fi, solution, check_recursive, check_iterative, forbid_recursive, forbid_iterative) VALUES (%s, %s, %s, %s, %s, %s)", array (
 				'integer',
 				'text',
 				'integer',
@@ -137,7 +137,7 @@ class assProgQuestion extends assQuestion {
 		// {
 		// ilUtil::delDir( $this->getImagePath() );
 		// }
-		$ilDB->manipulateF ( "DELETE FROM " . $this->getAnswerTableName () . " WHERE question_fi = %s", array (
+		$ilDB->manipulateF ( "DELETE FROM " . $this->getParameterTableName () . " WHERE question_fi = %s", array (
 				'integer' 
 		), array (
 				$this->getId () 
@@ -149,9 +149,9 @@ class assProgQuestion extends assQuestion {
 			 */
 			$answer_obj = $this->test_parameterset [$key]; // TODO bringt das was? sieht redundant aus.
 			if ($answer_obj->getAnswertext () != NULL) {
-				$next_id = $ilDB->nextId ( $this->getAnswerTableName () );
+				$next_id = $ilDB->nextId ( $this->getParameterTableName () );
 				// answer_id,question_fi,params,points,aorder
-				$ilDB->manipulateF ( "INSERT INTO " . $this->getAnswerTableName () . " (answer_id, question_fi, params, points, aorder) VALUES (%s, %s, %s, %s, %s)", array (
+				$ilDB->manipulateF ( "INSERT INTO " . $this->getParameterTableName () . " (answer_id, question_fi, params, points, aorder) VALUES (%s, %s, %s, %s, %s)", array (
 						'integer',
 						'integer',
 						'text',
@@ -207,7 +207,7 @@ class assProgQuestion extends assQuestion {
 			// ProgQuestion spezifisch -> Musterloesung und Parameter
 			// load additional data
 			// Solution
-			$result = $ilDB->queryF ( "SELECT * FROM " . $this->getAdditionalTableName () . " WHERE question_fi = %s", array (
+			$result = $ilDB->queryF ( "SELECT * FROM " . $this->getFunctionQuestionTableName () . " WHERE question_fi = %s", array (
 					'integer' 
 			), array (
 					$question_id 
@@ -221,7 +221,7 @@ class assProgQuestion extends assQuestion {
 				$this->setForbidRecursive ( $data ['forbid_recursive'] );
 			}
 			// Params
-			$result = $ilDB->queryF ( "SELECT * FROM " . $this->getAnswerTableName () . " WHERE question_fi = %s", array (
+			$result = $ilDB->queryF ( "SELECT * FROM " . $this->getParameterTableName () . " WHERE question_fi = %s", array (
 					'integer' 
 			), array (
 					$question_id 
@@ -553,7 +553,7 @@ class assProgQuestion extends assQuestion {
 	 * @return mixed the name(s) of the additional tables (array or string)
 	 * @access public
 	 */
-	function getAdditionalTableName() {
+	function getFunctionQuestionTableName() {
 		return "il_qpl_qst_prog_quest";
 	}
 	
@@ -563,7 +563,7 @@ class assProgQuestion extends assQuestion {
 	 * @return string The answer table name
 	 * @access public
 	 */
-	function getAnswerTableName() {
+	function getParameterTableName() {
 		return "il_qpl_qst_prog_params";
 	}
 	

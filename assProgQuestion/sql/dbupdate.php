@@ -1,16 +1,23 @@
 <#1>
 <?php
-// Eintragung des Fragetyps
+// Create the database entry when the database does not yet exists.
+//   1. Ask for the entry of the plugin in `qpl_qst_type`.
+//   2. If the entry for the plugin does not exists:
+//      a) Get the maximum for the questin_type_id and increment by 1 as our new id.
+//      a) Create the database entry for the plugin in `qpl_qst_type`.
+// (1)
 $res = $ilDB->queryF ( "SELECT * FROM qpl_qst_type WHERE type_tag = %s", array (
 		'text' 
 ), array (
 		'assProgQuestion' 
 ) );
+// (2)
 if ($res->numRows () == 0) {
+	// (a)
 	$res = $ilDB->query ( "SELECT MAX(question_type_id) maxid FROM qpl_qst_type" );
 	$data = $ilDB->fetchAssoc ( $res );
 	$max = $data ["maxid"] + 1;
-	
+	// (b)
 	$affectedRows = $ilDB->manipulateF ( "INSERT INTO qpl_qst_type (question_type_id, type_tag, plugin) VALUES (%s, %s, %s)", array (
 			"integer",
 			"text",
@@ -86,7 +93,7 @@ $ilDB->addPrimaryKey ( 'il_qpl_qst_prog_quest', array (
 ) );
 ?>
 <#5>
-<?php
+<?php>
 // +answer_id, +question_fi, +answertext, +points, ?aorder, -imagefile, ?tstamp
 $ilDB->createTable ( 'il_qpl_qst_prog_params', array (
 		'answer_id' => array (
