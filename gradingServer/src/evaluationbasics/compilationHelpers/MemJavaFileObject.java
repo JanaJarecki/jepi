@@ -1,4 +1,4 @@
-package evaluationbasics.compilationhelpers;
+package evaluationbasics.compilationHelpers;
 import java.io.ByteArrayOutputStream;
 import java.io.OutputStream;
 import java.net.URI;

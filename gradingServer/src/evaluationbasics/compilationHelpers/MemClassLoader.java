@@ -1,4 +1,4 @@
-package evaluationbasics.compilationhelpers;
+package evaluationbasics.compilationHelpers;
 import java.util.HashMap;
 import java.util.Map;
 

@@ -60,8 +60,8 @@ public class XMLConstructor {
 			if(type.endsWith("Method") && (tempCU.methodtype!= null || !tempCU.methodtypeError.equals(""))){
 				Element methodtype=new Element("methodtype");
 				if(tempCU.methodtypeError.equals("") && tempCU.methodtype!= null){
-					methodtype.addContent(new Element("recursive").addContent(String.valueOf(tempCU.methodtype[0])));
-					methodtype.addContent(new Element("iterative").addContent(String.valueOf(tempCU.methodtype[1])));
+					methodtype.addContent(new Element("recursive").addContent(String.valueOf(tempCU.methodtype.get("recursive"))));
+					methodtype.addContent(new Element("iterative").addContent(String.valueOf(tempCU.methodtype.get("loop"))));
 				}else
 					methodtype.addContent(new Element("error").addContent(tempCU.methodtypeError));
 				eCode=eCode.addContent(methodtype);

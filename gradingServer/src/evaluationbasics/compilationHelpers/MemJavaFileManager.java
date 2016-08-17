@@ -1,4 +1,4 @@
-package evaluationbasics.compilationhelpers;
+package evaluationbasics.compilationHelpers;
 import javax.tools.DiagnosticCollector;
 import javax.tools.FileObject;
 import javax.tools.ForwardingJavaFileManager;

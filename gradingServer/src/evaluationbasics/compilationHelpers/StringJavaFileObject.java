@@ -1,4 +1,4 @@
-package evaluationbasics.compilationhelpers;
+package evaluationbasics.compilationHelpers;
 
 import java.net.URI;
 import javax.tools.SimpleJavaFileObject;

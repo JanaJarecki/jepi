@@ -1,6 +1,8 @@
 package evaluationbasics;
 
+import java.util.HashMap;
 import java.util.LinkedList;
+import java.util.Map;
 
 import org.eclipse.jdt.core.dom.AST;
 import org.eclipse.jdt.core.dom.ASTParser;
@@ -33,7 +35,7 @@ public class ASTHelper {
 	 * @return Rueckgabearray. Formatierung siehe Beschreibung
 	 * @throws TooManyMethodsException sofern mehrere Methoden uebergeben wurden
 	 */
-	public static boolean[] getMethodType(String sMethod) throws TooManyMethodsException{
+	public static Map<String,Boolean> getMethodType(String sMethod) throws TooManyMethodsException{
 		ASTParser parser = ASTParser.newParser(AST.JLS8);
 		parser.setSource(("public class A{"+sMethod+"}").toCharArray());
 		parser.setKind(ASTParser.K_COMPILATION_UNIT);
@@ -43,7 +45,11 @@ public class ASTHelper {
 		cu.accept(v);
 		if(v.methodCount()!=1)
 			throw new TooManyMethodsException("Unable to identify the main Method");
-		return new boolean[]{v.isRecursive(),v.hasLoop()};
+
+		Map<String,Boolean> methodType = new HashMap<String,Boolean>();
+		methodType.put("recursive",v.isRecursive());
+		methodType.put("loop",v.hasLoop());
+		return methodType;
 	}
 	
 	/**

@@ -4,6 +4,7 @@ import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
 import java.lang.reflect.Modifier;
 import java.util.Arrays;
+import java.util.Map;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
@@ -15,9 +16,9 @@ import javax.tools.JavaFileObject;
 import javax.tools.ToolProvider;
 import javax.tools.JavaCompiler.CompilationTask;
 
-import evaluationbasics.compilationhelpers.MemClassLoader;
-import evaluationbasics.compilationhelpers.MemJavaFileManager;
-import evaluationbasics.compilationhelpers.StringJavaFileObject;
+import evaluationbasics.compilationHelpers.MemClassLoader;
+import evaluationbasics.compilationHelpers.MemJavaFileManager;
+import evaluationbasics.compilationHelpers.StringJavaFileObject;
 
 /**
  * Die Klasse bietet mehrere Methoden an die den Kern des Kompilierens vereinfachen.
@@ -97,7 +98,7 @@ public final class EvaluationTools {
 	 * @param pMethodCode Code der Methode als String
 	 * @return Vollstaendiges DiagnostedMethodClass Objekt
 	 * @exception IllegalArgumentException Wird geworfen wenn ein leerer Code uebergeben wurde.
-	 * @see DiagnostedMethodClas
+	 * @see DiagnostedMethodClass
 	 */	
 	public static final DiagnostedMethodClass compileMethod(String pMethodCode) throws TooManyMethodsException{
 		return compileMethod(pMethodCode,new String[]{});
@@ -111,7 +112,7 @@ public final class EvaluationTools {
 	 * 
 	 * 
 	 * @param pMethodCode Code der Methode als String
-	 * @param importedPackages Zu importierende Pakete. Es ist hierbei nur der Pfad anzugeben zB. "javax.swing.JOptionPane" oder "javax.swing.*"
+	 * @param pImportedPackages Zu importierende Pakete. Es ist hierbei nur der Pfad anzugeben zB. "javax.swing.JOptionPane" oder "javax.swing.*"
 	 * @return Vollstaendiges DiagnostedMethodClass Objekt
 	 * @exception IllegalArgumentException Wird geworfen wenn ein leerer Code uebergeben wurde.
 	 * @see DiagnostedMethodClass
@@ -143,7 +144,7 @@ public final class EvaluationTools {
 	 * Die Methode durchsucht alle Methoden der Klasse nach ihren Namen. Falls in der Klasse mehrere Methoden gleichen Namens auftreten,
 	 * so wird willkuerlich eine Methode gewaehlt. Dies gilt zu vermeiden.
 	 * 
-	 * @param pMethodCode Code der Methode als String
+	 * @param pMethodsCode Code der Methode als String
 	 * @param pImportedPackages Zu importierende Pakete. Es ist hierbei nur der Pfad anzugeben zB. "javax.swing.JOptionPane" oder "javax.swing.*" Falls nicht notwendig: "null"
 	 * @param pMethodName Name der gewuenschten MainMethode (case sensitive)
 	 * @return Vollstaendiges DiagnostedMethodClass Objekt
@@ -164,7 +165,7 @@ public final class EvaluationTools {
 	 * Die Methode durchsucht alle Methoden der Klasse nach ihren Namen als auch nach den den Paramtertypen.
 	 * Falls diese Werte abweichen, so gilt die Kompilierung als fehlgeschlagen.
 	 * 
-	 * @param pMethodCode Code der Methode als String
+	 * @param pMethodsCode Code der Methode als String
 	 * @param pImportedPackages Zu importierende Pakete. Es ist hierbei nur der Pfad anzugeben zB. "javax.swing.JOptionPane" oder "javax.swing.*" Falls nicht notwendig: "null"
 	 * @param pMethodName Name der gewuenschten MainMethode (case sensitive)
 	 * @return Vollstaendiges DiagnostedMethodClass Objekt oder Invalides DiagnostedMethodClass Objekt, sofern die Methode syntaktisch nicht korrekt war.
@@ -264,7 +265,7 @@ public final class EvaluationTools {
 	 * 
 	 * @param dClass DiagnostedClass Objekt welches von der compileClass()-Methode zurueckgegeben wurde
 	 * @param pMethodName Name der Methode die ausgefuehrt werden soll
-	 * @param pMethodArgs[] Array der zu uebergebenen Parameter
+	 * @param pMethodArgs Array der zu uebergebenen Parameter
 	 * @
 	 */	
 	public static final Object callMethod(DiagnostedClass dClass, String pMethodName, Object[] pMethodArgs) throws Exception{
@@ -287,7 +288,7 @@ public final class EvaluationTools {
 	 * @param dClass DiagnostedClass Objekt welches von der compileClass()-Methode zurueckgegeben wurde
 	 * @param pClassInstance Instanz der Klasse
 	 * @param pMethodName Name der Methode die ausgefuehrt werden soll
-	 * @param pMethodArgs[] Array der zu uebergebenen Parameter
+	 * @param pMethodArgs Array der zu uebergebenen Parameter
 	 * 
 	 * @throws IllegalAccessException
 	 * @throws IllegalArgumentException
@@ -324,7 +325,7 @@ public final class EvaluationTools {
 	 * Bei dieser Methode wird anstatt eine gegebene Instanz zu verwenden. Eine neue erstellt.
 	 *
 	 * @param dClass DiagnostedMethodClass Objekt welches von der compileMethod()-Methode zurueckgegeben wurde
-	 * @param pMethodArgs[] Array der zu uebergebenen Parameter
+	 * @param pMethodArgs Array der zu uebergebenen Parameter
 	 * @return Rueckgabeobjekt der Methode
 	 * @throws Exception Fuer die genaue Listung der Exceptions siehe callMethodonInstance
 	 */	
@@ -343,7 +344,7 @@ public final class EvaluationTools {
 	 *  
 	 * @param dClass DiagnostedClass Objekt welches von der compileClass()-Methode zurueckgegeben wurde
 	 * @param pClassInstance Instanz der Klasse
-	 * @param pMethodArgs[] Array der zu uebergebenen Parameter
+	 * @param pMethodArgs Array der zu uebergebenen Parameter
 	 * @return Rueckgabeobjekt der Methode
 	 */		
 	public static final Object callMethodOnInstance(DiagnostedMethodClass dClass,Object pClassInstance, Object[] pMethodArgs) throws Exception{
@@ -401,7 +402,7 @@ public final class EvaluationTools {
 	 * Parameters:
 	 * 		dcMethod - DiagnostedMethodClass Objekt
 	 */	
-	public static final boolean[] getMethodType(DiagnostedMethodClass dcMethod) throws TooManyMethodsException{
+	public static final Map<String,Boolean> getMethodType(DiagnostedMethodClass dcMethod) throws TooManyMethodsException{
 		return ASTHelper.getMethodType(dcMethod.getMethodCode());
 	}
 	

@@ -6,6 +6,7 @@ import java.net.Socket;
 import java.util.Iterator;
 import java.util.LinkedList;
 import java.util.List;
+import java.util.Map;
 
 import javax.tools.DiagnosticCollector;
 import javax.tools.JavaFileObject;
@@ -402,7 +403,7 @@ public class Student extends Thread{
 		public boolean isSecurityLeak=false;
 		
 		//Methodtype
-		public boolean[] methodtype=null;
+		public Map<String,Boolean> methodtype=null;
 		public String methodtypeError="";
 		
 		public LinkedList<ParamGroup> paramgroup; //Beinhaltet die Return-Werte
