@@ -6,5 +6,9 @@ package evaluationbasics;
  */
 public class TooManyMethodsException extends Exception {
 	private static final long serialVersionUID = -3732312084766119514L;
-	public TooManyMethodsException(String str){super(str);}
+
+	public TooManyMethodsException(String str) {
+		super(str);
+	}
 }
+

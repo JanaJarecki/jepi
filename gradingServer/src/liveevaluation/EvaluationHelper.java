@@ -5,12 +5,9 @@ import java.io.OutputStream;
 import java.lang.reflect.Array;
 import java.lang.reflect.InvocationTargetException;
 import java.util.Arrays;
-import java.util.List;
 
-import org.jdom2.Element;
-
+import evaluationbasics.CompilationBox;
 import evaluationbasics.DiagnostedMethodClass;
-import evaluationbasics.EvaluationTools;
 import evaluationbasics.NoValidClassException;
 
 
@@ -29,7 +26,7 @@ public class EvaluationHelper {
 					pTestArgs[i]=EvaluationHelper.stringToType(pClassType[i],pTestArgs[i].toString());
 			}
 			try{
-				return EvaluationTools.callMethod(dcMethod, pTestArgs);				
+				return CompilationBox.callMethod(dcMethod, pTestArgs);
 			//Hauptsaechlich StackOverFlowError:
 			}catch(InvocationTargetException e){
 				return e.getTargetException();
@@ -39,17 +36,6 @@ public class EvaluationHelper {
 			}
 		}
 		throw new NoValidClassException("Given DiagnostedMethodClass is not valid");
-	}	
-	
-	/*
-	 * Konvertiert die ParamsXML in ein Array
-	 */
-	public static Object[] paramsToArray(Element params){
-		List<Element> param=params.getChildren();
-		Object[] zReturn=new Object[param.size()];
-		for(int j=0;j<param.size();j++)
-			zReturn[j]=param.get(j).getValue();
-		return zReturn;		
 	}
 	
 	/*
@@ -110,23 +96,37 @@ public class EvaluationHelper {
 		try {
 			out.write(output.getBytes());
 	    	out.flush();
-		} catch (IOException e) {}	//FEHLER
+		} catch (IOException e) {
+			// @todo how-to handle which errors?
+		}
 	}
 
-	public static final String getStringFromInputStream(InputStream in) {		
-		byte[] b=new byte[1000];
-		String sReturn="";
+
+	/**
+	 * Reads a complete String from an InputStream.
+	 * @param in
+	 * @return
+	 */
+	public static final String getStringFromInputStream(InputStream in) {
+		final int ACCEPT_NBYTE = 1000;
+		byte[] b=new byte[ACCEPT_NBYTE];
+		StringBuilder sReturn = new StringBuilder();
 		int i=0;
 		try {
 			while(i!=-1){
 				i=in.read(b);
-				if(i==b.length){
-					sReturn=sReturn+new String(b);
-				}else if(i<b.length && i!=-1)
-					return sReturn+new String(Arrays.copyOf(b,i));
+				if(i>0) {
+					byte[] relevant = Arrays.copyOf(b,i);
+					sReturn.append(new String(relevant));
+					if(i<ACCEPT_NBYTE) {
+						break;
+					}
+				}
 			}
-		} catch (IOException e) {} //FEHLER
-		return sReturn;	
+		} catch (IOException e) {
+			// @todo how-to handle which errors?
+		}
+		return sReturn.toString();
 	}
 	
 

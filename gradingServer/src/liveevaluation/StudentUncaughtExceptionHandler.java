@@ -17,6 +17,7 @@ public class StudentUncaughtExceptionHandler implements
 	}
 	@Override
 	public void uncaughtException(Thread t, Throwable e) {
+		System.out.println("StudentUncaughtExceptionHandler.uncaughtException");
 		StringWriter sw = new StringWriter();
 		PrintWriter pw = new PrintWriter(sw);
 		e.printStackTrace(pw);
@@ -27,12 +28,13 @@ public class StudentUncaughtExceptionHandler implements
 		} catch (IOException e2) {
 			e2.printStackTrace();
 		}		
-		output=new XMLOutputter().outputString(XMLConstructor.errorResponse(output));
+		XMLConstructor response = new XMLConstructor();
+		response.error(output);
 		
 		if(!CLIENT.isClosed())
 			//Beendet den Stream ordnungsgemaess mit der Ausgabe einer Error-XML
 			try {
-				EvaluationHelper.setStringToOutputStream(CLIENT.getOutputStream(),output);
+				EvaluationHelper.setStringToOutputStream(CLIENT.getOutputStream(),response.getDocument().toString());
 				CLIENT.close();
 			} catch (IOException e1) {
 				e1.printStackTrace();

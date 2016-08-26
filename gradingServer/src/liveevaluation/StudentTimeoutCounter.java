@@ -1,7 +1,7 @@
 package liveevaluation;
 
 /**
- * Die Klasse dient als Timeoutmanager fuer einen Student-Thread.
+ * Die Klasse dient als Timeoutmanager fuer einen EvaluationRequest-Thread.
  * Sobald dieser laenger als die angegebene Zeit benoetigt, wird der Prozess mit Gewalt abgewuergt.
  * 
  * 
@@ -11,12 +11,12 @@ package liveevaluation;
 public class StudentTimeoutCounter extends Thread{
 	
 	//Definiert die Timeoutzeit
-	private final static int STUDENTTIMEOUT=LiveEvaluationMain.STUDENTTIMEOUT;
+	private final static int STUDENTTIMEOUT= EvaluationServer.STUDENTTIMEOUT;
 	
-	private final Student STUDENT;
+	private final EvaluationRequest STUDENT;
 	private boolean stop=false;
 	
-	public StudentTimeoutCounter(Student pStudent){
+	public StudentTimeoutCounter(EvaluationRequest pStudent){
 		this.setUncaughtExceptionHandler(new StudentUncaughtExceptionHandler.UselessUncaughtExceptionHandler());
 		STUDENT=pStudent;			
 	}
@@ -37,7 +37,7 @@ public class StudentTimeoutCounter extends Thread{
 		if(STUDENT.isAlive())
 			/*
 			 * Der folgende Methodenaufruf ist deprecated, aufgrund dessen das es zu unvorhergesehen Komplikationen mit anderen Threads kommen kann.(Deadlocks etc)
-			 * Aufgrund dessen das ein Student-thread aber weitgehen unabhaengig operiert sollte das keine grossen Probleme bereiten.
+			 * Aufgrund dessen das ein EvaluationRequest-thread aber weitgehen unabhaengig operiert sollte das keine grossen Probleme bereiten.
 			 * 
 			 * Mir ist bislang keine Moeglichkeit bekannt eine moegliche Dauerschleife einer
 			 * Studentenmethode anders zu unterbrechen.

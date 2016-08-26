@@ -2,7 +2,7 @@ package liveevaluation;
 
 import java.util.LinkedList;
 /**
- * Dient zur Unterstuetzung der LiveEvaluationMain-Klasse.
+ * Dient zur Unterstuetzung der EvaluationServer-Klasse.
  * Aufgaben:
  * Formatueberpruefung der Eingaben
  * Zusammenfuehren von nur korrekten Addressen
