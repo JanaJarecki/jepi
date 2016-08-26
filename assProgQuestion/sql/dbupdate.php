@@ -181,3 +181,18 @@ $ilDB->createTable ( 'il_qpl_qst_prog_config', array (
 		) 
 ), true );
 ?>
+<#10>
+<?php 
+$ilDB->addTableColumn('il_qpl_qst_prog_quest', 'quest_type', array (
+		'type' => 'text',
+		'length' => 64,
+		'default' => 'function_original',
+		'notnull' => true
+));
+?>
+<#11>
+<?php 
+$ilDB->addTableColumn('il_qpl_qst_prog_quest', 'test_code', array (
+		'type' => 'clob'
+));
+?>

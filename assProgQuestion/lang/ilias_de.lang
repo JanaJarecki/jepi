@@ -5,11 +5,17 @@
 <!-- language file start -->
 assProgQuestion#:#Programmierfrage
 solution#:#Lösung
+testCode#:#Test Code
+testCodeInfo#:#Der Test Code sollte die oben angegebene Musterlösung testen. Die unten angegebenen Werte werden den Tests zugeordnet und für die Bewertung verwendet.
 testparams#:#Testparameter
 paramvalues#:#Testargumente
 paraminfo#:#Die Lösung des Testteilnehmers wird mit der obigen Lösung verglichen, indem beide mit den angegebenen Testwerten ausgeführt werden. Sind die zurückgegebenen Werte gleich, werden die angegebenen Punkte hinzuaddiert. Benötigt die Methode mehr als ein Argument, so trennen Sie diese durch Kommata (,). Sie können mehrere Parametertests in einer einzelnen Zeile angeben, so dass die zugehörigen Punkte nur vergeben werden, wenn die Ergebnisse aller Tests der Zeile erfolgreich sind. Trennen Sie dazu die Argument-Mengen durch Semikolons. Um z.B. eine Funktion f(int a, String b) zu testen, können Sie eingeben: 3,"foo";4,"bar".
 solutioninfo#:#Diese Funktion sollte genau die Werte zurückgeben, die vom Code des Teilnehmers erwartet werden. Beachten Sie, dass NICHT der Code selbst, sondern nur die Rückgabewerte verglichen werden. Sie können die Funktion mit den unten angegebenen Parametern testen, indem Sie auf "Speichern und Compilieren" drücken.
-compile#:#Speichern und Compilieren
+compile#:#Kompilieren
+run#:#Ausführen
+compilesSuccessfully#:#Der Java-Code kompiliert ohne Fehler.
+compileErrorAtLine#:#Kompiler-Fehler auf Zeile: 
+runningMethodWithParametersLeadTo#:#Die Rückgabewerte der Methoden für die angegebenen Parameter sind:
 connectionfail#:#Konnte keine Verbindung zum Bewertungssystem aufbauen. Bitte prüfen Sie, ob das System läuft und unter der angegebenen Adresse erreichbar ist.
 emptyresponse#:#Das Bewertungssystem sendete keine Antwort.
 errorresponse#:#Das Bewertungssystem meldete einen Fehler.
@@ -24,6 +30,10 @@ recursive#:#Rekursion
 recursiveinfo#:#Der Code wird auf Selbsaufrufe untersucht. Werden keine gefunden, werden für die Aufgabe keine Punkte vergeben.
 recursivenoiterative#:#Rekursion, keine Iteration
 recursivenoiterativeinfo#:#Der Code wird auf Selbsaufrufe untersucht. Werden keine gefunden, werden für die Aufgabe keine Punkte vergeben. Es werden außerdem keine Punkte vergeben, wenn Schleifen verwendet wurden.
+recursionFoundNotAllowed#:#WARNUNG: Rekursive Lösungen sind nicht erlaubt.
+recursionReuiredNotFound#:#WARNUNG: Es ist eine rekursive Lösung gefordert.
+iterationFoundNotAllowed#:#WARNUNG: Iterative Lösungen sind nicht erlaubt.
+iterationReuiredNotFound#:#WARNUNG: Es ist eine iterative Lösung gefordert.
 iterative#:#Iteration
 iterativeinfo#:#Der Code wird auf Schleifen untersucht. Werden keine gefunden, werden für die Aufgabe keine Punkte vergeben.
 iterativenorecursive#:#Iteration, keine Rekursion
@@ -40,3 +50,6 @@ default_settings#:#Standard wiederherstellen
 ratingsystem_address_info#:#Adresse, unter der das Bewertungssystem vom ILIAS-Server aus erreichbar ist
 config_changed_message#:#Die Einstellungen wurden gespeichert
 config_error_message#:#Beim Speichern der Einstellungen ist ein Fehler aufgetreten
+quest_type#:#Fragen Typ
+function_original#:#Funktion
+testng#:#Test mit TestNG
