@@ -1,0 +1,7 @@
+## Simple Instructions
+
+To run the server:
+java -cp build/libs/gradingServer-all.jar -Djava.security.policy=security.policy evaluationbasics.RunServer
+
+To build the server:
+gradle jar -Dorg.gradle.java.home=/home/ilias/Downloads/jdk1.8.0_101 fatJar
