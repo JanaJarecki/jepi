@@ -470,13 +470,13 @@ class ilAssProgQuestionEvalConnection {
 		foreach ( $tests->xpath ( "test" ) as $test ) {
 			$att = $test->attributes ();
 			if ($att ["passed"] == "true") {
-				$result ['message'] .= "\n ".$this->plugin->txt("passedtest")." [" . $att ["description"] . "].";
+				$result ['message'] .= "\n " . $this->plugin->txt ( "passedtest" ) . " [" . $att ["description"] . "].";
 				$result ['points'] += $att ["reachedPoints"];
 			} elseif ($att ["passedPartially"] == "true") {
-				$result ['message'] .= "\n".$this->plugin->txt("partialtest")." [" . $att ["description"] . "].";
+				$result ['message'] .= "\n" . $this->plugin->txt ( "partialtest" ) . " [" . $att ["description"] . "].";
 				$reachedTotalPoints = false;
 			} else {
-				$result ['message'] .= "\n".$this->plugin->txt("failedtest")." [" . $att ["description"] . "] ";
+				$result ['message'] .= "\n" . $this->plugin->txt ( "failedtest" ) . " [" . $att ["description"] . "] ";
 				$reachedTotalPoints = false;
 			}
 		}
@@ -585,14 +585,6 @@ class ilAssProgQuestionEvalConnection {
 		$diagnostics = $response->diagnostics;
 		if ($diagnostics === null || count ( $diagnostics->children () ) == 0) {
 			$message = $this->plugin->txt ( "compilesSuccessfully" );
-			$result = $this->parseMethodTypeDiagnostic ( $response );
-			$feedback = $this->generateMethodTypeFeedback ( $result );
-			if ($feedback == "") {
-				$result ['type'] = "success";
-			} else {
-				$result ['type'] = "warning";
-				$message .= $feedback;
-			}
 			
 			$message .= "\n" . $this->plugin->txt ( "runningMethodWithParametersLeadTo" );
 			$runresults = $response->runresults;
@@ -602,7 +594,7 @@ class ilAssProgQuestionEvalConnection {
 					$params = $group->xpath ( "params" );
 					foreach ( $params as $param ) {
 						$att = $param->attributes ();
-						if ($att["error"] ) {
+						if ($att ["error"]) {
 							$message .= "\n" . $att ["params"] . " => " . $param;
 							$result ['type'] = "warning";
 						} else {
@@ -627,29 +619,40 @@ class ilAssProgQuestionEvalConnection {
 	 * @return string
 	 */
 	private function parseFeedbackResponse($xml) {
-		
-		$compareresults = $xml->comparemethods->compareresults;
-
-		$result ['type'] = "success";
-		$result ['message'] = "";
-		if (! ($compareresults === null) && (count ( $compareresults->children () ) > 0)) {
-			$groups = $compareresults->xpath ( "paramgroup" );
-			foreach ( $groups as $group ) {
-				$att = $group->attributes ();
-				$passed = $att ["equals"];
-				if ($passed == "false") {
-					$message .= "\n".$this->plugin->txt("failedtest")." [" . $att ["name"] . "].";
-					if ($result ['type'] == "success" || $result['type'] == null) {
-						$result ['type'] = "warning";
-					}
+		$response = $xml->comparemethods;
+		$diagnostics = $response->diagnostics;
+		if ($diagnostics === null || count ( $diagnostics->children () ) == 0) {
+			$message = $this->plugin->txt ( "compilesSuccessfully" );
+			
+				$result = $this->parseMethodTypeDiagnostic ( $response );
+				$feedback = $this->generateMethodTypeFeedback ( $result );
+				if ($feedback == "") {
+					$result ['type'] = "success";
 				} else {
-					$message .= "\n".$this->plugin->txt("passedtest")." [" . $att ["name"] . "].";
-					if ( $result['type'] == null) {
-						$result ['type'] = "success";
-					}
+					$result ['type'] = "warning";
+					$message .= $feedback;
 				}
-			}
-			$result ['message' ] .= $message;
+				
+				$compareresults = $response->compareresults;
+				if (! ($compareresults === null) && (count ( $compareresults->children () ) > 0)) {
+					$groups = $compareresults->xpath ( "paramgroup" );
+					foreach ( $groups as $group ) {
+						$att = $group->attributes ();
+						$passed = $att ["equals"];
+						if ($passed == "false") {
+							$message .= "\n" . $this->plugin->txt ( "failedtest" ) . " [" . $att ["name"] . "].";
+							if ($result ['type'] == "success" || $result ['type'] == null) {
+								$result ['type'] = "warning";
+							}
+						} else {
+							$message .= "\n" . $this->plugin->txt ( "passedtest" ) . " [" . $att ["name"] . "].";
+							if ($result ['type'] == null) {
+								$result ['type'] = "success";
+							}
+						}
+					}
+					$result ['message'] .= $message;
+				}
 		} else {
 			$tdiagnose = $diagnostics->xpath ( 'diagnostic[@id=1]' ) [0];
 			$result ['type'] = "failure";
