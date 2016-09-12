@@ -120,6 +120,7 @@ public class FunctionEvaluator {
             Element element = request.getChild(person);
             Pair<DiagnostedMethodClass, CodeUnit> method = compileMethod(element);
             compareMethods(request, "student", "teacher");
+
         } catch ( EmptyCodeException e) {
             xml.error("Provided code was empty: "+e);
         } catch ( TooManyMethodsException e ) {
