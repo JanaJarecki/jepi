@@ -46,29 +46,71 @@ class ilAssProgQuestionEvalConnection {
 	 * @return array()
 	 */
 	static function compileTestNG($question, $code = null) {
+		$action = "compilestudenttestng";
 		if ($code == null) {
 			$code = $question->getSolution ();
+			$action = "compiletestng";
 		}
-		$evaluator = new ilAssProgQuestionEvalConnection ( $question, $code, "compile-test" );
+		$evaluator = new ilAssProgQuestionEvalConnection ( $question, $code, $action );
 		$evaluator->createTestNGXML ();
-		return $evaluator->evaluateIt ();
+		return $evaluator->evaluateIt ( array (
+				$evaluator,
+				'parseTestNGResponse' 
+		) );
 	}
 	
 	/**
 	 * Evaluate a solution against a test-case scenario.
 	 *
 	 * @param assProgQuestion $question        	
-	 * @param string $code       
-	 * @param array() $params 	
+	 * @param string $code        	
+	 * @param array() $params        	
 	 * @return array()
 	 */
-	static function runTestNG($question, $code = null, $params = array()) {
+	static function runTestNG($question, $code = null) {
 		if ($code == null) {
 			$code = $question->getSolution ();
 		}
-		$evaluator = new ilAssProgQuestionEvalConnection ( $question, $code, "run-test", $params );
+		$evaluator = new ilAssProgQuestionEvalConnection ( $question, $code, "runtestng", array () );
 		$evaluator->createTestNGXML ();
-		return $evaluator->evaluateIt ();
+		return $evaluator->evaluateIt ( array (
+				$evaluator,
+				'parseTestNGResponse' 
+		) );
+	}
+	
+	/**
+	 * Evaluate a solution against a test-case scenario.
+	 *
+	 * @param assProgQuestion $question        	
+	 * @param string $code        	
+	 * @param array() $params        	
+	 * @return array()
+	 */
+	static function runStudentTestNG($question, $code, $params) {
+		$evaluator = new ilAssProgQuestionEvalConnection ( $question, $code, "runstudenttestng", $params );
+		$evaluator->createTestNGXML ();
+		return $evaluator->evaluateIt ( array (
+				$evaluator,
+				'parseTestNGResponse' 
+		) );
+	}
+	
+	/**
+	 * Evaluate a solution against a test-case scenario.
+	 *
+	 * @param assProgQuestion $question        	
+	 * @param string $code        	
+	 * @param array() $params        	
+	 * @return array()
+	 */
+	static function feedbackStudentTestNG($question, $code, $params) {
+		$evaluator = new ilAssProgQuestionEvalConnection ( $question, $code, "feedbackstudenttestng", $params );
+		$evaluator->createTestNGXML ();
+		return $evaluator->evaluateIt ( array (
+				$evaluator,
+				'parseTestNGResponse' 
+		) );
 	}
 	
 	/**
@@ -81,10 +123,32 @@ class ilAssProgQuestionEvalConnection {
 	 * @return array()
 	 */
 	static function runCode($question, $code = null, $owner, $params = array()) {
-		$action = 'run-' . $owner;
+		$action = 'run' . $owner;
 		$evaluator = new ilAssProgQuestionEvalConnection ( $question, $code, $action, $params );
 		$evaluator->createFunctionXML ();
-		return $evaluator->evaluateIt ();
+		return $evaluator->evaluateIt ( array (
+				$evaluator,
+				'parseFunctionResponse' 
+		) );
+	}
+	
+	/**
+	 * Run a solution that should consists of one single function.
+	 *
+	 * @param assProgQuestion $question        	
+	 * @param string $code        	
+	 * @param string $owner        	
+	 * @param array $params        	
+	 * @return array()
+	 */
+	static function feedbackCode($question, $code = null, $owner, $params = array()) {
+		$action = 'feedback' . $owner;
+		$evaluator = new ilAssProgQuestionEvalConnection ( $question, $code, $action, $params );
+		$evaluator->createFunctionXML ();
+		return $evaluator->evaluateIt ( array (
+				$evaluator,
+				'parseFunctionResponse' 
+		) );
 	}
 	
 	/**
@@ -96,10 +160,13 @@ class ilAssProgQuestionEvalConnection {
 	 * @return array()
 	 */
 	static function compileCode($question, $code = null, $owner) {
-		$action = 'compile-' . $owner;
+		$action = 'compile' . $owner;
 		$evaluator = new ilAssProgQuestionEvalConnection ( $question, $code, $action );
 		$evaluator->createFunctionXML ();
-		return $evaluator->evaluateIt ();
+		return $evaluator->evaluateIt ( array (
+				$evaluator,
+				'parseFunctionResponse' 
+		) );
 	}
 	
 	/**
@@ -113,7 +180,10 @@ class ilAssProgQuestionEvalConnection {
 		$action = 'compare';
 		$evaluator = new ilAssProgQuestionEvalConnection ( $question, $code, $action );
 		$evaluator->createFunctionXML ();
-		return $evaluator->evaluateIt ();
+		return $evaluator->evaluateIt ( array (
+				$evaluator,
+				'parseFunctionResponse' 
+		) );
 	}
 	
 	/**
@@ -143,7 +213,7 @@ class ilAssProgQuestionEvalConnection {
 	 *
 	 * @return array()
 	 */
-	function evaluateIt() {
+	function evaluateIt(callable $result_parser) {
 		$this->plugin->includeClass ( "class.assProgQuestionConfig.php" );
 		$config = assProgQuestionConfig::_getStoredSettings ();
 		$address = $config ['ratingsystem_address'];
@@ -153,8 +223,11 @@ class ilAssProgQuestionEvalConnection {
 		if ($resultxml === FALSE) {
 			$result ['type'] = 'failure';
 			$result ['message'] = $this->plugin->txt ( 'connectionfail' ) . "\n\n $errstr ($errno)";
+		} elseif (empty ( $resultxml )) {
+			$result ['type'] = 'failure';
+			$result ['message'] = $this->plugin->txt ( 'emptyresponse' );
 		} else {
-			$result = $this->parseResponse ( $resultxml );
+			$result = $result_parser ( $resultxml );
 		}
 		
 		return $result;
@@ -203,14 +276,14 @@ class ilAssProgQuestionEvalConnection {
 		$xml->addChild ( 'action', $this->action );
 		
 		$solution = $xml->addChild ( 'solution' );
-		$this->addCode ( $solution, 'class', $this->student_code_id ++, $this->question->getSolution(), false );
-		if ( $this->action == "run-student-test") {
-			$this->addStudentParameterGroups( $solution, $this->student_parameters );
+		$this->addCode ( $solution, 'class', $this->student_code_id ++, $this->student_code, false );
+		if ($this->action == "runstudenttestng") {
+			$this->addStudentParameterGroups ( $solution, $this->student_parameters );
 		}
 		
-		$test = $xml->addChild ( 'test' );
-		$this->addCode ( $test, 'testcode', $this->teacher_code_id ++, $this->question->getTestCode(), false );
-		$this->addTestParameterGroups ( $test, $this->question->getTestParameterset () );
+		$test = $xml->addChild ( 'testgroup' );
+		$this->addCode ( $test, 'testcode', $this->teacher_code_id ++, $this->question->getTestCode (), false );
+		$this->addTests ( $test, $this->question->getTestParameterset () );
 		
 		$this->xml = $xml->asXML ();
 	}
@@ -237,13 +310,35 @@ class ilAssProgQuestionEvalConnection {
 	 * @param SimpleXMLElement $xml        	
 	 * @param array[] $paramgroups        	
 	 */
+	private function addTests($xml, $paramgroups) {
+		foreach ( $paramgroups as $pid => $paramObject ) {
+			$points = $paramObject->getPoints ();
+			$description = $paramObject->getName ();
+			$testName = $paramObject->getParams ();
+			
+			$xmlparamgroup = $xml->addChild ( 'test' );
+			$xmlparamgroup->addAttribute ( 'id', $pid );
+			$xmlparamgroup->addAttribute ( 'name', $testName );
+			$xmlparamgroup->addAttribute ( 'description', $description );
+			if ($points != NULL)
+				$xmlparamgroup->addAttribute ( 'points', $points );
+		}
+	}
+	
+	/**
+	 *
+	 * @param SimpleXMLElement $xml        	
+	 * @param array[] $paramgroups        	
+	 */
 	private function addTestParameterGroups($xml, $paramgroups) {
 		foreach ( $paramgroups as $pid => $paramObject ) {
 			$points = $paramObject->getPoints ();
-			$paramgroup = $paramObject->getAnswertext ();
+			$paramgroup = $paramObject->getParams ();
+			$desc = $paramObject->getName ();
 			
 			$xmlparamgroup = $xml->addChild ( 'paramgroup' );
 			$xmlparamgroup->addAttribute ( 'id', $pid );
+			$xmlparamgroup->addAttribute ( 'description', $desc );
 			
 			$this->addTestParameters ( $xmlparamgroup, $paramgroup );
 			
@@ -268,9 +363,9 @@ class ilAssProgQuestionEvalConnection {
 	}
 	
 	/**
-	 * 
-	 * @param SimpleXMLElement $xml
-	 * @param array[] $params
+	 *
+	 * @param SimpleXMLElement $xml        	
+	 * @param array[] $params        	
 	 */
 	private function addTestParameters($xml, $params) {
 		$paramsarray = explode ( ';', $params );
@@ -316,6 +411,108 @@ class ilAssProgQuestionEvalConnection {
 		
 		return $result;
 	}
+	private function parseTestNGResponse($response) {
+		$xml = new SimpleXMLElement ( $response );
+		if ($xml->error) {
+			$result ['type'] = 'failure';
+			$result ['message'] = $this->plugin->txt ( 'errorresponse' ) . "\n" . $this->parseErrors ( $xml );
+			return $result;
+		}
+		
+		switch ($this->action) {
+			case "compiletestng" :
+				return $this->parseCompileTestNGResponse ( $xml );
+				break;
+			case "compilestudenttestng" :
+				return $this->parseCompileTestNGResponse ( $xml );
+				break;
+			case "runtestng" :
+				return $this->parseRunTestNGResponse ( $xml );
+				break;
+			case "runstudenttestng" :
+				return $this->parseStudentTestNGResponse ( $xml );
+				break;
+			case "feedbackstudenttestng" :
+				return $this->parseRunTestNGResponse ( $xml );
+				break;
+			default :
+				$result ['type'] = 'failure';
+				$result ['message'] = 'FAILURE: Could not parse response from evaluation server.';
+		}
+		
+		return $result;
+	}
+	private function parseCompileTestNGResponse($xml) {
+		$response = $xml->compiletestng;
+		$diagnostics = $response->diagnostics;
+		if ($diagnostics === null || count ( $diagnostics->children () ) == 0) {
+			$result ['type'] = "success";
+			$result ['message'] = $this->plugin->txt ( "compilesSuccessfully" );
+		} else {
+			$result ['type'] = "failure";
+			$testDiag = $diagnostics->xpath ( 'diagnostic[@id=1]' ) [0];
+			if ($testDiag->line) {
+				$result ['message'] = $this->plugin->txt ( "compileErrorAtLine" ) . $testDiag->line . "\n\t" . $testDiag->message;
+			} else {
+				$result ['message'] = "\t" . $testDiag->message;
+			}
+		}
+		return $result;
+	}
+	private function parseRunTestNGResponse($xml) {
+		$result = $this->parseCompileTestNGResponse ( $xml );
+		if ($result ['type'] == "failure")
+			return $result;
+		
+		$response = $xml->runtestng;
+		$tests = $response->tests;
+		$reachedTotalPoints = true;
+		foreach ( $tests->xpath ( "test" ) as $test ) {
+			$att = $test->attributes ();
+			if ($att ["passed"] == "true") {
+				$result ['message'] .= "\n ".$this->plugin->txt("passedtest")." [" . $att ["description"] . "].";
+				$result ['points'] += $att ["reachedPoints"];
+			} elseif ($att ["passedPartially"] == "true") {
+				$result ['message'] .= "\n".$this->plugin->txt("partialtest")." [" . $att ["description"] . "].";
+				$reachedTotalPoints = false;
+			} else {
+				$result ['message'] .= "\n".$this->plugin->txt("failedtest")." [" . $att ["description"] . "] ";
+				$reachedTotalPoints = false;
+			}
+		}
+		if (! $reachedTotalPoints) {
+			$result ['type'] = "warning";
+		}
+		return $result;
+	}
+	private function parseStudentTestNGResponse($xml) {
+		$result = $this->parseCompileTestNGResponse ( $xml );
+		if ($result ['type'] == "failure")
+			return $result;
+		
+		$message = '';
+		$runresults = $xml->runstudenttestng->runresults;
+		if (! ($runresults === null) && (count ( $runresults->children () ) > 0)) {
+			$groups = $runresults->xpath ( "paramgroup" );
+			foreach ( $groups as $group ) {
+				$params = $group->xpath ( "params" );
+				foreach ( $params as $param ) {
+					$att = $param->attributes ();
+					$message .= "\nRUN WITH PARAMETERS" . $att ["params"] . ":\n" . $param;
+				}
+			}
+		}
+		$result ['message'] .= $message;
+		return $result;
+	}
+	private function parseErrors($xml) {
+		$message = '';
+		$errors = $xml->error;
+		foreach ( $errors->xpath ( "error" ) as $error ) {
+			$message .= "=== [ERROR DURING EXECUTION] ===\n" . $error;
+		}
+		return $message;
+	}
 	
 	/**
 	 *
@@ -324,14 +521,8 @@ class ilAssProgQuestionEvalConnection {
 	 * @param unknown $errstr        	
 	 * @return string
 	 */
-	private function parseResponse($response) {
-		if (empty ( $response )) {
-			$result ['type'] = 'failure';
-			$result ['message'] = $this->plugin->txt ( 'emptyresponse' );
-			return $result;
-		}
+	private function parseFunctionResponse($response) {
 		$xml = new SimpleXMLElement ( $response );
-		
 		if ($xml->error) {
 			$result ['type'] = 'failure';
 			$result ['message'] = $this->plugin->txt ( 'errorresponse' ) . "\n" . $xml->error;
@@ -339,31 +530,38 @@ class ilAssProgQuestionEvalConnection {
 		}
 		
 		switch ($this->action) {
-			case "compile-teacher" :
-				return $this->parseCompileTeacherResponse ( $xml );
+			case "compileteacher" :
+				return $this->parseCompileResponse ( $xml );
 				break;
-			case "compile-student" :
+			case "compilestudent" :
+				return $this->parseCompileResponse ( $xml );
 				break;
-			case "run-teacher" :
+			case "runteacher" :
 				return $this->parseRunResponse ( $xml );
 				break;
-			case "run-student" :
+			case "runstudent" :
 				return $this->parseRunResponse ( $xml );
+				break;
+			case "feedbackstudent" :
+				return $this->parseFeedbackResponse ( $xml );
 				break;
 			case "compare" :
 				return $this->parseCompareResponse ( $xml );
 				break;
 			default :
+				$result ['type'] = 'failure';
+				$result ['message'] = "Could not parse response action: " . $this->action;
 		}
 		
 		return $result;
 	}
+	
 	/**
 	 *
 	 * @param unknown $xml        	
 	 * @return string
 	 */
-	private function parseCompileTeacherResponse($xml) {
+	private function parseCompileResponse($xml) {
 		$response = $xml->compilemethod;
 		$diagnostics = $response->diagnostics;
 		if ($diagnostics === null || count ( $diagnostics->children () ) == 0) {
@@ -371,7 +569,7 @@ class ilAssProgQuestionEvalConnection {
 			$result ['message'] = $this->plugin->txt ( "compilesSuccessfully" );
 		} else {
 			$tdiagnose = $diagnostics->xpath ( 'diagnostic[@id=1]' ) [0];
-			$result ['type'] = "compile error";
+			$result ['type'] = "failure";
 			$result ['message'] = $this->plugin->txt ( "compileErrorAtLine" ) . $tdiagnose->line . "\n\t" . $tdiagnose->message;
 		}
 		return $result;
@@ -385,13 +583,18 @@ class ilAssProgQuestionEvalConnection {
 	private function parseRunResponse($xml) {
 		$response = $xml->runmethod;
 		$diagnostics = $response->diagnostics;
-		if ($diagnostics === null || count ( $diagnostics->children () ) == 0) { // we rely only on children && count($diagnostics->attributes())==0 ) {
-			$result ['type'] = "success";
-			
+		if ($diagnostics === null || count ( $diagnostics->children () ) == 0) {
 			$message = $this->plugin->txt ( "compilesSuccessfully" );
-			$message .= $this->parseMethodTypeDiagnostic ( $response );
-			$message .= "\n" . $this->plugin->txt ( "runningMethodWithParametersLeadTo" );
+			$result = $this->parseMethodTypeDiagnostic ( $response );
+			$feedback = $this->generateMethodTypeFeedback ( $result );
+			if ($feedback == "") {
+				$result ['type'] = "success";
+			} else {
+				$result ['type'] = "warning";
+				$message .= $feedback;
+			}
 			
+			$message .= "\n" . $this->plugin->txt ( "runningMethodWithParametersLeadTo" );
 			$runresults = $response->runresults;
 			if (! ($runresults === null) && (count ( $runresults->children () ) > 0)) {
 				$groups = $runresults->xpath ( "paramgroup" );
@@ -399,14 +602,57 @@ class ilAssProgQuestionEvalConnection {
 					$params = $group->xpath ( "params" );
 					foreach ( $params as $param ) {
 						$att = $param->attributes ();
-						$message .= "\n" . $att ["params"] . " => " . $att ["value"];
+						if ($att["error"] ) {
+							$message .= "\n" . $att ["params"] . " => " . $param;
+							$result ['type'] = "warning";
+						} else {
+							$message .= "\n" . $att ["params"] . " => " . $att ["value"];
+						}
 					}
 				}
 			}
+			
 			$result ['message'] = $message;
 		} else {
 			$tdiagnose = $diagnostics->xpath ( 'diagnostic[@id=1]' ) [0];
-			$result ['type'] = "compile error";
+			$result ['type'] = "failure";
+			$result ['message'] = $this->plugin->txt ( "compileErrorAtLine" ) . $tdiagnose->line . "\n\t" . $tdiagnose->message;
+		}
+		return $result;
+	}
+	
+	/**
+	 *
+	 * @param unknown $xml        	
+	 * @return string
+	 */
+	private function parseFeedbackResponse($xml) {
+		
+		$compareresults = $xml->comparemethods->compareresults;
+
+		$result ['type'] = "success";
+		$result ['message'] = "";
+		if (! ($compareresults === null) && (count ( $compareresults->children () ) > 0)) {
+			$groups = $compareresults->xpath ( "paramgroup" );
+			foreach ( $groups as $group ) {
+				$att = $group->attributes ();
+				$passed = $att ["equals"];
+				if ($passed == "false") {
+					$message .= "\n".$this->plugin->txt("failedtest")." [" . $att ["name"] . "].";
+					if ($result ['type'] == "success" || $result['type'] == null) {
+						$result ['type'] = "warning";
+					}
+				} else {
+					$message .= "\n".$this->plugin->txt("passedtest")." [" . $att ["name"] . "].";
+					if ( $result['type'] == null) {
+						$result ['type'] = "success";
+					}
+				}
+			}
+			$result ['message' ] .= $message;
+		} else {
+			$tdiagnose = $diagnostics->xpath ( 'diagnostic[@id=1]' ) [0];
+			$result ['type'] = "failure";
 			$result ['message'] = $this->plugin->txt ( "compileErrorAtLine" ) . $tdiagnose->line . "\n\t" . $tdiagnose->message;
 		}
 		return $result;
@@ -423,7 +669,11 @@ class ilAssProgQuestionEvalConnection {
 		if ($diagnostics === null || count ( $diagnostics->children () ) == 0) { // we rely only on children && count($diagnostics->attributes())==0 ) {
 			$result ['type'] = "success";
 			$result ['message'] = "";
-			$this->parseMethodTypeDiagnostic ( $response, $result );
+			$result ['iterative'] = false;
+			$result ['recursive'] = false;
+			$result = array_merge ( $result, $this->parseMethodTypeDiagnostic ( $response ) );
+			$feedback = $this->generateMethodTypeFeedback ( $result );
+			// TODO: add feedback to message displayed to user
 			
 			$message = $this->plugin->txt ( "compilesSuccessfully" );
 			
@@ -451,38 +701,49 @@ class ilAssProgQuestionEvalConnection {
 	
 	/**
 	 *
+	 * @param array() $result        	
+	 */
+	private function generateMethodTypeFeedback($result) {
+		$feedback = "";
+		$loop = $result ['iterative'];
+		$recursive = $result ['recursive'];
+		if ($this->question->getCheckIterative ()) {
+			if (! is_null ( $loop ) && ! $loop) {
+				$feedback .= "\n" . $this->plugin->txt ( "iterationReuiredNotFound" );
+			}
+		}
+		if ($this->question->getForbidIterative ()) {
+			if (! is_null ( $loop ) && $loop) {
+				$feedback .= "\n" . $this->plugin->txt ( "iterationFoundNotAllowed" );
+			}
+		}
+		if ($this->question->getCheckRecursive ()) {
+			if (! is_null ( $recursive ) && ! $recursive) {
+				$feedback .= "\n" . $this->plugin->txt ( "recursionReuiredNotFound" );
+			}
+		}
+		if ($this->question->getForbidRecursive ()) {
+			if (! is_null ( $recursive ) && $recursive) {
+				$feedback .= "\n" . $this->plugin->txt ( "recursionFoundNotAllowed" );
+			}
+		}
+		return $feedback;
+	}
+	
+	/**
+	 *
 	 * @todo use language pack
 	 * @param unknown $element        	
 	 * @return string
 	 */
 	private function parseMethodTypeDiagnostic($element) {
-		$feedback = '';
+		$result = array ();
 		$diagnose = $element->methodtypediagnostics;
 		if (! ($diagnose === null) && (count ( $diagnose->children () ) > 0)) {
-			$loop = $diagnose->loop;
-			$recursive = $diagnose->recursive;
-			if ($this->question->getCheckIterative ()) {
-				if ($loop != null && $loop == "false") {
-					$feedback .= "\n" . $this->plugin->txt ( "iterationReuiredNotFound" );
-				}
-			}
-			if ($this->question->getForbidIterative ()) {
-				if ($loop != null && $loop == "true") {
-					$feedback .= "\n" . $this->plugin->txt ( "iterationFoundNotAllowed" );
-				}
-			}
-			if ($this->question->getCheckRecursive ()) {
-				if ($recursive != null && $recursive == "false") {
-					$feedback .= "\n" . $this->plugin->txt ( "recursionReuiredNotFound" );
-				}
-			}
-			if ($this->question->getForbidRecursive ()) {
-				if ($recursive != null && $recursive == "true") {
-					$feedback .= "\n" . $this->plugin->txt ( "recursionFoundNotAllowed" );
-				}
-			}
+			$result ['iterative'] = $diagnose->loop == "true";
+			$result ['recursive'] = $diagnose->recursive == "true";
 		}
-		return $feedback;
+		return $result;
 	}
 	
 	/**

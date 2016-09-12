@@ -40,6 +40,13 @@ class assProgQuestionDBConnection {
 	static function getParameterTableName() {
 		return "il_qpl_qst_prog_params";
 	}
+	
+	/**
+	 *
+	 * @param unknown $prog_question        	
+	 * @param unknown $active_id        	
+	 * @param unknown $pass        	
+	 */
 	public static function loadStudentSolution($prog_question, $active_id, $pass) {
 		$result = $ilDB->queryF ( "SELECT * FROM tst_solutions WHERE active_fi = %s AND question_fi = %s AND pass = %s", array (
 				'integer',
@@ -50,12 +57,16 @@ class assProgQuestionDBConnection {
 				$prog_question->getId (),
 				$pass 
 		) );
-		while ( $data = $ilDB->fetchAssoc ( $result ) ) { // TODO was tun bei mehreren results??
-		                                                  // Programmcode finden - data1, data2 entspricht key, value
+		$params = array ();
+		$points = array ();
+		$studentcode = "";
+		while ( $data = $ilDB->fetchAssoc ( $result ) ) {
 			if ($data ['value1'] == 'progquest_studentsolution') {
-				$params = array ();
-				$points = array ();
 				$studentcode = $data ['value2'];
+			}
+			if ($data ['value1'] == 'progquest_studentparams') {
+				$params = $data ['value2'];
+				
 			}
 		}
 	}
@@ -75,35 +86,59 @@ class assProgQuestionDBConnection {
 				$prog_question->getId () 
 		) );
 		
-// 		$affectedRows = $ilDB->manipulateF ( "INSERT INTO " . self::getFunctionQuestionTableName () . " (question_fi, solution, check_recursive, check_iterative, forbid_recursive, forbid_iterative, quest_type, test_code)" . " VALUES (%s, %s, %s, %s, %s, %s, %s, %s)", array (
-// 				'integer',
-// 				'text',
-// 				'integer',
-// 				'integer',
-// 				'integer',
-// 				'integer',
-// 				'text',
-// 				'clob' 
-// 		), array (
-// 				$prog_question->getId (),
-// 				$prog_question->getSolution (),
-// 				( int ) $prog_question->getCheckRecursive (),
-// 				( int ) $prog_question->getCheckIterative (),
-// 				( int ) $prog_question->getForbidRecursive (),
-// 				( int ) $prog_question->getForbidIterative (),
-// 				( string ) $prog_question->getProgQuestionType (),
-// 				( string ) $prog_question->getTestCode () 
-// 		) );
-		$affectedRows = $ilDB->insert ( self::getFunctionQuestionTableName () , array (
-				"question_fi" => array('integer',$prog_question->getId ()),
-				"solution" => array('text',$prog_question->getSolution ()),
-				"check_recursive" => array('integer',( int ) $prog_question->getCheckRecursive ()),
-				"check_iterative" => array('integer',( int ) $prog_question->getCheckIterative ()),
-				"forbid_recursive" => array('integer',( int ) $prog_question->getForbidRecursive ()),
-				"forbid_iterative" => array('integer',( int ) $prog_question->getForbidIterative ()),
-				"quest_type" => array('text',( string ) $prog_question->getProgQuestionType ()),
-				"test_code" => array('clob',( string ) $prog_question->getTestCode ())
-		));
+		// $affectedRows = $ilDB->manipulateF ( "INSERT INTO " . self::getFunctionQuestionTableName () . " (question_fi, solution, check_recursive, check_iterative, forbid_recursive, forbid_iterative, quest_type, test_code)" . " VALUES (%s, %s, %s, %s, %s, %s, %s, %s)", array (
+		// 'integer',
+		// 'text',
+		// 'integer',
+		// 'integer',
+		// 'integer',
+		// 'integer',
+		// 'text',
+		// 'clob'
+		// ), array (
+		// $prog_question->getId (),
+		// $prog_question->getSolution (),
+		// ( int ) $prog_question->getCheckRecursive (),
+		// ( int ) $prog_question->getCheckIterative (),
+		// ( int ) $prog_question->getForbidRecursive (),
+		// ( int ) $prog_question->getForbidIterative (),
+		// ( string ) $prog_question->getProgQuestionType (),
+		// ( string ) $prog_question->getTestCode ()
+		// ) );
+		$affectedRows = $ilDB->insert ( self::getFunctionQuestionTableName (), array (
+				"question_fi" => array (
+						'integer',
+						$prog_question->getId () 
+				),
+				"solution" => array (
+						'text',
+						$prog_question->getSolution () 
+				),
+				"check_recursive" => array (
+						'integer',
+						( int ) $prog_question->getCheckRecursive () 
+				),
+				"check_iterative" => array (
+						'integer',
+						( int ) $prog_question->getCheckIterative () 
+				),
+				"forbid_recursive" => array (
+						'integer',
+						( int ) $prog_question->getForbidRecursive () 
+				),
+				"forbid_iterative" => array (
+						'integer',
+						( int ) $prog_question->getForbidIterative () 
+				),
+				"quest_type" => array (
+						'text',
+						( string ) $prog_question->getProgQuestionType () 
+				),
+				"test_code" => array (
+						'clob',
+						( string ) $prog_question->getTestCode () 
+				) 
+		) );
 	}
 	
 	/**
@@ -126,19 +161,21 @@ class assProgQuestionDBConnection {
 			 * @var ASS_AnswerMultipleResponseImage $answer_obj
 			 */
 			// $answer_obj = $prog_question->getTestParameterSet()[$key]; // TODO bringt das was? sieht redundant aus.
-			if ($answer_obj->getAnswertext () != NULL) {
+			if ($answer_obj->getParams () != NULL) {
 				$next_id = $ilDB->nextId ( self::getParameterTableName () );
 				// answer_id,question_fi,params,points,aorder
-				$ilDB->manipulateF ( "INSERT INTO " . self::getParameterTableName () . " (answer_id, question_fi, params, points, aorder) VALUES (%s, %s, %s, %s, %s)", array (
+				$ilDB->manipulateF ( "INSERT INTO " . self::getParameterTableName () . " (answer_id, question_fi, paramset_name, params, points, aorder) VALUES (%s, %s, %s, %s, %s, %s)", array (
 						'integer',
 						'integer',
+						'text',
 						'text',
 						'float',
 						'integer' 
 				), array (
 						$next_id,
 						$prog_question->getId (),
-						$answer_obj->getAnswertext (),
+						$answer_obj->getName (),
+						$answer_obj->getParams (),
 						$answer_obj->getPoints (),
 						$answer_obj->getOrder () 
 				) );
@@ -210,7 +247,7 @@ class assProgQuestionDBConnection {
 			include_once "./Modules/TestQuestionPool/classes/class.assAnswerBinaryStateImage.php";
 			while ( $data = $ilDB->fetchAssoc ( $result ) ) {
 				// $data = $ilDB->fetchAssoc($result);
-				$prog_question->addTestParameterset ( $data ["params"], $data ["points"], $data ["aorder"] );
+				$prog_question->addTestParameterset ( $data["paramset_name"], $data ["params"], $data ["points"], $data ["aorder"] );
 				// array_push($this->test_parameterset, new ASS_AnswerBinaryStateImage($data["answertext"], $data["points"], $data["aorder"], 1, $data["imagefile"]));
 			}
 			return true;

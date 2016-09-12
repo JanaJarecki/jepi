@@ -4,9 +4,13 @@
 <!-- END feedback -->
 
 <textarea style="border: 1px solid red;" name="prog_area" id="prog_area" class="noRTEditor"  wrap="virtual" cols="100" rows="10" style="width:90%;">{SOLUTION_ON_WORK}</textarea>
-<!--  BEGIN paramscompile --><br /><input type="text" id="prog_params" name="prog_params" /><input type="submit" class="submit" name="cmd[{CMD_COMPILE}]" value="{TEXT_COMPILE}" />
+<!--  BEGIN paramscompile --><br />
+<button type="submit" class="submit" name="cmd[{CMD_COMPILE}]" value="Compile">{TEXT_COMPILE}</button>
+<button type="submit" class="submit" name="cmd[{CMD_RUN}]" value="Run">{TEXT_RUN}</button>
+<input type="text" id="prog_params" name="prog_params" value="{STUD_PARAMS_INPUT}"/>
+<button type="submit" class="submit" name="cmd[{CMD_FEEDBACK}]" value="Feedback">{TEXT_FEEDBACK}</button>
 <div style="margin-top: 3px; margin-left: 3px;">
-	<label for="prog_params" class="subtitle">{TEXT_PARAMS}</span>
+	<label for="prog_params" class="subtitle">{TEXT_PARAMS}</label>
 </div>
 <!--  END paramscompile -->
 

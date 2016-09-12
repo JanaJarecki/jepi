@@ -188,7 +188,8 @@ class assProgQuestionGUIComponentFactory {
 	
 	public function parameters($parameterSet,$testSituation) {
 		include_once 'class.ilProgQuestionParaInputGUI.php';
-		include_once "./Modules/TestQuestionPool/classes/class.assAnswerBinaryStateImage.php";
+		
+		$this->plugin->includeClass ( "class.assProgQuestionParameters.php" );
 		$choices = new ilProgQuestionParaInputGUI ( $this->txt ( "testparams" ), "choice" );
 		$choices->setRequired ( false );
 		//$choices->setQuestionObject ( $question );
@@ -201,7 +202,7 @@ class assProgQuestionGUIComponentFactory {
 		}
 		$params = array();
 		if (count ( $parameterSet ) < 1) {
-			array_push($params,new ASS_AnswerBinaryStateImage ( "", 0, 0, 1, "" ) );
+			array_push($params,new assProgQuestionParameters("", "", 0, 1) );
 		} else {
 			$params = $parameterSet;
 		}

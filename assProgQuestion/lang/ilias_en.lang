@@ -13,16 +13,21 @@ paraminfo#:#The learner-supplied function is compared to the above solution by e
 solutioninfo#:#This function should return the same values that you want the learner's function to return. Note that the actual code is NOT compared, only the return values. You can test your function using the parameters below by clicking "Save and Compile".
 compile#:#Compile
 run#:#Run
-compilesSuccessfully#:#The method compiled without errors.
+feedback#:#Feedback
+compilesSuccessfully#:#The code compiled without errors.
 compileErrorAtLine#:#Compile error at line: 
 runningMethodWithParametersLeadTo#:#The results running the method with the provided parameters are:
 connectionfail#:#Could not connect to rating system. Please check that the rating system is running and reachable at the configured address.
 emptyresponse#:#The rating system did not respond.
 errorresponse#:#The rating system gave an error response.
 studcompile#:#Compile
-studparams#:#Enter parameter values for testing. If your method uses multiple parameters, seperate them by comma (,).
+studparams#:#Enter parameter values for testing. Seperate multiple parameters by comma (,).
+studmain#:#Enter parameter values for running the main method. Seperate multiple parameters by comma (,).
 studcodecompiles#:#Your code was successfully compiled.
 studcodedoesnotcompile#:#Your code could not be compiled.
+passedtest#:#PASSED test with
+partialtest#:#PARTIALLY PASSED test with
+failedtest#:#FAILED test with
 codestructure#:#Code structure
 nostructure#:#Do not check
 nostructureinfo#:#Code will only be rated based on its return values. 

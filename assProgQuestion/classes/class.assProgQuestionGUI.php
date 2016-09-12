@@ -149,8 +149,10 @@ class assProgQuestionGUI extends assQuestionGUI {
 		// Delete all existing answers and create new answers from the form data
 		$this->object->flushParams ();
 		foreach ( $_POST ['choice'] ['answer'] as $index => $answer ) {
-			$answertext = $answer;
-			$this->object->addTestParameterset ( $answertext, $_POST ['choice'] ['points'] [$index], $index );
+			$name =  $_POST ['choice'] ['name'] [$index];
+			$params = $answer;
+			$points = $_POST ['choice'] ['points'] [$index];
+			$this->object->addTestParameterset ( $name, $params, $points, $index );
 		}
 	}
 	
@@ -485,6 +487,7 @@ class assProgQuestionGUI extends assQuestionGUI {
 	 */
 	function renderStudentView($active_id, $pass = NULL, $is_postponed = FALSE, $use_post_solutions = FALSE, $show_feedback = FALSE) {
 		$user_solution = "";
+		$user_params = "";
 		
 		if ($active_id) {
 			$solutions = NULL;
@@ -500,6 +503,8 @@ class assProgQuestionGUI extends assQuestionGUI {
 					$user_solution = $solution_value ['value2'];
 				} elseif (strpos ( $solution_value ['value1'], 'progquest_ratingsystemresponse_' ) === 0) {
 					$rating_system_response [substr ( $solution_value ['value1'], 31 )] = $solution_value ['value2'];
+				} elseif ($solution_value ['value1'] == 'progquest_studentparams' ) {
+					$user_params = $solution_value['value2'];
 				}
 			}
 		}
@@ -511,19 +516,33 @@ class assProgQuestionGUI extends assQuestionGUI {
 		$template->setVariable ( "SOLUTION_ON_WORK", ilUtil::prepareFormOutput ( $user_solution ) );
 		$questiontext = $this->object->getQuestion ();
 		$template->setVariable ( "QUESTIONTEXT", $this->object->prepareTextareaOutput ( $questiontext, TRUE ) );
-		// Setting these variables seems to trigger display of the containing block, too
+		
+		$template->setVariable ( "CMD_RUN", 'handleQuestionAction' );
+		$template->setVariable ( "TEXT_RUN", $pl->txt ( "run" ) );
+		
 		$template->setVariable ( "CMD_COMPILE", 'handleQuestionAction' );
 		$template->setVariable ( "TEXT_COMPILE", $pl->txt ( "studcompile" ) );
-		$template->setVariable ( "TEXT_PARAMS", $pl->txt ( "studparams" ) );
+		$template->setVariable( "STUD_PARAMS_INPUT", $user_params) ;
+		$template->setVariable ( "CMD_FEEDBACK", 'handleQuestionAction' );
+		$template->setVariable ( "TEXT_FEEDBACK", $pl->txt ( "feedback" ) );
+		
+		if ( $this->object->getProgQuestionType() == "function_original") {
+			$template->setVariable ( "TEXT_PARAMS", $pl->txt ( "studparams" ) );
+		} else {
+			$template->setVariable ( "TEXT_PARAMS", $pl->txt ( "studmain" ) );
+		}
 		
 		if ($rating_system_response) {
 			// TODO Doppelung mit Edit-Formular, eigene Methode?
 			switch ($rating_system_response ['type']) {
 				case 'success' :
-					ilUtil::sendSuccess ( nl2br ( htmlspecialchars ( $rating_system_response ['message'] . "\n\n" . $rating_system_response ['paramsreturn'] ) ) );
+					ilUtil::sendSuccess ( nl2br ( htmlspecialchars ( $rating_system_response ['message'] ) ) ); // . "\n\n" . $rating_system_response ['paramsreturn'] 
 					break;
 				case 'failure' :
-					ilUtil::sendFailure ( nl2br ( htmlspecialchars ( $rating_system_response ['message'] . "\n\n" . $rating_system_response ['diagnostics'] ) ) );
+					ilUtil::sendFailure ( nl2br ( htmlspecialchars ( $rating_system_response ['message']  ) ) ); // . "\n\n" . $rating_system_response ['diagnostics']
+					break;
+				case 'warning' :
+					ilUtil::sendQuestion ( nl2br ( htmlspecialchars ( $rating_system_response ['message'] ) ) );
 					break;
 				default :
 					ilUtil::sendInfo ( nl2br ( htmlspecialchars ( $rating_system_response ['message'] ) ) );

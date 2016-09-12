@@ -196,3 +196,12 @@ $ilDB->addTableColumn('il_qpl_qst_prog_quest', 'test_code', array (
 		'type' => 'clob'
 ));
 ?>
+<#12>
+<?php 
+$ilDB->addTableColumn('il_qpl_qst_prog_params', 'paramset_name', array (
+		'type' => 'text',
+				'length' => 4000,
+				'default' => '',
+				'notnull' => true 
+));
+?>

@@ -13,6 +13,7 @@ paraminfo#:#Die Lösung des Testteilnehmers wird mit der obigen Lösung verglich
 solutioninfo#:#Diese Funktion sollte genau die Werte zurückgeben, die vom Code des Teilnehmers erwartet werden. Beachten Sie, dass NICHT der Code selbst, sondern nur die Rückgabewerte verglichen werden. Sie können die Funktion mit den unten angegebenen Parametern testen, indem Sie auf "Speichern und Compilieren" drücken.
 compile#:#Kompilieren
 run#:#Ausführen
+feedback#:#Feedback
 compilesSuccessfully#:#Der Java-Code kompiliert ohne Fehler.
 compileErrorAtLine#:#Kompiler-Fehler auf Zeile: 
 runningMethodWithParametersLeadTo#:#Die Rückgabewerte der Methoden für die angegebenen Parameter sind:
@@ -20,9 +21,13 @@ connectionfail#:#Konnte keine Verbindung zum Bewertungssystem aufbauen. Bitte pr
 emptyresponse#:#Das Bewertungssystem sendete keine Antwort.
 errorresponse#:#Das Bewertungssystem meldete einen Fehler.
 studcompile#:#Compilieren
-studparams#:#Geben Sie Parameterwerte zum Testen ein. Falls Ihre Methode mehrere Parameter benötigt, trennen Sie diese durch Kommata (,).
+studparams#:#Geben Sie Parameterwerte zum Testen ein. Trennen Sie Parameter durch Kommata (,).
+studmain#:#Geben Sie Parameterwerte zum Starten Ihrer main-Methode ein. Trennen Sie Parameter durch Kommata (,).
 studcodecompiles#:#Ihr Code wurde erfolgreich kompiliert.
 studcodedoesnotcompile#:#Ihr Code konnte nicht kompiliert werden.
+passedtest#:#BESTANDENER Test mit
+partialtest#:#TEILWEISE BESTANDENER Test mit 
+failedtest#:#FEHLGESCHLAGENER Test mit
 codestructure#:#Strukturanforderungen
 nostructure#:#Keine Anforderungen
 nostructureinfo#:#Es werden keine zusätzlichen Prüfungen ausgeführt. Code wird ausschließlich durch Prüfung der Ergebnisse bewertet.
