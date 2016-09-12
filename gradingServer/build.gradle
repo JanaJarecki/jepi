@@ -1,0 +1,23 @@
+apply plugin: 'java'
+
+repositories {
+    mavenCentral()
+}
+
+dependencies {
+    compile group: 'org.testng', name: 'testng', version: '6.9.+'
+    compile group: 'de.defmacro', name: 'eclipse-astparser', version: '8.+'
+    compile group: 'org.jdom', name: 'jdom2', version: '2.0.5'
+}
+
+//create a single Jar with all dependencies
+task fatJar(type: Jar) {
+    manifest {
+        attributes 'Implementation-Title': 'Gradle Jar File Example',
+                   'Implementation-Version': 0.1,
+                   'Main-Class': 'evaluationbasics.RunServer'
+    }
+    baseName = project.name + '-all'
+        from { configurations.compile.collect { it.isDirectory() ? it : zipTree(it) } }
+    with jar
+}
