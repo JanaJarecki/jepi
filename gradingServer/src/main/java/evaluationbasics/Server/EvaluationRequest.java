@@ -65,10 +65,10 @@ public class EvaluationRequest extends Thread {
             return;
         }
 
-        System.out.println();
-        System.out.println("#######################");
-        System.out.println("# XML request #########");
-        System.out.println(new XMLOutputter(Format.getPrettyFormat()).outputString(doc));
+//        System.out.println();
+//        System.out.println("#######################");
+//        System.out.println("# XML request #########");
+//        System.out.println(new XMLOutputter(Format.getPrettyFormat()).outputString(doc));
 
         Element eRoot = doc.getRootElement();
         Element eType = eRoot.getChild("type");
@@ -102,9 +102,9 @@ public class EvaluationRequest extends Thread {
 
     protected final void sendResponse(Document pReturnDoc) {
 
-        System.out.println("- XML xml --------");
-        System.out.println(new XMLOutputter(Format.getPrettyFormat()).outputString(pReturnDoc));
-        System.out.println("#######################");
+//        System.out.println("- XML xml --------");
+//        System.out.println(new XMLOutputter(Format.getPrettyFormat()).outputString(pReturnDoc));
+//        System.out.println("#######################");
 
         try {
             EvaluationHelper.setStringToOutputStream(CLIENT.getOutputStream(), new XMLOutputter().outputString(pReturnDoc));
