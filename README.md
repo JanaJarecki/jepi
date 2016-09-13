@@ -23,6 +23,8 @@ This plugin was inspired by the assExampleQuestion plugin developed by:
 
 Universität Köln, uni-koeln.de :
 
+* Manuel Molina Madrid
+* Daniel Lückerath
 * Matthias Lohmann
 * Sebastian Koch
 * Roman Bange
