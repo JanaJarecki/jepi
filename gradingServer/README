@@ -1,7 +1,19 @@
+# Grading Server
+
+The grading server is the backend of JEPI, the Java Exercise Plugin for Ilias.
+
+## Requirements
+
+You need to have the following software installed:
+- Gradle, a build tool for java.
+- Java 8, as the server uses lambdas. Note that it does not need to be the systems default java. It only has to be configured and set in the bash you are starting the server.
+
 ## Simple Instructions
 
-To run the server:
-java -cp build/libs/gradingServer-all.jar -Djava.security.policy=security.policy evaluationbasics.RunServer
+You need to have the requirements installed. Then follow the steps:
 
-To build the server:
-gradle jar -Dorg.gradle.java.home=/home/ilias/Downloads/jdk1.8.0_101 fatJar
+- Adapt setup.sh to your needs.
+- Setup your environment by executing '''source setup.sh'''
+- Build the server running '''build.sh'''
+- Start the server by calling '''run.sh''' . This script takes an optional parameter, the port the sever listens on.
+

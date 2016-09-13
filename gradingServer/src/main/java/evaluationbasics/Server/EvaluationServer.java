@@ -5,6 +5,7 @@ import evaluationbasics.Security.SwitchableSecurityManager;
 import javax.xml.bind.annotation.adapters.XmlJavaTypeAdapter;
 import java.net.ServerSocket;
 import java.util.Arrays;
+import java.util.ArrayList;
 import java.util.List;
 
 /**
@@ -70,7 +71,7 @@ public class EvaluationServer {
 		}
 
 		if(serverSocket!=null){
-			List<String> adresses = Arrays.asList(ACCEPTED_STR_ADDRESSES);
+			List<String> adresses = new ArrayList<String>(Arrays.asList(ACCEPTED_STR_ADDRESSES));
 			adresses.addAll(Arrays.asList(acceptedAddresses));
 			SwitchableSecurityManager ssm = new SwitchableSecurityManager(port,false);
 			System.setSecurityManager(ssm);
