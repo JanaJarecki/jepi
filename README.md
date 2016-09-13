@@ -7,6 +7,7 @@ This is a question type for the Ilias e-learning platform.
 under development:
 
 * ilias-4.4.15: branch should work now (fixed interface)
+* ilias-5.0.13: branch is working, additional functionality introduced
 
 ## Ongoing ##
 
