@@ -6,10 +6,13 @@ import evaluationbasics.Exceptions.EmptyCodeException;
 import evaluationbasics.Exceptions.WrongNumberOfProvidedJavaElementsException;
 import evaluationbasics.Exceptions.ERROR_CODE;
 import evaluationbasics.XML.*;
+import org.jdom2.Document;
 import org.jdom2.Element;
 
+import java.io.IOException;
 import java.lang.reflect.InvocationTargetException;
 import java.util.List;
+import java.util.concurrent.TimeoutException;
 
 import static evaluationbasics.XML.XMLParser.parseParameterGroups;
 
@@ -18,14 +21,16 @@ import static evaluationbasics.XML.XMLParser.parseParameterGroups;
  */
 public class TestNGEvaluator {
 
-    public static void eval(Element request, XMLConstructor response) {
+    public static Document eval(Element request) {
+        XMLConstructor response = new XMLConstructor();
         TestNGEvaluator eval = new TestNGEvaluator(response);
         eval.dispatchTestAction(request);
+        return response.getDocument();
     }
 
     private XMLConstructor xml;
 
-    public TestNGEvaluator(XMLConstructor response) {
+    private TestNGEvaluator(XMLConstructor response) {
         this.xml = response;
     }
 
@@ -68,11 +73,17 @@ public class TestNGEvaluator {
     private void runTests(Element request, String person) {
         try {
             List<TestData> tests = XMLParser.parseTests(request);
-            DiagnostedTest dc = complationTest(request,person);
-            if ( dc!=null && dc.isValidClass() ) {
+            DiagnostedTest dc = complationTest(request, person);
+            if (dc != null && dc.isValidClass()) {
                 EvaluationHelper.runInstanceMethod(dc.getTestSuiteClass(), "RunTests", new Object[]{tests});
                 xml.responseToRunTest(tests);
             }
+        } catch ( TimeoutException e )  {
+            xml.error("The execution took too long: "+e);
+        } catch ( IOException e )  {
+
+        } catch ( ClassNotFoundException e )  {
+
         } catch ( org.jdom2.DataConversionException e) {
             xml.error("Found wrong datatype in XML: "+e);
         } catch ( IllegalAccessException e) {
@@ -103,6 +114,12 @@ public class TestNGEvaluator {
                 EvaluationHelper.runInstanceMethod(dc.getTestSuiteClass(), "RunTests", new Object[]{tests});
                 xml.responseToRunTest(tests);
             }
+        } catch ( TimeoutException e )  {
+            xml.error("The execution took too long: "+e);
+        } catch ( IOException e )  {
+
+        } catch ( ClassNotFoundException e )  {
+
         } catch ( org.jdom2.DataConversionException e) {
             xml.error("Found wrong datatype in XML: "+e);
         } catch ( IllegalAccessException e) {
@@ -138,6 +155,12 @@ public class TestNGEvaluator {
                 EvaluationHelper.runInstanceMethod(dc.getTestSuiteClass(), "RunTests", new Object[]{tests});
                 xml.responseToRunTest(tests);
             }
+        } catch ( TimeoutException e )  {
+            xml.error("The execution took too long: "+e);
+        } catch ( IOException e )  {
+
+        } catch ( ClassNotFoundException e )  {
+
         } catch ( NoSuchMethodException e) {
             xml.error("The main method was not accessible. Probably the main method is missing or has a too strict access modifier.");
         } catch ( org.jdom2.DataConversionException e) {

@@ -1,5 +1,12 @@
 package evaluationbasics.Evaluators;
 
+import evaluationbasics.Exceptions.NoValidClassException;
+import evaluationbasics.Exceptions.WrongNumberOfParametersException;
+import evaluationbasics.Exceptions.WrongNumberOfProvidedJavaElementsException;
+import evaluationbasics.Reports.DiagnostedClass;
+import evaluationbasics.Reports.DiagnostedMethodClass;
+import evaluationbasics.Security.SwitchableSecurityManager;
+
 import java.io.*;
 import java.lang.reflect.Array;
 import java.lang.reflect.InvocationTargetException;
@@ -7,20 +14,14 @@ import java.lang.reflect.Method;
 import java.lang.reflect.Modifier;
 import java.rmi.activation.UnknownObjectException;
 import java.util.Arrays;
+import java.util.concurrent.TimeoutException;
 import java.util.stream.Collectors;
-
-import evaluationbasics.Exceptions.WrongNumberOfParametersException;
-import evaluationbasics.Exceptions.WrongNumberOfProvidedJavaElementsException;
-import evaluationbasics.Reports.DiagnostedClass;
-import evaluationbasics.Reports.DiagnostedMethodClass;
-import evaluationbasics.Exceptions.NoValidClassException;
-import evaluationbasics.Security.SwitchableSecurityManager;
 
 
 public class EvaluationHelper {
 
 
-    public static Object saveExecution(Method method, Object instance, Object arg) throws InvocationTargetException, IllegalAccessException {
+    private static Object saveExecution(Method method, Object instance, Object arg) throws InvocationTargetException, IllegalAccessException, IOException, ClassNotFoundException, TimeoutException {
         SwitchableSecurityManager sm = (SwitchableSecurityManager) System.getSecurityManager();
         sm.enable();
         Object result;
@@ -30,9 +31,12 @@ public class EvaluationHelper {
             sm.disable();
         }
         return result;
+
+//        return ExecutionProcess.exec(20000,method,instance,arg);
     }
 
-    public static Object saveExecution(Method method, Object instance, Object[] args) throws InvocationTargetException, IllegalAccessException {
+    private static Object saveExecution(Method method, Object instance, Object[] args) throws InvocationTargetException, IllegalAccessException, IOException, ClassNotFoundException, TimeoutException {
+
         SwitchableSecurityManager sm = (SwitchableSecurityManager) System.getSecurityManager();
         sm.enable();
         Object result;
@@ -42,9 +46,11 @@ public class EvaluationHelper {
             sm.disable();
         }
         return result;
+
+//        return ExecutionProcess.exec(20000,method,instance,args);
     }
 
-    public static Object runMainMethodWithParams(DiagnostedClass dc, String[] args) throws NoSuchMethodException, InvocationTargetException, IllegalAccessException {
+    static Object runMainMethodWithParams(DiagnostedClass dc, String[] args) throws NoSuchMethodException, InvocationTargetException, IllegalAccessException, IOException, ClassNotFoundException, TimeoutException {
         assert( dc.isValidClass());
 
         PrintStream systemOut = System.out;
@@ -66,7 +72,7 @@ public class EvaluationHelper {
     }
 
 
-    public static Object runMethodOnParams(DiagnostedMethodClass dcMethod, Object[] pTestArgs) throws NumberFormatException, UnknownObjectException, WrongNumberOfParametersException, NoValidClassException {
+    static Object runMethodOnParams(DiagnostedMethodClass dcMethod, Object[] pTestArgs) throws NumberFormatException, UnknownObjectException, WrongNumberOfParametersException, NoValidClassException {
         if (dcMethod.isValidClass()) {
             Class<?>[] pClassType = dcMethod.getMainMethod().getParameterTypes();
             if ( pClassType.length > 0 && pTestArgs == null ) {
@@ -93,19 +99,13 @@ public class EvaluationHelper {
         throw new NoValidClassException("Given DiagnostedMethodClass is not valid");
     }
 
-    public static Object runInstanceMethod(Class<?> clazz, String methodName, Object[] args) throws WrongNumberOfProvidedJavaElementsException, IllegalAccessException, InvocationTargetException, InstantiationException {
+    public static Object runInstanceMethod(Class<?> clazz, String methodName, Object[] args) throws WrongNumberOfProvidedJavaElementsException, IllegalAccessException, InvocationTargetException, InstantiationException, IOException, ClassNotFoundException, TimeoutException {
 //        assert (dc.isValidClass());
         if (args == null) {
             args = new Object[]{};
         }
         Method method = findMethod(clazz.getMethods(), methodName, args);
-        try {
-            return saveExecution(method,null,args);
-        } catch (IllegalArgumentException e) {
-            throw e;
-        } catch (Exception e) {
-            throw e;
-        }
+        return saveExecution(method,null,args);
     }
 
     public static Method findMethod(Method[] methods, String name, Object[] args) throws WrongNumberOfProvidedJavaElementsException {
@@ -122,7 +122,7 @@ public class EvaluationHelper {
                 }
             }
         }
-        throw new WrongNumberOfProvidedJavaElementsException("Could not find class " + name + "with parameters:\n\t" + Arrays.asList(args).stream().map(x -> x.getClass().getSimpleName()).collect(Collectors.joining("\n\t")));
+        throw new WrongNumberOfProvidedJavaElementsException("Could not find class " + name + "with parameters:\n\t" + Arrays.stream(args).map(x -> x.getClass().getSimpleName()).collect(Collectors.joining("\n\t")));
     }
 
     /*
@@ -145,7 +145,7 @@ public class EvaluationHelper {
      * 		pClass - Typ in den der String verwandelt werden soll
      * 		pParam - String in welcher umgewandelt werden soll
      */
-    private static final Object stringToType(Class<?> pClass, String pParam) throws UnknownObjectException, NumberFormatException {
+    private static Object stringToType(Class<?> pClass, String pParam) throws UnknownObjectException, NumberFormatException {
         if (pClass.isArray()) {
             String[] sArray = pParam.split(",");
             Object objArray = Array.newInstance(pClass.getComponentType(), sArray.length);
@@ -179,7 +179,7 @@ public class EvaluationHelper {
     /*
      * Streambehandlung
      */
-    public static final void setStringToOutputStream(OutputStream out, String output) {
+    public static void setStringToOutputStream(OutputStream out, String output) {
         try {
             out.write(output.getBytes());
             out.flush();
@@ -195,7 +195,7 @@ public class EvaluationHelper {
      * @param in
      * @return
      */
-    public static final String getStringFromInputStream(InputStream in) {
+    public static String getStringFromInputStream(InputStream in) {
         final int ACCEPT_NBYTE = 1000;
         byte[] b = new byte[ACCEPT_NBYTE];
         StringBuilder sReturn = new StringBuilder();
@@ -232,8 +232,8 @@ public class EvaluationHelper {
      * @param pMethodArgs    Array der zu uebergebenen Parameter
      * @return Rueckgabeobjekt der Methode
      */
-    public static Object callMethodOnInstance(DiagnostedMethodClass dClass, Object pClassInstance, Object[] pMethodArgs)
-            throws IllegalAccessException, IllegalArgumentException, InvocationTargetException, SecurityException, NoValidClassException {
+    private static Object callMethodOnInstance(DiagnostedMethodClass dClass, Object pClassInstance, Object[] pMethodArgs)
+            throws IllegalAccessException, IllegalArgumentException, InvocationTargetException, SecurityException, NoValidClassException, IOException, ClassNotFoundException, TimeoutException {
         if (pMethodArgs == null) pMethodArgs = new Object[]{};
         if (dClass.isValidClass()) {
             Method method = dClass.getMainMethod();
@@ -255,7 +255,7 @@ public class EvaluationHelper {
      * @return Rueckgabeobjekt der Methode
      * @throws Exception Fuer die genaue Listung der Exceptions siehe callMethodonInstance
      */
-    public static Object callMethod(DiagnostedMethodClass dClass, Object[] pMethodArgs) throws Exception {
+    private static Object callMethod(DiagnostedMethodClass dClass, Object[] pMethodArgs) throws Exception {
         return callMethodOnInstance(dClass, dClass.getNewInstance(), pMethodArgs);
     }
 }

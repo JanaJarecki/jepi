@@ -31,11 +31,7 @@ public class EvaluationRequest extends Thread {
     //										   ,"accept","getInetAddress","setSocketFactory"}; //ServerSocket
 
 
-    private XMLConstructor xml;
-
     public EvaluationRequest(Socket client) {
-
-        xml = new XMLConstructor();
         CLIENT = client;
         this.setUncaughtExceptionHandler(new StudentUncaughtExceptionHandler(client));
         TIMEOUTCOUNTER = new StudentTimeoutCounter(this);
@@ -49,62 +45,58 @@ public class EvaluationRequest extends Thread {
         TIMEOUTCOUNTER.start();
 
         SAXBuilder builder = new SAXBuilder();
-        Document doc;
+        Document request;
+        Document response = null;
 
         try {
             String str = EvaluationHelper.getStringFromInputStream(CLIENT.getInputStream());
-            doc = builder.build(new StringReader(str));
-
-        } catch (JDOMException e) {
-            xml.error(ERROR_CODE.XML_PARSING_ERROR);
-            sendResponse(xml.getDocument());
-            return;
-        } catch (IOException e) {
-            xml.error(ERROR_CODE.INPUTSTREAM_IO_ERROR);
-            sendResponse(xml.getDocument());
-            return;
-        }
+            request = builder.build(new StringReader(str));
 
 //        System.out.println();
 //        System.out.println("#######################");
 //        System.out.println("# XML request #########");
-//        System.out.println(new XMLOutputter(Format.getPrettyFormat()).outputString(doc));
+//        System.out.println(new XMLOutputter(Format.getPrettyFormat()).outputString(request));
 
-        Element eRoot = doc.getRootElement();
-        Element eType = eRoot.getChild("type");
+            Element eRoot = request.getRootElement();
+            Element eType = eRoot.getChild("type");
 
-        switch (eType.getValue()) {
-            case "function_original":
-                FunctionEvaluator.eval(eRoot, xml);
-                break;
+            switch (eType.getValue()) {
+                case "function_original":
+                    response = FunctionEvaluator.eval(eRoot);
+                    break;
 
-            case "testng":
-                TestNGEvaluator.eval(eRoot, xml);
-                break;
+                case "testng":
+                    response = TestNGEvaluator.eval(eRoot);
+                    break;
 
-            default:
-                xml.error(ERROR_CODE.QUESTION_TYPE_NOT_KNOWN);
+                default:
+                    XMLConstructor writer = new XMLConstructor();
+                    writer.error(ERROR_CODE.QUESTION_TYPE_NOT_KNOWN);
+                    response = writer.getDocument();
+            }
+        } catch (JDOMException e) {
+            XMLConstructor writer = new XMLConstructor();
+            writer.error(ERROR_CODE.XML_PARSING_ERROR);
+            response = writer.getDocument();
+        } catch (IOException e) {
+            XMLConstructor writer = new XMLConstructor();
+            writer.error(ERROR_CODE.INPUTSTREAM_IO_ERROR);
+            response = writer.getDocument();
+        } finally {
+            if (response == null || response.getContentSize() == 0) {
+                XMLConstructor writer = new XMLConstructor();
+                writer.error(ERROR_CODE.COULD_NOT_CREATE_RESPONSEXML);
+                response = writer.getDocument();
+            }
+            sendResponse(response);
         }
-
-        //@todo check for nullpointer
-        if ( xml == null) {
-            System.out.println("xml");
-        }
-        if ( xml.getDocument() == null ) {
-            System.out.println("document");
-        }
-        if ( xml.getDocument().getContentSize() == 0) {
-            xml.error(ERROR_CODE.COULD_NOT_CREATE_RESPONSEXML);
-        }
-
-        sendResponse(xml.getDocument());
     }
 
     protected final void sendResponse(Document pReturnDoc) {
 
-//        System.out.println("- XML xml --------");
-//        System.out.println(new XMLOutputter(Format.getPrettyFormat()).outputString(pReturnDoc));
-//        System.out.println("#######################");
+        System.out.println("- XML xml --------");
+        System.out.println(new XMLOutputter(Format.getPrettyFormat()).outputString(pReturnDoc));
+        System.out.println("#######################");
 
         try {
             EvaluationHelper.setStringToOutputStream(CLIENT.getOutputStream(), new XMLOutputter().outputString(pReturnDoc));
@@ -118,9 +110,11 @@ public class EvaluationRequest extends Thread {
 
     public final void kill() {
         if (!CLIENT.isClosed()) {
-            xml.error(ERROR_CODE.TIMEOUT);
-            this.setUncaughtExceptionHandler(new DummyExceptionHandler());
-            this.sendResponse(xml.getDocument());
+
+            XMLConstructor writer = new XMLConstructor();
+            writer.error(ERROR_CODE.TIMEOUT);
+            setUncaughtExceptionHandler(new DummyExceptionHandler());
+            sendResponse(writer.getDocument());
         }
     }
 

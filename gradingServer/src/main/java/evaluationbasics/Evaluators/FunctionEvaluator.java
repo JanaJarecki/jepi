@@ -4,14 +4,19 @@ import evaluationbasics.Exceptions.*;
 import evaluationbasics.Reports.CodeUnit;
 import evaluationbasics.Reports.DiagnostedMethodClass;
 import evaluationbasics.CompilationHelpers.CompilationBox;
+import evaluationbasics.Security.SwitchableSecurityManager;
 import evaluationbasics.XML.ParamGroup;
 import evaluationbasics.XML.Params;
 import evaluationbasics.XML.XMLConstructor;
 import javafx.util.Pair;
+import org.jdom2.Document;
 import org.jdom2.Element;
 
+import java.io.*;
 import java.rmi.activation.UnknownObjectException;
+import java.sql.Time;
 import java.util.*;
+import java.util.concurrent.TimeoutException;
 
 import static evaluationbasics.XML.XMLParser.*;
 
@@ -20,9 +25,83 @@ import static evaluationbasics.XML.XMLParser.*;
  */
 public class FunctionEvaluator {
 
-    public static void eval(Element request, XMLConstructor response) {
-        FunctionEvaluator eval = new FunctionEvaluator(response);
-        eval.dispatchFunctionAction(request);
+    private static final int TIMEOUT = 20000;
+
+    public static Document eval(Element request) {
+        int GRANULARITY = 50;
+        String JAVA_CMD = System.getenv("JAVA_HOME");
+        String CLASSPATH = System.getProperty("java.class.path");
+        String CURRENTDIR = System.getProperty("user.dir");
+
+        try {
+            ProcessBuilder builder = new ProcessBuilder(JAVA_CMD + File.separator + "bin" + File.separator + "java",
+                    "-Xdebug -Xrunjdwp=transport=dt_socket,server=y,suspend=y,address=5005",
+                    "-cp", CLASSPATH,
+                    "-Djava.security.policy="+CURRENTDIR+File.separator+"security.policy",
+                    "evaluationbasics.Evaluators.FunctionEvaluator");
+            Process child = builder.start();
+            try {
+                OutputStream output = child.getOutputStream();
+                ObjectOutputStream oos = new ObjectOutputStream(output);
+                oos.writeObject(request);
+                oos.flush();
+
+                InputStream input = child.getInputStream();
+                ObjectInputStream ois = new ObjectInputStream(input);
+                int total = 0;
+                while (total < TIMEOUT && input.available() == 0) {
+                    try {
+                        Thread.sleep(GRANULARITY);
+                    } catch (InterruptedException e) {
+                    }
+                    total = total + GRANULARITY;
+                }
+                if (input.available() != 0) {
+                    Document response = (Document) ois.readObject();
+                    return response;
+                } else {
+                    throw new TimeoutException("timed out after " + TIMEOUT + "ms");
+                }
+            } finally {
+                child.destroy();
+            }
+
+        } catch ( IOException e ) {
+            System.out.println(e);
+        } catch (ClassNotFoundException e) {
+            System.out.println(e);
+        } catch (TimeoutException e) {
+            System.out.println(e);
+        }
+        XMLConstructor response = new XMLConstructor();
+        response.error("Some error occured while running a child process.");
+        return response.getDocument();
+
+    }
+
+    public static void main(String... args) {
+        SwitchableSecurityManager ssm = new SwitchableSecurityManager(1234,false);
+        System.setSecurityManager(ssm);
+
+        try {
+            ObjectInputStream ois = new ObjectInputStream(System.in);
+            ObjectOutputStream oos = new ObjectOutputStream(System.out);
+
+            Element request = (Element) ois.readObject();
+
+            XMLConstructor response = new XMLConstructor();
+
+            FunctionEvaluator eval = new FunctionEvaluator(response);
+            eval.dispatchFunctionAction(request);
+
+            oos.writeObject(response.getDocument());
+            oos.flush();
+        } catch (IOException e) {
+
+        } catch (ClassNotFoundException e) {
+
+        } finally {
+        }
     }
 
     private XMLConstructor xml;
@@ -72,23 +151,23 @@ public class FunctionEvaluator {
     }
 
     protected void compileMethod(Element request, String person) {
-        try{
+        try {
             Element codeOwner = request.getChild(person);
 
             Pair<DiagnostedMethodClass, CodeUnit> smethod = compileMethod(codeOwner);
             List<ParamGroup> sparams = parseParameterGroups(codeOwner);
 
-            runMethodOnParams(smethod.getKey(),sparams);
+            runMethodOnParams(smethod.getKey(), sparams);
 
-            xml.responseToCompileMethod(sparams,smethod.getValue());
+            xml.responseToCompileMethod(sparams, smethod.getValue());
 
-        } catch ( EmptyCodeException e) {
-            xml.error("Provided code was empty: "+e);
-        } catch ( TooManyMethodsException e ) {
-            xml.error("Too many methods provided: "+e);
-        } catch ( org.jdom2.DataConversionException e) {
-            xml.error("Found wrong datatype in XML: "+e);
-        } catch ( Exception e) {
+        } catch (EmptyCodeException e) {
+            xml.error("Provided code was empty: " + e);
+        } catch (TooManyMethodsException e) {
+            xml.error("Too many methods provided: " + e);
+        } catch (org.jdom2.DataConversionException e) {
+            xml.error("Found wrong datatype in XML: " + e);
+        } catch (Exception e) {
             xml.errorUnknown(e);
         }
     }
@@ -104,13 +183,13 @@ public class FunctionEvaluator {
 
             xml.responseToRunMethod(params, method.getValue());
 
-        } catch ( EmptyCodeException e) {
-            xml.error("Provided code was empty: "+e);
-        } catch ( TooManyMethodsException e ) {
-            xml.error("Too many methods provided: "+e);
-        } catch ( org.jdom2.DataConversionException e) {
-            xml.error("Found wrong datatype in XML: "+e);
-        } catch ( Exception e) {
+        } catch (EmptyCodeException e) {
+            xml.error("Provided code was empty: " + e);
+        } catch (TooManyMethodsException e) {
+            xml.error("Too many methods provided: " + e);
+        } catch (org.jdom2.DataConversionException e) {
+            xml.error("Found wrong datatype in XML: " + e);
+        } catch (Exception e) {
             xml.errorUnknown(e);
         }
     }
@@ -121,13 +200,13 @@ public class FunctionEvaluator {
             Pair<DiagnostedMethodClass, CodeUnit> method = compileMethod(element);
             compareMethods(request, "student", "teacher");
 
-        } catch ( EmptyCodeException e) {
-            xml.error("Provided code was empty: "+e);
-        } catch ( TooManyMethodsException e ) {
-            xml.error("Too many methods provided: "+e);
-        } catch ( org.jdom2.DataConversionException e) {
-            xml.error("Found wrong datatype in XML: "+e);
-        } catch ( Exception e) {
+        } catch (EmptyCodeException e) {
+            xml.error("Provided code was empty: " + e);
+        } catch (TooManyMethodsException e) {
+            xml.error("Too many methods provided: " + e);
+        } catch (org.jdom2.DataConversionException e) {
+            xml.error("Found wrong datatype in XML: " + e);
+        } catch (Exception e) {
             xml.errorUnknown(e);
         }
     }
@@ -153,13 +232,13 @@ public class FunctionEvaluator {
 
             xml.respondseToCompareMethods(testeeResults, testeeMethod.getValue());
 
-        } catch ( EmptyCodeException e) {
-            xml.error("Provided code was empty: "+e);
-        } catch ( TooManyMethodsException e ) {
-            xml.error("Too many methods provided: "+e);
-        } catch ( org.jdom2.DataConversionException e) {
-            xml.error("Found wrong datatype in XML: "+e);
-        } catch ( Exception e) {
+        } catch (EmptyCodeException e) {
+            xml.error("Provided code was empty: " + e);
+        } catch (TooManyMethodsException e) {
+            xml.error("Too many methods provided: " + e);
+        } catch (org.jdom2.DataConversionException e) {
+            xml.error("Found wrong datatype in XML: " + e);
+        } catch (Exception e) {
             xml.errorUnknown(e);
         }
     }
@@ -196,7 +275,7 @@ public class FunctionEvaluator {
 
         if (codeUnit.compileable && checkType && diagnostedMethodClass != null) {
             codeUnit.methodtype = CompilationBox.getMethodType(diagnostedMethodClass);
-        } else if ( checkType ){
+        } else if (checkType) {
             codeUnit.methodtypeError = "Could not infer method diagnostics.";
         }
 
@@ -275,7 +354,7 @@ public class FunctionEvaluator {
                     params.zReturn = EvaluationHelper.runMethodOnParams(dcMethod, params.values);
                 } catch (UnknownObjectException e) {
                     params.zReturn = null;
-                    params.error = "Could not run method on the value: {" + Arrays.toString(params.values) + "}\nMaybe the parameter does not match the required type.\n"+e.getMessage();
+                    params.error = "Could not run method on the value: {" + Arrays.toString(params.values) + "}\nMaybe the parameter does not match the required type.\n" + e.getMessage();
                 } catch (NoValidClassException e) {
                     params.zReturn = null;
                     String error = e.getMessage();
@@ -284,7 +363,7 @@ public class FunctionEvaluator {
                     } else {
                         params.error = error;
                     }
-                } catch ( WrongNumberOfParametersException | NumberFormatException e) {
+                } catch (WrongNumberOfParametersException | NumberFormatException e) {
                     params.zReturn = null;
                     params.error = e.getMessage();
                 }
@@ -300,7 +379,7 @@ public class FunctionEvaluator {
             DiagnostedMethodClass method = m.getKey();
             CodeUnit result = m.getValue();
             List<ParamGroup> p = new LinkedList();
-            for ( ParamGroup pg : parameters) {
+            for (ParamGroup pg : parameters) {
                 p.add(new ParamGroup(pg));
             }
 
