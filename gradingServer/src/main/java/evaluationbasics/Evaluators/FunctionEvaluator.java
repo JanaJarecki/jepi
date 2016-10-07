@@ -27,6 +27,11 @@ public class FunctionEvaluator {
 
     private static final int TIMEOUT = 20000;
 
+    public static void eval(Element request, XMLConstructor response) {
+        FunctionEvaluator eval = new FunctionEvaluator(response);
+        eval.dispatchFunctionAction(request);
+    }
+
     public static Document eval(Element request) {
         int GRANULARITY = 50;
         String JAVA_CMD = System.getenv("JAVA_HOME");
