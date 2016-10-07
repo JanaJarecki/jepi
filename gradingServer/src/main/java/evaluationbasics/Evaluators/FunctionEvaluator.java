@@ -14,7 +14,6 @@ import org.jdom2.Element;
 
 import java.io.*;
 import java.rmi.activation.UnknownObjectException;
-import java.sql.Time;
 import java.util.*;
 import java.util.concurrent.TimeoutException;
 
@@ -27,9 +26,13 @@ public class FunctionEvaluator {
 
     private static final int TIMEOUT = 20000;
 
-    public static void eval(Element request, XMLConstructor response) {
-        FunctionEvaluator eval = new FunctionEvaluator(response);
-        eval.dispatchFunctionAction(request);
+    /**
+     * @param request
+     * @return
+     * @deprecated Do not use this method in the productive system. This remains only for debuggin purpose.
+     */
+    public static Document evalNotInProcess(Element request) {
+        return new FunctionEvaluator().dispatchEvaluation(request);
     }
 
     public static Document eval(Element request) {
@@ -42,7 +45,7 @@ public class FunctionEvaluator {
             ProcessBuilder builder = new ProcessBuilder(JAVA_CMD + File.separator + "bin" + File.separator + "java",
 //                    "-Xdebug -Xrunjdwp=transport=dt_socket,server=y,suspend=y,address=5005",
                     "-cp", CLASSPATH,
-                    "-Djava.security.policy="+CURRENTDIR+File.separator+"security.policy",
+                    "-Djava.security.policy=" + CURRENTDIR + File.separator + "security.policy",
                     "evaluationbasics.Evaluators.FunctionEvaluator");
             Process child = builder.start();
             try {
@@ -71,7 +74,7 @@ public class FunctionEvaluator {
                 child.destroy();
             }
 
-        } catch ( IOException e ) {
+        } catch (IOException e) {
             System.out.println(e);
         } catch (ClassNotFoundException e) {
             System.out.println(e);
@@ -85,7 +88,7 @@ public class FunctionEvaluator {
     }
 
     public static void main(String... args) {
-        SwitchableSecurityManager ssm = new SwitchableSecurityManager(1234,false);
+        SwitchableSecurityManager ssm = new SwitchableSecurityManager(1234, false);
         System.setSecurityManager(ssm);
 
         try {
@@ -93,13 +96,8 @@ public class FunctionEvaluator {
             ObjectOutputStream oos = new ObjectOutputStream(System.out);
 
             Element request = (Element) ois.readObject();
-
-            XMLConstructor response = new XMLConstructor();
-
-            FunctionEvaluator eval = new FunctionEvaluator(response);
-            eval.dispatchFunctionAction(request);
-
-            oos.writeObject(response.getDocument());
+            Document response = new FunctionEvaluator().dispatchEvaluation(request);
+            oos.writeObject(response);
             oos.flush();
         } catch (IOException e) {
 
@@ -111,8 +109,8 @@ public class FunctionEvaluator {
 
     private XMLConstructor xml;
 
-    private FunctionEvaluator(XMLConstructor response) {
-        this.xml = response;
+    private FunctionEvaluator() {
+        this.xml = new XMLConstructor();
     }
 
     /**
@@ -122,7 +120,7 @@ public class FunctionEvaluator {
      * @param request XML Root element of the request
      * @return The respose xml document containing the evaluation.
      */
-    protected void dispatchFunctionAction(Element request) {
+    public Document dispatchEvaluation(Element request) {
         Element eAction = request.getChild("action");
         String actionRequested = eAction.getValue().toLowerCase();
         switch (actionRequested) {
@@ -153,6 +151,8 @@ public class FunctionEvaluator {
             default:
                 xml.error(ERROR_CODE.ACTION_NOT_KNOWN);
         }
+
+        return xml.getDocument();
     }
 
     protected void compileMethod(Element request, String person) {

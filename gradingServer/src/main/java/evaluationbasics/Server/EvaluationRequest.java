@@ -2,8 +2,11 @@ package evaluationbasics.Server;
 
 import java.io.IOException;
 import java.io.StringReader;
+import java.lang.reflect.InvocationTargetException;
 import java.net.Socket;
+import java.util.concurrent.TimeoutException;
 
+import evaluationbasics.Evaluators.EvaluationProcess;
 import evaluationbasics.Evaluators.FunctionEvaluator;
 import evaluationbasics.Evaluators.TestNGEvaluator;
 import evaluationbasics.Exceptions.DummyExceptionHandler;
@@ -62,11 +65,11 @@ public class EvaluationRequest extends Thread {
 
             switch (eType.getValue()) {
                 case "function_original":
-                    response = FunctionEvaluator.eval(eRoot);
+                    response = EvaluationProcess.exec(eRoot,"evaluationbasics.Evaluators.FunctionEvaluator",20000);
                     break;
 
                 case "testng":
-                    response = TestNGEvaluator.eval(eRoot);
+                    response = EvaluationProcess.exec(eRoot,"evaluationbasics.Evaluators.TestNGEvaluator",20000);
                     break;
 
                 default:
@@ -78,10 +81,17 @@ public class EvaluationRequest extends Thread {
             XMLConstructor writer = new XMLConstructor();
             writer.error(ERROR_CODE.XML_PARSING_ERROR);
             response = writer.getDocument();
+        } catch ( TimeoutException e) {
+            XMLConstructor writer = new XMLConstructor();
+            writer.error(ERROR_CODE.TIMEOUT);
+            response = writer.getDocument();
         } catch (IOException e) {
             XMLConstructor writer = new XMLConstructor();
             writer.error(ERROR_CODE.INPUTSTREAM_IO_ERROR);
             response = writer.getDocument();
+        } catch ( InvocationTargetException e) {
+        } catch ( IllegalAccessException e ) {
+        } catch ( ClassNotFoundException e ) {
         } finally {
             if (response == null || response.getContentSize() == 0) {
                 XMLConstructor writer = new XMLConstructor();

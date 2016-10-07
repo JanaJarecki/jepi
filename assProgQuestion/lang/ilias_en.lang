@@ -58,3 +58,4 @@ config_error_message#:#An error occured during saving
 quest_type#:#Question type
 function_original#:#Function
 testng#:#Test with TestNG
+error_105#:#TIMEOUT: The execution of your program took too long and was therefore canceled. Make sure you have no endless loops in your code.

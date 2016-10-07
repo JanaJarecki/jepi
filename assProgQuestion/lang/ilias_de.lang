@@ -20,7 +20,7 @@ runningMethodWithParametersLeadTo#:#Die Rückgabewerte der Methoden für die ang
 connectionfail#:#Konnte keine Verbindung zum Bewertungssystem aufbauen. Bitte prüfen Sie, ob das System läuft und unter der angegebenen Adresse erreichbar ist.
 emptyresponse#:#Das Bewertungssystem sendete keine Antwort.
 errorresponse#:#Das Bewertungssystem meldete einen Fehler.
-studcompile#:#Compilieren
+studcompile#:#Kompilieren
 studparams#:#Geben Sie Parameterwerte zum Testen ein. Trennen Sie Parameter durch Kommata (,).
 studmain#:#Geben Sie Parameterwerte zum Starten Ihrer main-Methode ein. Trennen Sie Parameter durch Kommata (,).
 studcodecompiles#:#Ihr Code wurde erfolgreich kompiliert.
@@ -58,3 +58,4 @@ config_error_message#:#Beim Speichern der Einstellungen ist ein Fehler aufgetret
 quest_type#:#Fragen Typ
 function_original#:#Funktion
 testng#:#Test mit TestNG
+error_105#:#TIMEOUT: Ihr Program lief zu lange und wurde abgebrochen. Überprüfen Sie ob Sie nicht ausversehen eine Endlosschleife geschrieben haben.

@@ -5,11 +5,12 @@ import evaluationbasics.Reports.DiagnostedTest;
 import evaluationbasics.Exceptions.EmptyCodeException;
 import evaluationbasics.Exceptions.WrongNumberOfProvidedJavaElementsException;
 import evaluationbasics.Exceptions.ERROR_CODE;
+import evaluationbasics.Security.SwitchableSecurityManager;
 import evaluationbasics.XML.*;
 import org.jdom2.Document;
 import org.jdom2.Element;
 
-import java.io.IOException;
+import java.io.*;
 import java.lang.reflect.InvocationTargetException;
 import java.util.List;
 import java.util.concurrent.TimeoutException;
@@ -21,12 +22,98 @@ import static evaluationbasics.XML.XMLParser.parseParameterGroups;
  */
 public class TestNGEvaluator {
 
-    public static Document eval(Element request) {
+    private static final int TIMEOUT = 20000;
+
+    /**
+     * @deprecated Do not use this method in the productive system. This remains only for debuggin purpose.
+     *
+     * @param request
+     * @return
+     */
+    public static Document evalNotInProcess(Element request) {
         XMLConstructor response = new XMLConstructor();
         TestNGEvaluator eval = new TestNGEvaluator(response);
-        eval.dispatchTestAction(request);
+        eval.dispatchEvaluation(request);
         return response.getDocument();
     }
+
+    public static Document eval(Element request) {
+        int GRANULARITY = 50;
+        String JAVA_CMD = System.getenv("JAVA_HOME");
+        String CLASSPATH = System.getProperty("java.class.path");
+        String CURRENTDIR = System.getProperty("user.dir");
+
+        try {
+            ProcessBuilder builder = new ProcessBuilder(JAVA_CMD + File.separator + "bin" + File.separator + "java",
+//                    "-Xdebug -Xrunjdwp=transport=dt_socket,server=y,suspend=y,address=5005",
+                    "-cp", CLASSPATH,
+                    "-Djava.security.policy="+CURRENTDIR+File.separator+"security.policy",
+                    "evaluationbasics.Evaluators.FunctionEvaluator");
+            Process child = builder.start();
+            try {
+                OutputStream output = child.getOutputStream();
+                ObjectOutputStream oos = new ObjectOutputStream(output);
+                oos.writeObject(request);
+                oos.flush();
+
+                InputStream input = child.getInputStream();
+                ObjectInputStream ois = new ObjectInputStream(input);
+                int total = 0;
+                while (total < TIMEOUT && input.available() == 0) {
+                    try {
+                        Thread.sleep(GRANULARITY);
+                    } catch (InterruptedException e) {
+                    }
+                    total = total + GRANULARITY;
+                }
+                if (input.available() != 0) {
+                    Document response = (Document) ois.readObject();
+                    return response;
+                } else {
+                    throw new TimeoutException("timed out after " + TIMEOUT + "ms");
+                }
+            } finally {
+                child.destroy();
+            }
+
+        } catch ( IOException e ) {
+            System.out.println(e);
+        } catch (ClassNotFoundException e) {
+            System.out.println(e);
+        } catch (TimeoutException e) {
+            System.out.println(e);
+        }
+        XMLConstructor response = new XMLConstructor();
+        response.error("Some error occured while running a child process.");
+        return response.getDocument();
+
+    }
+
+    public static void main(String... args) {
+        SwitchableSecurityManager ssm = new SwitchableSecurityManager(1234,false);
+        System.setSecurityManager(ssm);
+
+        try {
+            ObjectInputStream ois = new ObjectInputStream(System.in);
+            ObjectOutputStream oos = new ObjectOutputStream(System.out);
+
+            Element request = (Element) ois.readObject();
+
+            XMLConstructor response = new XMLConstructor();
+
+            TestNGEvaluator eval = new TestNGEvaluator(response);
+            eval.dispatchEvaluation(request);
+
+            oos.writeObject(response.getDocument());
+            oos.flush();
+        } catch (IOException e) {
+
+        } catch (ClassNotFoundException e) {
+
+        } finally {
+        }
+    }
+
 
     private XMLConstructor xml;
 
@@ -41,7 +128,7 @@ public class TestNGEvaluator {
      * @param request XML Root element of the request
      * @return The respose xml document containing the evaluation.
      */
-    private void dispatchTestAction(Element request) {
+    private void dispatchEvaluation(Element request) {
         Element eAction = request.getChild("action");
         String actionRequested = eAction.getValue().toLowerCase();
         switch (actionRequested) {

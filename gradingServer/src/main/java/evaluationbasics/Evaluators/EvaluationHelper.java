@@ -32,7 +32,7 @@ public class EvaluationHelper {
         }
         return result;
 
-//        return ExecutionProcess.exec(20000,method,instance,arg);
+//        return EvaluationProcess.exec(20000,method,instance,arg);
     }
 
     private static Object saveExecution(Method method, Object instance, Object[] args) throws InvocationTargetException, IllegalAccessException, IOException, ClassNotFoundException, TimeoutException {
@@ -47,7 +47,7 @@ public class EvaluationHelper {
         }
         return result;
 
-//        return ExecutionProcess.exec(20000,method,instance,args);
+//        return EvaluationProcess.exec(20000,method,instance,args);
     }
 
     static Object runMainMethodWithParams(DiagnostedClass dc, String[] args) throws NoSuchMethodException, InvocationTargetException, IllegalAccessException, IOException, ClassNotFoundException, TimeoutException {

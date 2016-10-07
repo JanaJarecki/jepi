@@ -509,7 +509,8 @@ class ilAssProgQuestionEvalConnection {
 		$message = '';
 		$errors = $xml->error;
 		foreach ( $errors->xpath ( "error" ) as $error ) {
-			$message .= "=== [ERROR DURING EXECUTION] ===\n" . $error;
+			//$message .= "=== [ERROR DURING EXECUTION] ===\n";
+			$message .= $this->plugin->txt ( "error_". $error);
 		}
 		return $message;
 	}
