@@ -147,7 +147,7 @@ public class EvaluationHelper {
      */
     private static Object stringToType(Class<?> pClass, String pParam) throws UnknownObjectException, NumberFormatException {
         if (pClass.isArray()) {
-            String[] sArray = pParam.split(",");
+            String[] sArray = pParam.split("~");
             Object objArray = Array.newInstance(pClass.getComponentType(), sArray.length);
             for (int i = 0; i < sArray.length; i++)
                 Array.set(objArray, i, stringToType(pClass.getComponentType(), sArray[i]));
@@ -173,6 +173,31 @@ public class EvaluationHelper {
         } else {
             throw new UnknownObjectException("Do not know how to parse an object from a string with type: " + pClass.getName());
         }
+    }
+
+    public static String deepToString(Object e1) {
+        String s = "";
+        if (e1 instanceof Object[] )
+            s = Arrays.deepToString((Object[]) e1);
+        else if (e1 instanceof byte[] )
+            s = Arrays.toString((byte[]) e1);
+        else if (e1 instanceof short[] )
+            s = Arrays.toString((short[]) e1);
+        else if (e1 instanceof int[] )
+            s = Arrays.toString((int[]) e1);
+        else if (e1 instanceof long[] )
+            s = Arrays.toString((long[]) e1);
+        else if (e1 instanceof char[] )
+            s = Arrays.toString((char[]) e1);
+        else if (e1 instanceof float[] )
+            s = Arrays.toString((float[]) e1);
+        else if (e1 instanceof double[] )
+            s = Arrays.toString((double[]) e1);
+        else if (e1 instanceof boolean[] )
+            s = Arrays.toString((boolean[]) e1);
+        else
+            s = e1.toString();
+        return s;
     }
 
 

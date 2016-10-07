@@ -498,7 +498,7 @@ class ilAssProgQuestionEvalConnection {
 				$params = $group->xpath ( "params" );
 				foreach ( $params as $param ) {
 					$att = $param->attributes ();
-					$message .= "\nRUN WITH PARAMETERS" . $att ["params"] . ":\n" . $param;
+					$message .= "\nRUN WITH PARAMETERS" . $att ["params"] . ":\n" . $att["value"];
 				}
 			}
 		}

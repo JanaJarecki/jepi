@@ -316,12 +316,10 @@ public class FunctionEvaluator {
 
         boolean allEqual = true;
 
-        while (tIt.hasNext() && eIt.hasNext()) {
+        while (tIt.hasNext() && eIt.hasNext() ) {
             Params tParams = tIt.next();
             Params eParams = eIt.next();
-            String ts = String.valueOf(tParams.zReturn);
-            String es = String.valueOf(eParams.zReturn);
-            if (ts.equals(es)) {
+            if ( Objects.deepEquals(tParams.zReturn,eParams.zReturn) ) {
                 tParams.equals = true;
             } else {
                 allEqual = false;

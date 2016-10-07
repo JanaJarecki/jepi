@@ -4,6 +4,7 @@ import java.lang.reflect.InvocationTargetException;
 import java.util.Arrays;
 import java.util.LinkedList;
 import java.util.List;
+import java.util.Objects;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
@@ -16,6 +17,8 @@ import evaluationbasics.Reports.DiagnostedTest;
 import org.jdom2.Attribute;
 import org.jdom2.Document;
 import org.jdom2.Element;
+
+import static evaluationbasics.Evaluators.EvaluationHelper.deepToString;
 
 
 public class XMLConstructor {
@@ -211,9 +214,13 @@ public class XMLConstructor {
             for (Params params : grp.params) {
                 Element par = new Element("params");
                 par.setAttribute("id", "" + params.id);
-                par.setAttribute("params", Arrays.toString(params.values));
+                par.setAttribute("params", Arrays.deepToString(params.values));
                 if ( params.error.isEmpty() ) {
-                    par.setAttribute("value", params.zReturn.toString());
+                    if (params.zReturn.getClass().isArray() ) {
+                        par.setAttribute("value", deepToString(params.zReturn));
+                    } else {
+                        par.setAttribute("value", params.zReturn.toString());
+                    }
                 } else {
                     par.setAttribute("error", "true");
                     par.setText(params.error);
@@ -232,8 +239,12 @@ public class XMLConstructor {
             for (Params params : grp.params) {
                 Element par = new Element("params");
                 par.setAttribute("id", "" + params.id);
-                par.setAttribute("params", Arrays.toString(params.values));
-                par.setText(params.zReturn.toString());
+                par.setAttribute("params", Arrays.deepToString(params.values));
+                if (params.zReturn.getClass().isArray() ) {
+                    par.setAttribute("value", deepToString(params.zReturn));
+                } else {
+                    par.setAttribute("value", params.zReturn.toString());
+                }
                 group.addContent(par);
             }
             element.addContent(group);
