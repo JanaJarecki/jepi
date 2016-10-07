@@ -52,10 +52,10 @@ public class EvaluationRequest extends Thread {
             String str = EvaluationHelper.getStringFromInputStream(CLIENT.getInputStream());
             request = builder.build(new StringReader(str));
 
-//        System.out.println();
-//        System.out.println("#######################");
-//        System.out.println("# XML request #########");
-//        System.out.println(new XMLOutputter(Format.getPrettyFormat()).outputString(request));
+        System.out.println();
+        System.out.println("#######################");
+        System.out.println("# XML request #########");
+        System.out.println(new XMLOutputter(Format.getPrettyFormat()).outputString(request));
 
             Element eRoot = request.getRootElement();
             Element eType = eRoot.getChild("type");

@@ -35,7 +35,7 @@ public class FunctionEvaluator {
 
         try {
             ProcessBuilder builder = new ProcessBuilder(JAVA_CMD + File.separator + "bin" + File.separator + "java",
-                    "-Xdebug -Xrunjdwp=transport=dt_socket,server=y,suspend=y,address=5005",
+//                    "-Xdebug -Xrunjdwp=transport=dt_socket,server=y,suspend=y,address=5005",
                     "-cp", CLASSPATH,
                     "-Djava.security.policy="+CURRENTDIR+File.separator+"security.policy",
                     "evaluationbasics.Evaluators.FunctionEvaluator");

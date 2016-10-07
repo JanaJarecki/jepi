@@ -41,7 +41,7 @@ public class EvaluationHelper {
         sm.enable();
         Object result;
         try {
-             result = method.invoke(instance, args);
+            result = method.invoke(instance, args);
         } finally {
             sm.disable();
         }
@@ -51,7 +51,7 @@ public class EvaluationHelper {
     }
 
     static Object runMainMethodWithParams(DiagnostedClass dc, String[] args) throws NoSuchMethodException, InvocationTargetException, IllegalAccessException, IOException, ClassNotFoundException, TimeoutException {
-        assert( dc.isValidClass());
+        assert (dc.isValidClass());
 
         PrintStream systemOut = System.out;
 
@@ -60,11 +60,11 @@ public class EvaluationHelper {
 
         try {
             Method main = dc.getAsClass().getMethod("main", String[].class);
-            if ( !Modifier.isStatic(main.getModifiers())) {
+            if (!Modifier.isStatic(main.getModifiers())) {
                 throw new NoSuchMethodException("Could not find a static main method.");
             }
             System.setOut(printStream);
-            saveExecution(main,null,(Object)args);
+            saveExecution(main, null, (Object) args);
         } finally {
             System.setOut(systemOut);
         }
@@ -75,7 +75,7 @@ public class EvaluationHelper {
     static Object runMethodOnParams(DiagnostedMethodClass dcMethod, Object[] pTestArgs) throws NumberFormatException, UnknownObjectException, WrongNumberOfParametersException, NoValidClassException {
         if (dcMethod.isValidClass()) {
             Class<?>[] pClassType = dcMethod.getMainMethod().getParameterTypes();
-            if ( pClassType.length > 0 && pTestArgs == null ) {
+            if (pClassType.length > 0 && pTestArgs == null) {
                 throw new WrongNumberOfParametersException("Expected number of parameters: " + pClassType.length + " but none provided.");
             } else if (pClassType.length != pTestArgs.length) {
                 throw new WrongNumberOfParametersException("Expected number of parameters: " + pClassType.length + " but " + pTestArgs.length + " provided.");
@@ -83,8 +83,8 @@ public class EvaluationHelper {
                 for (int i = 0; i < pTestArgs.length; i++) {
                     try {
                         pTestArgs[i] = EvaluationHelper.stringToType(pClassType[i], pTestArgs[i].toString());
-                    } catch ( NumberFormatException e) {
-                        throw new NumberFormatException("Exception when parsing parameter["+i+"]: Could not parse string \""+pTestArgs[i].toString()+"\" to a number.");
+                    } catch (NumberFormatException e) {
+                        throw new NumberFormatException("Exception when parsing parameter[" + i + "]: Could not parse string \"" + pTestArgs[i].toString() + "\" to a number.");
                     }
                 }
             }
@@ -105,7 +105,7 @@ public class EvaluationHelper {
             args = new Object[]{};
         }
         Method method = findMethod(clazz.getMethods(), methodName, args);
-        return saveExecution(method,null,args);
+        return saveExecution(method, null, args);
     }
 
     public static Method findMethod(Method[] methods, String name, Object[] args) throws WrongNumberOfProvidedJavaElementsException {
@@ -154,7 +154,7 @@ public class EvaluationHelper {
             return objArray;
         } else if (pClass == Byte.class || pClass == byte.class) {
             return Byte.parseByte(pParam);
-        } else if (pClass == Double.class || pClass == double.class) {
+        } else if (pClass == Character.class || pClass == char.class) {
             return pParam.charAt(0);
         } else if (pClass == Short.class || pClass == short.class) {
             return Short.parseShort(pParam);
@@ -241,7 +241,7 @@ public class EvaluationHelper {
                 pClassInstance = null;
             if (!method.isAccessible())
                 method.setAccessible(true);
-            return saveExecution(method,pClassInstance,pMethodArgs);
+            return saveExecution(method, pClassInstance, pMethodArgs);
         }
         throw new NoValidClassException("Given Diagnosted Class is not valid.");
     }
