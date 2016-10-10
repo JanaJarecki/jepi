@@ -526,7 +526,7 @@ class ilAssProgQuestionEvalConnection {
 		$xml = new SimpleXMLElement ( $response );
 		if ($xml->error) {
 			$result ['type'] = 'failure';
-			$result ['message'] = $this->plugin->txt ( 'errorresponse' ) . "\n" . $xml->error;
+			$result ['message'] = $this->plugin->txt ( 'errorresponse' ) . "\n" . $this->parseErrors ( $xml );
 			return $result;
 		}
 		

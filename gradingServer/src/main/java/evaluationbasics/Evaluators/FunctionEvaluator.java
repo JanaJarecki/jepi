@@ -90,19 +90,18 @@ public class FunctionEvaluator {
     public static void main(String... args) {
         SwitchableSecurityManager ssm = new SwitchableSecurityManager(1234, false);
         System.setSecurityManager(ssm);
-
         try {
             ObjectInputStream ois = new ObjectInputStream(System.in);
             ObjectOutputStream oos = new ObjectOutputStream(System.out);
-
-            Element request = (Element) ois.readObject();
-            Document response = new FunctionEvaluator().dispatchEvaluation(request);
-            oos.writeObject(response);
-            oos.flush();
+            try {
+                Element request = (Element) ois.readObject();
+                Document response = new FunctionEvaluator().dispatchEvaluation(request);
+                oos.writeObject(response);
+                oos.flush();
+            } catch (ClassNotFoundException e) {
+            } finally {
+            }
         } catch (IOException e) {
-
-        } catch (ClassNotFoundException e) {
-
         } finally {
         }
     }
@@ -177,16 +176,11 @@ public class FunctionEvaluator {
         }
     }
 
-    protected void runMethodOnParams(Element request, String person) {
+    protected void feedbackMethodOnParams(Element request, String person) {
         try {
             Element element = request.getChild(person);
-
             Pair<DiagnostedMethodClass, CodeUnit> method = compileMethod(element);
-            List<ParamGroup> params = parseParameterGroups(element);
-
-            runMethodOnParams(method.getKey(), params);
-
-            xml.responseToRunMethod(params, method.getValue());
+            compareMethods(request, "student", "teacher");
 
         } catch (EmptyCodeException e) {
             xml.error("Provided code was empty: " + e);
@@ -199,11 +193,16 @@ public class FunctionEvaluator {
         }
     }
 
-    protected void feedbackMethodOnParams(Element request, String person) {
+    protected void runMethodOnParams(Element request, String person) {
         try {
             Element element = request.getChild(person);
             Pair<DiagnostedMethodClass, CodeUnit> method = compileMethod(element);
-            compareMethods(request, "student", "teacher");
+
+            List<ParamGroup> params = parseParameterGroups(element);
+
+            runMethodOnParams(method.getKey(), params);
+
+            xml.responseToRunMethod(params, method.getValue());
 
         } catch (EmptyCodeException e) {
             xml.error("Provided code was empty: " + e);
@@ -225,17 +224,24 @@ public class FunctionEvaluator {
 
             List<ParamGroup> parameters = parseParameterGroups(request.getChild(examinator));
 
-            Pair<DiagnostedMethodClass, CodeUnit>[] methodArray = new Pair[]{testeeMethod, examinatorMethod};
-            Vector<Pair<DiagnostedMethodClass, CodeUnit>> methods = new Vector(Arrays.asList(methodArray));
+//            Pair<DiagnostedMethodClass, CodeUnit>[] methodArray = new Pair[]{testeeMethod, examinatorMethod};
+//            Vector<Pair<DiagnostedMethodClass, CodeUnit>> methods = new Vector(Arrays.asList(methodArray));
+//
+//            List<List<ParamGroup>> results = runAllMethodsOnParams(methods, parameters);
 
-            List<List<ParamGroup>> results = runAllMethodsOnParams(methods, parameters);
+//            List<ParamGroup> testeeResults = results.get(0);
+//            List<ParamGroup> examinatorResults = results.get(1);
+//            compareParamGroupLists(testeeResults, examinatorResults);
+//            xml.respondseToCompareMethods(testeeResults, testeeMethod.getValue());
 
-            List<ParamGroup> testeeResults = results.get(0);
-            List<ParamGroup> examinatorResults = results.get(1);
+            List<ParamGroup> parameters2 = parseParameterGroups(request.getChild(examinator));
 
-            compareParamGroupLists(testeeResults, examinatorResults);
+            runMethodOnParams(testeeMethod.getKey(), parameters);
+            runMethodOnParams(examinatorMethod.getKey(), parameters2);
 
-            xml.respondseToCompareMethods(testeeResults, testeeMethod.getValue());
+            compareParamGroupLists(parameters, parameters2);
+
+            xml.respondseToCompareMethods(parameters, testeeMethod.getValue());
 
         } catch (EmptyCodeException e) {
             xml.error("Provided code was empty: " + e);
@@ -316,10 +322,10 @@ public class FunctionEvaluator {
 
         boolean allEqual = true;
 
-        while (tIt.hasNext() && eIt.hasNext() ) {
+        while (tIt.hasNext() && eIt.hasNext()) {
             Params tParams = tIt.next();
             Params eParams = eIt.next();
-            if ( Objects.deepEquals(tParams.zReturn,eParams.zReturn) ) {
+            if (Objects.deepEquals(tParams.zReturn, eParams.zReturn)) {
                 tParams.equals = true;
             } else {
                 allEqual = false;
@@ -327,27 +333,6 @@ public class FunctionEvaluator {
         }
         return allEqual;
     }
-
-//    private Document compileClasses(Element request) {
-//        Document returnDoc;
-//        LinkedList<CodeUnit> codeUnits = new LinkedList<>();
-//        for (Element codeunit : eCodeunits) {
-//            CodeUnit tempCodeUnit = new CodeUnit();
-//            String classCode = codeunit.getChild("code").getValue();
-//            DiagnostedClass dcClass = CompilationBox.compileClass(classCode, CompilationBox.getClassName(classCode));
-//            try {
-//                tempCodeUnit.id = codeunit.getAttribute("id").getIntValue();
-//            } catch (DataConversionException e) {
-//                tempCodeUnit.id = -1;
-//                e.printStackTrace();
-//            }
-//            tempCodeUnit.diagnostics = dcClass.getDiagnostic();
-//            tempCodeUnit.compileable = dcClass.isValidClass();
-//            codeUnits.add(tempCodeUnit);
-//        }
-//        returnDoc = XMLConstructor.xml("compileClass", codeUnits, null);
-//        return returnDoc;
-//    }
 
 
     protected final void runMethodOnParams(DiagnostedMethodClass dcMethod, List<ParamGroup> parameters) {

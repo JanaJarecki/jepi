@@ -50,64 +50,66 @@ public class EvaluationRequest extends Thread {
         SAXBuilder builder = new SAXBuilder();
         Document request;
         Document response = null;
+        XMLConstructor writer = new XMLConstructor();
 
         try {
             String str = EvaluationHelper.getStringFromInputStream(CLIENT.getInputStream());
             request = builder.build(new StringReader(str));
 
-        System.out.println();
-        System.out.println("#######################");
-        System.out.println("# XML request #########");
-        System.out.println(new XMLOutputter(Format.getPrettyFormat()).outputString(request));
+//        System.out.println();
+//        System.out.println("#######################");
+//        System.out.println("# XML request #########");
+//        System.out.println(new XMLOutputter(Format.getPrettyFormat()).outputString(request));
 
             Element eRoot = request.getRootElement();
             Element eType = eRoot.getChild("type");
 
             switch (eType.getValue()) {
                 case "function_original":
-                      response = FunctionEvaluator.evalNotInProcess(eRoot);
-//                    response = EvaluationProcess.exec(eRoot,"evaluationbasics.Evaluators.FunctionEvaluator",20000);
+//                      response = FunctionEvaluator.evalNotInProcess(eRoot);
+                    response = EvaluationProcess.exec(eRoot,"evaluationbasics.Evaluators.FunctionEvaluator",20000);
                     break;
 
                 case "testng":
+//                    response = TestNGEvaluator.evalNotInProcess(eRoot);
                     response = EvaluationProcess.exec(eRoot,"evaluationbasics.Evaluators.TestNGEvaluator",20000);
                     break;
 
                 default:
-                    XMLConstructor writer = new XMLConstructor();
                     writer.error(ERROR_CODE.QUESTION_TYPE_NOT_KNOWN);
-                    response = writer.getDocument();
             }
         } catch (JDOMException e) {
-            XMLConstructor writer = new XMLConstructor();
+//            System.out.println("jdomE");
             writer.error(ERROR_CODE.XML_PARSING_ERROR);
-            response = writer.getDocument();
         } catch ( TimeoutException e) {
-            XMLConstructor writer = new XMLConstructor();
+//            System.out.println("timeoutE");
             writer.error(ERROR_CODE.TIMEOUT);
-            response = writer.getDocument();
         } catch (IOException e) {
-            XMLConstructor writer = new XMLConstructor();
+//            System.out.println("IOE");
             writer.error(ERROR_CODE.INPUTSTREAM_IO_ERROR);
-            response = writer.getDocument();
         } catch ( InvocationTargetException e) {
+//            System.out.println("ITE");
         } catch ( IllegalAccessException e ) {
+//            System.out.println("IAE");
         } catch ( ClassNotFoundException e ) {
+//            System.out.println("CNFE");
         } finally {
-            if (response == null || response.getContentSize() == 0) {
-                XMLConstructor writer = new XMLConstructor();
+            if ( writer.getDocument().getContentSize() == 0) {
                 writer.error(ERROR_CODE.COULD_NOT_CREATE_RESPONSEXML);
+            }
+            if (response == null) {
                 response = writer.getDocument();
             }
-            sendResponse(response);
         }
+        sendResponse(response);
     }
 
     protected final void sendResponse(Document pReturnDoc) {
 
-        System.out.println("- XML xml --------");
-        System.out.println(new XMLOutputter(Format.getPrettyFormat()).outputString(pReturnDoc));
-        System.out.println("#######################");
+//        System.out.println();
+//        System.out.println("- XML xml --------");
+//        System.out.println(new XMLOutputter(Format.getPrettyFormat()).outputString(pReturnDoc));
+//        System.out.println("#######################");
 
         try {
             EvaluationHelper.setStringToOutputStream(CLIENT.getOutputStream(), new XMLOutputter().outputString(pReturnDoc));
