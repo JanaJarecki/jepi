@@ -80,13 +80,13 @@ public class EvaluationRequest extends Thread {
             }
         } catch (JDOMException e) {
 //            System.out.println("jdomE");
-            writer.error(ERROR_CODE.XML_PARSING_ERROR);
+            writer.error(ERROR_CODE.XML_PARSING_ERROR,e);
         } catch ( TimeoutException e) {
 //            System.out.println("timeoutE");
-            writer.error(ERROR_CODE.TIMEOUT);
+           writer.error(ERROR_CODE.TIMEOUT);
         } catch (IOException e) {
 //            System.out.println("IOE");
-            writer.error(ERROR_CODE.INPUTSTREAM_IO_ERROR);
+            writer.error("Problem with client input stream"+"\n"+e.toString());//ERROR_CODE.INPUTSTREAM_IO_ERROR);
         } catch ( InvocationTargetException e) {
 //            System.out.println("ITE");
         } catch ( IllegalAccessException e ) {

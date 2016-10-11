@@ -75,11 +75,11 @@ public class FunctionEvaluator {
             }
 
         } catch (IOException e) {
-            System.out.println(e);
+//            System.out.println(e);
         } catch (ClassNotFoundException e) {
-            System.out.println(e);
+//            System.out.println(e);
         } catch (TimeoutException e) {
-            System.out.println(e);
+//            System.out.println(e);
         }
         XMLConstructor response = new XMLConstructor();
         response.error("Some error occured while running a child process.");

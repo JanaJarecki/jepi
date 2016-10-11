@@ -58,4 +58,5 @@ config_error_message#:#Beim Speichern der Einstellungen ist ein Fehler aufgetret
 quest_type#:#Fragen Typ
 function_original#:#Funktion
 testng#:#Test mit TestNG
+error_103#:#UNERLAUBTES SZENARIO: Das Auswertungssystem konnte Ihre Anfrage nicht bearbeiten.
 error_105#:#TIMEOUT: Ihr Program lief zu lange und wurde abgebrochen. Überprüfen Sie ob Sie nicht ausversehen eine Endlosschleife geschrieben haben.

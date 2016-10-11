@@ -1,5 +1,6 @@
 package evaluationbasics.XML;
 
+import java.io.PrintWriter;
 import java.lang.reflect.InvocationTargetException;
 import java.util.Arrays;
 import java.util.LinkedList;
@@ -160,6 +161,20 @@ public class XMLConstructor {
     public void error(int errorId) {
         Element err = new Element("error");
         error(errorId, err);
+        root.addContent(err);
+    }
+
+    public void error(String message, Exception e) {
+        Element err = new Element("error");
+        StackTraceElement[] stackTrace = e.getStackTrace();
+        error(message+"\n"+e.toString()+"\n"+Arrays.toString(stackTrace), err);
+        root.addContent(err);
+    }
+
+    public void error(int errorId, Exception e) {
+        Element err = new Element("error");
+        StackTraceElement[] stackTrace = e.getStackTrace();
+        error(errorId+"\n"+e.toString()+"\n"+Arrays.toString(stackTrace), err);
         root.addContent(err);
     }
 
