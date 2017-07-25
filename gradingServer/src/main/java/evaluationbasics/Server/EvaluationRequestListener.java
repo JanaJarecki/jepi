@@ -9,26 +9,22 @@ import java.io.IOException;
 import java.net.*;
 
 /**
- * Thread fuer Kernserveraktivitaet
- * <p>
- * Aufgaben:
- * Starten des ConsoleListener
- * Warten auf Clients
- * Ueberpruefen von Clients(IPCheck)
- * Schliessen des Servers
- *
- * @author roman
+* Socket listener handling client requests if client has access rights.
  */
 class EvaluationRequestListener extends Thread {
     private final byte[][] ACCEPTED_BYTE_ADDRESSES;
-    private final ServerSocket SERVER;
-    private final ConsoleListener CL;
+    private final ServerSocket SERVER_SOCKET;
+    private final ConsoleExitListener CONSOLE_LISTENER;
 
-    public EvaluationRequestListener(ServerSocket pServer, Iterable<String> acceptedAddresses) {
+    /**
+     * Creates the socket listener and a console listener to timeoutShutdown the server.
+     * @param serverSocket socket from which client requests are processed.
+     * @param acceptedAddresses list of addresses that are allowed to access the server.
+     */
+    public EvaluationRequestListener(ServerSocket serverSocket, Iterable<String> acceptedAddresses) {
         ACCEPTED_BYTE_ADDRESSES = IPAddressListBuilder.parseIPAddresses(acceptedAddresses);
-        SERVER = pServer;
-        CL = new ConsoleListener(this);
-        //Debug
+        SERVER_SOCKET = serverSocket;
+        CONSOLE_LISTENER = new ConsoleExitListener(this);
         try {
             this.setName("EvaluationRequestListener");
         } catch (SecurityException e) {
@@ -36,27 +32,19 @@ class EvaluationRequestListener extends Thread {
         }
     }
 
+    /**
+     * Does the work of accepting clients.
+     */
     public void run() {
         Socket client = null;
-        CL.start();
+        CONSOLE_LISTENER.start();
         try {
             while (true) {
-                client = SERVER.accept();
-                if (client.getLocalAddress().isLoopbackAddress()
-                        || isAcceptedAddress(client.getLocalAddress())
-                        || client.getLocalAddress().equals(InetAddress.getLocalHost()) ) {
+                client = SERVER_SOCKET.accept();
+                if (checkClientsAccessPermission(client)) {
                     new EvaluationRequest(client).start();
                 } else {
-                    try {
-                        XMLConstructor response = new XMLConstructor();
-                        response.error(ERROR_CODE.CLIENT_ADRESS_NOT_ALLOWED);
-                        EvaluationHelper.setStringToOutputStream(client.getOutputStream(), new XMLOutputter().outputString(response.getDocument()));
-                        client.close();
-                    } catch (IOException e) {
-                        e.printStackTrace();
-                    } catch (SecurityException e) {
-                        System.err.println("SE");
-                    }
+                    reportAccessDeniedToClient(client);
                 }
             }
         } catch (SocketException e) {
@@ -67,36 +55,67 @@ class EvaluationRequestListener extends Thread {
             e.printStackTrace();
         }
 
-        closeServer();
-        if (CL.isAlive())
-            CL.kill();
-
+        shutdownServer();
     }
 
     /**
-     * Versucht den Server ordnungsgemaess zu schliessen.
+     * Shutdown the server properly.
      */
-    public void closeServer() {
-        if (SERVER != null) {
-            if (!SERVER.isClosed())
-                try {
-                    SERVER.close();
-                    System.out.println("Der Server wurde ordnungsgemaess geschlossen.");
-                } catch (IOException e) {
-                    e.printStackTrace();
-                }
-        } else {
-            System.out.println("Der Server konnte nicht ordnungsgemaess geschlossen werden.");
+    private void shutdownServer() {
+        closeServer();
+        if ( CONSOLE_LISTENER.isAlive() )
+            CONSOLE_LISTENER.setStopFlag();
+    }
+
+    /**
+     * Reports the client that it has no access permission.
+     * @param client
+     */
+    private void reportAccessDeniedToClient(Socket client) {
+        try {
+            XMLConstructor response = new XMLConstructor();
+            response.error(ERROR_CODE.CLIENT_ADRESS_NOT_ALLOWED);
+            EvaluationHelper.setStringToOutputStream(client.getOutputStream(), new XMLOutputter().outputString(response.getDocument()));
+            client.close();
+        } catch (IOException e) {
+            e.printStackTrace();
+        } catch (SecurityException e) {
+            System.err.println("SE");
+            e.printStackTrace();
         }
     }
 
     /**
-     * Die Methode prueft eine IP-Addresse auf ihre Akzeptanz im erlaubten IP-Bereich
-     *
-     * @param iAddress die zu ueberpruefende IP-Addresse
-     * @return true, sofern die IP-Addresse akzeptiert wird, andernfalls false
+     * Tries to close the server.
      */
-    private boolean isAcceptedAddress(InetAddress iAddress) {
+    public void closeServer() {
+        if (SERVER_SOCKET!=null && !SERVER_SOCKET.isClosed()) {
+            try {
+                SERVER_SOCKET.close();
+            } catch (IOException e) {
+                e.printStackTrace();
+            }
+        }
+    }
+
+    /**
+     * Checks wether the client has the right to access the server.
+     * @return
+     * @throws UnknownHostException
+     */
+    private boolean checkClientsAccessPermission(Socket client) throws UnknownHostException {
+        return client.getLocalAddress().isLoopbackAddress()
+            || isListedIAddress(client.getLocalAddress())
+            || client.getLocalAddress().equals(InetAddress.getLocalHost());
+    }
+
+    /**
+     * Checks if the ip-address is in the list of accepted addresses.
+     *
+     * @param iAddress the ip to check
+     * @return true if the ip is accepted, otherwise false
+     */
+    private boolean isListedIAddress(InetAddress iAddress) {
         for (byte[] accIAddress : ACCEPTED_BYTE_ADDRESSES) {
             try {
                 if (InetAddress.getByAddress(accIAddress).equals(iAddress))

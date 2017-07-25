@@ -36,19 +36,18 @@ public class StudentUncaughtExceptionHandler implements
         XMLConstructor response = new XMLConstructor();
         response.error(output);
 
-        System.out.println("- XML xml --------");
+        System.out.println("# XML xml #############");
         System.out.println(new XMLOutputter(Format.getPrettyFormat()).outputString(response.getDocument()));
-        System.out.println("#######################");
+        System.out.println("-----------------------");
 
-
-        if (!CLIENT.isClosed())
-            //Beendet den Stream ordnungsgemaess mit der Ausgabe einer Error-XML
+        if (!CLIENT.isClosed()) {
             try {
                 EvaluationHelper.setStringToOutputStream(CLIENT.getOutputStream(), response.getDocument().toString());
                 CLIENT.close();
             } catch (IOException e1) {
                 e1.printStackTrace();
             }
+        }
 
     }
 

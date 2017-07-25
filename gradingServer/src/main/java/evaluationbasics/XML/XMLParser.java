@@ -7,9 +7,6 @@ import org.jdom2.Element;
 import java.util.LinkedList;
 import java.util.List;
 
-/**
- * Created by ilias on 26.08.16.
- */
 public class XMLParser {
 
     public static String getCode( Element top ) throws EmptyCodeException {

@@ -9,75 +9,45 @@ import java.util.ArrayList;
 import java.util.List;
 
 /**
- * In der Klasse ist der Server fuer das Bewertungssystem definiert.
- * 
- * @author Roman Bange
- * @version 1.0
+ * The evaluation server for the Java Evaluation Plugin for ILIAS (JEPI)
  */
 public class EvaluationServer {
-
-	
-	//Hier koennen weiterere IPAddressen definiert werden, von denen aus auf das Bewertungssystem zugegriffen werden kann
-	private final static String[] ACCEPTED_STR_ADDRESSES= new String[]{
-		//"255.255.255.255" - Eingabebeispiel
-	};			
-	private static final int DEFAULTPORT=1234;
-	
-	//Dauer fuer die ein Studentthread bearbeitet werden darf (in Millisekunden). siehe StudentTimeoutCounter
-	public static final int STUDENTTIMEOUT=20000;
-
 	/**
-	 * Konstruktur fuer Serverklasse
-	 * 
-	 * Aufgaben:
-	 * Uebernimmt Port-Management
-	 * 	-Automatische Portsuche
-	 * 	-Portcheck
-	 * Startet SecurityManager
-	 * Startet Server
-	 * Startet EvaluationRequestListener
-	 * 
-	 * @param port Gewuenschter Port
-	 * @param acceptedAddresses Fuer Clients zu akzeptierende IPAddressen
+	 * Opens a socket on the port, sets the security manager and creates a listener.
+	 * @param port port to be used
+	 * @param acceptedAddresses accepted addresses for an ILIAS
 	 */
-	@SuppressWarnings("unused") //aufgrund der StudenttimeoutMeldung
 	public EvaluationServer(int port, String [] acceptedAddresses){
-		//Portueberpruefung
-		if (port == -1 ) port = DEFAULTPORT;
-		if((port < 1024 && port != 0) || port > 65535){
-			System.err.println("Der eingegebene Parameter ist nicht zulaessig.");
-			System.err.println("Geben Sie einen Port zwischen 1024 bis 65535 ein.");
-			System.err.println("Eine 0 generiert einen zufaelligen Port.");
-			return;
-		}		
-			
+
+		SwitchableSecurityManager ssm = new SwitchableSecurityManager(port,false);
+		System.setSecurityManager(ssm);
+
+		List<String> adresses = Arrays.asList(acceptedAddresses);
+
 		ServerSocket serverSocket=null;
 
 		try {
 			serverSocket = new ServerSocket(port);
 			port=serverSocket.getLocalPort();
-			System.out.println("Der Server wurde auf Port "+port+" gestartet.");
-			System.out.println("Zum Beenden 'exit' eingeben.");
+			System.out.println("Ther server listens on port: "+port);
+			System.out.println("Please type 'exit' to stop the server.");
 		} catch (Exception e) {
-			System.err.println("Server konnte nicht gestartet werden:");
-			System.out.println("Port: "+port);
+			System.out.println("The server could not be started. Used port was: "+port);
 			System.out.println(e);
 			serverSocket=null;
 		}
-		
-		if(EvaluationServer.STUDENTTIMEOUT<500) {
-			System.out.println("Die erlaubte Bearbeitungsdauer eines EvaluationRequest betraegt unter 0.5 Sekunden.");
-			System.out.println("Funktionsweise nicht gewaehrleistet!");
-		}
 
 		if(serverSocket!=null){
-			List<String> adresses = new ArrayList<String>(Arrays.asList(ACCEPTED_STR_ADDRESSES));
-			adresses.addAll(Arrays.asList(acceptedAddresses));
-			SwitchableSecurityManager ssm = new SwitchableSecurityManager(port,false);
-			System.setSecurityManager(ssm);
 			new EvaluationRequestListener(serverSocket,adresses).start();
 		}
-
-		
 	}
+
+
+	public final static EvaluationServerConfig config = new EvaluationServerConfig();
+
+}
+
+class EvaluationServerConfig {
+	// Timeout time for long running solution from students
+	public static final int REQUEST_TIMELIMIT =20000;
 }

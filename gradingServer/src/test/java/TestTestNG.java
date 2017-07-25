@@ -65,7 +65,7 @@ public class TestTestNG {
         Vector<TestData> tests = new Vector();
         tests.add(new TestData(0,"testFirst","Erster Test", 5));
         tests.add(new TestData(1,"testSecond","Zweiter Test", 3));
-    }
+}
 
     public static void RunTests(List<TestData> tests) {
 
