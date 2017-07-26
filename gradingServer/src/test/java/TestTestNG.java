@@ -2,20 +2,13 @@
  * Created by ilias on 16.08.16.
  */
 
-import evaluationbasics.AnalysisHelpers.ASTHelper;
-import evaluationbasics.XML.TestData;
+import evaluationbasics.analysis.ASTHelper;
+import evaluationbasics.xml.TestData;
 import org.testng.*;
 import org.testng.annotations.DataProvider;
 import org.testng.annotations.Test;
-import org.testng.internal.IResultListener;
-import org.testng.internal.IResultListener2;
 
 import java.util.*;
-import java.util.function.Consumer;
-import java.util.function.IntFunction;
-import java.util.stream.Stream;
-
-import static java.util.stream.Collectors.toSet;
 
 
 public class TestTestNG {

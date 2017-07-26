@@ -1,0 +1,14 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<response>
+    <runmethod>
+        <diagnostics />
+        <methodtypediagnostics />
+        <runresults>
+            <paramgroup>
+                <params id="0" params="[[3, 4, 5]]" value="[0, 1, 2]" />
+                <params id="1" params="[[3, 5, 6]]" value="[0, 1, 2]" />
+                <params id="2" params="[[4]]" value="[0, 1, 2, 3]" />
+            </paramgroup>
+        </runresults>
+    </runmethod>
+</response>

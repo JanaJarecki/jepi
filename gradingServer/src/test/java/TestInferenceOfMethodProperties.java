@@ -1,5 +1,5 @@
 
-import evaluationbasics.AnalysisHelpers.ASTHelper;
+import evaluationbasics.analysis.ASTHelper;
 import org.testng.Assert;
 import org.testng.annotations.DataProvider;
 import org.testng.annotations.Test;

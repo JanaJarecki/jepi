@@ -1,16 +1,11 @@
-import evaluationbasics.CompilationHelpers.CompilationBox;
-import evaluationbasics.CompilationHelpers.StringJavaFileObject;
-import evaluationbasics.Evaluators.EvaluationHelper;
-import evaluationbasics.Evaluators.TestNGEvaluator;
-import evaluationbasics.Reports.DiagnostedClass;
-import evaluationbasics.XML.TestData;
-import evaluationbasics.XML.XMLConstructor;
+import evaluationbasics.compilation.CompilationBox;
+import evaluationbasics.evaluators.EvaluationHelper;
+import evaluationbasics.reports.DiagnostedClass;
+import evaluationbasics.xml.TestData;
 import org.eclipse.jdt.core.dom.*;
 
 import javax.tools.Diagnostic;
-import java.lang.reflect.Method;
 import java.util.Arrays;
-import java.util.LinkedList;
 import java.util.List;
 import java.util.Vector;
 

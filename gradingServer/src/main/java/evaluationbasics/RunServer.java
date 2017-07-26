@@ -1,6 +1,6 @@
 package evaluationbasics;
 
-import evaluationbasics.Server.EvaluationServer;
+import evaluationbasics.server.EvaluationServer;
 
 import java.util.Arrays;
 

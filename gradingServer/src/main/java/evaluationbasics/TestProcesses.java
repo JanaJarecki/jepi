@@ -1,10 +1,5 @@
 package evaluationbasics;
 
-import evaluationbasics.Evaluators.FunctionEvaluator;
-import evaluationbasics.XML.XMLConstructor;
-import org.jdom2.Document;
-import org.jdom2.Element;
-
 import java.io.*;
 import java.util.concurrent.TimeoutException;
 

@@ -1,0 +1,22 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<progquestion>
+    <type>function_original</type>
+    <action>runteacher</action>
+    <teacher>
+        <code type="method" id="0" checkmethodtype="false">double f( double d) {&#xD;
+            for ( int i = 0 ; i==i; ++i) {}&#xD;
+            return d;&#xD;
+            }</code>
+        <paramgroup id="0" description="Doubles" points="1">
+            <params id="0">
+                <param>3.1415</param>
+            </params>
+            <params id="1">
+                <param>2.46</param>
+            </params>
+        </paramgroup>
+    </teacher>
+    <student>
+        <code type="method" id="0" checkmethodtype="false" />
+    </student>
+</progquestion>

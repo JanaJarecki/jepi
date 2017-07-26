@@ -1,13 +1,3 @@
-import evaluationbasics.Security.SwitchableSecurityManager;
-import org.testng.Assert;
-import org.testng.annotations.Test;
-
-import java.io.ByteArrayOutputStream;
-import java.io.PrintStream;
-import java.lang.reflect.Field;
-import java.lang.reflect.Method;
-import java.lang.reflect.Modifier;
-
 /**
  * Created by ilias on 29.08.16.
  */

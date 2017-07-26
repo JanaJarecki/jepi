@@ -8,7 +8,7 @@ public class TestSuite {
     public static void main(String[] args) {
 
         Class[] classList = new Class[]{
-//                TestTestNG.class,
+                TestTestNG.class,
                 TestInferenceOfMethodProperties.class,
                 TestMethodIsCompilable.class
         };

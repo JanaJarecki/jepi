@@ -1,0 +1,25 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<progquestion>
+    <type>function_original</type>
+    <action>runteacher</action>
+    <teacher>
+        <code type="method" id="0" checkmethodtype="false">int f( int n ) {&#xD;
+            if ( n &lt; 1) return 0;&#xD;
+            return n + f(n-1);&#xD;
+            }</code>
+        <paramgroup id="0" description="Test" points="1">
+            <params id="0">
+                <param>1</param>
+            </params>
+            <params id="1">
+                <param>2</param>
+            </params>
+            <params id="2">
+                <param>3</param>
+            </params>
+        </paramgroup>
+    </teacher>
+    <student>
+        <code type="method" id="0" checkmethodtype="false" />
+    </student>
+</progquestion>

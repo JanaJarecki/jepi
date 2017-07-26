@@ -1,4 +1,4 @@
 grant codebase "file:-" {
-  permission evaluationbasics.Security.ToggleSecurityManagerPermission;
+  permission evaluationbasics.security.ToggleSecurityManagerPermission;
 };
 

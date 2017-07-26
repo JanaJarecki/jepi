@@ -1,6 +1,6 @@
-import evaluationbasics.CompilationHelpers.CompilableClass;
-import evaluationbasics.CompilationHelpers.MyMethodWrapper;
-import evaluationbasics.CompilationHelpers.Compilation;
+import evaluationbasics.compilation.CompilableClass;
+import evaluationbasics.compilation.MyMethodWrapper;
+import evaluationbasics.compilation.Compilation;
 
 
 import org.testng.Assert;
