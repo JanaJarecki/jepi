@@ -310,7 +310,7 @@ class assProgQuestionGUI extends assQuestionGUI {
 		$type = $result ['type'];
 		switch ($type) {
 			case 'success' :
-				ilUtil::sendSuccess ( nl2br ( htmlspecialchars ( $result ['message'] . "\n\n" . $result ['paramsreturn'] ) ) );
+				ilUtil::sendSuccess ( nl2br ( htmlspecialchars ( $result ['message'] . "\nfoobar\n" . $result ['paramsreturn'] ) ) );
 				break;
 			case 'failure' :
 			case 'compile error' :
@@ -463,7 +463,9 @@ class assProgQuestionGUI extends assQuestionGUI {
 	function getPreview($show_question_only = FALSE, $showInlineFeedback = false) {
 		$pl = $this->object->getPlugin ();
 		$template = $pl->getTemplate ( "tpl.il_as_qpl_progquestion_output.html" );
-		$template->setVariable ( "QUESTIONTEXT", $this->object->prepareTextareaOutput ( $this->object->getQuestion (), TRUE ) );
+		$questiontext =  $this->object->getQuestion ();
+		$template->setVariable ( "QUESTIONTEXT", $this->object->prepareTextareaOutput ( $questiontext, TRUE ) );
+		$template->setVariable ( "SOLUTION_ON_WORK", $this->object->getSolution() );
 		$questionoutput = $template->get ();
 		if (! $show_question_only) {
 			// get page object output
@@ -512,17 +514,20 @@ class assProgQuestionGUI extends assQuestionGUI {
 		// generate the question output
 		$pl = $this->object->getPlugin ();
 		$template = $pl->getTemplate ( "tpl.il_as_qpl_progquestion_output.html" );
-		
-		$template->setVariable ( "SOLUTION_ON_WORK", ilUtil::prepareFormOutput ( $user_solution ) );
+
 		$questiontext = $this->object->getQuestion ();
 		$template->setVariable ( "QUESTIONTEXT", $this->object->prepareTextareaOutput ( $questiontext, TRUE ) );
+		
+		$template->setVariable ( "SOLUTION_ON_WORK", ilUtil::prepareFormOutput ( $user_solution ) );
+		
+		$template->setVariable ( "CMD_COMPILE", 'handleQuestionAction' );
+		$template->setVariable ( "TEXT_COMPILE", $pl->txt ( "studcompile" ) );
 		
 		$template->setVariable ( "CMD_RUN", 'handleQuestionAction' );
 		$template->setVariable ( "TEXT_RUN", $pl->txt ( "run" ) );
 		
-		$template->setVariable ( "CMD_COMPILE", 'handleQuestionAction' );
-		$template->setVariable ( "TEXT_COMPILE", $pl->txt ( "studcompile" ) );
 		$template->setVariable( "STUD_PARAMS_INPUT", $user_params) ;
+		
 		$template->setVariable ( "CMD_FEEDBACK", 'handleQuestionAction' );
 		$template->setVariable ( "TEXT_FEEDBACK", $pl->txt ( "feedback" ) );
 		

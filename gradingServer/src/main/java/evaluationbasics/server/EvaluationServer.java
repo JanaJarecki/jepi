@@ -47,5 +47,5 @@ public class EvaluationServer {
 
 class EvaluationServerConfig {
 	// Timeout time for long running solution from students
-	public static final int REQUEST_TIMELIMIT =2000;
+	public static final int REQUEST_TIMELIMIT = 10000;
 }
