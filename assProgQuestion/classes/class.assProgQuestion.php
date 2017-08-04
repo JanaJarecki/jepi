@@ -207,7 +207,7 @@ class assProgQuestion extends assQuestion {
 	 *        	(deprecated !!)
 	 * @access public
 	 */
-	function calculateReachedPoints($active_id, $pass = NULL, $returndetails = FALSE) {
+	function calculateReachedPoints($active_id, $pass = NULL, $authorizedSolution = true, $returndetails = FALSE) {
 		global $ilDB;
 		
 		$reachedpoints = 0;
@@ -292,7 +292,7 @@ class assProgQuestion extends assQuestion {
 	 *
 	 * @see assQuestion::saveWorkingData()
 	 */
-	function saveWorkingData($active_id, $pass = NULL) {
+	function saveWorkingData($active_id, $pass = NULL, $authorized = Null) {
 		global $ilDB;
 		global $ilUser;
 		
@@ -786,6 +786,8 @@ class assProgQuestion extends assQuestion {
 		
 		return $startrow + $i + 1;
 	}
+
+
 }
 
 ?>

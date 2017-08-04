@@ -346,7 +346,7 @@ class assProgQuestionGUI extends assQuestionGUI {
 	 *
 	 * @see assQuestionGUI::outQuestionForTest()
 	 */
-	function outQuestionForTest($formaction, $active_id, $pass = NULL, $is_postponed = FALSE, $use_post_solutions = FALSE, $show_feedback = FALSE) {
+	function getTestOutput($formaction, $active_id, $pass = NULL, $is_postponed = FALSE, $use_post_solutions = FALSE, $show_feedback = FALSE) {
 		$test_output = $this->renderStudentView ( $active_id, $pass, $is_postponed, $use_post_solutions, $show_feedback );
 		$this->tpl->setVariable ( "QUESTION_OUTPUT", $test_output );
 		$this->tpl->setVariable ( "FORMACTION", $formaction );
