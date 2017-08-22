@@ -786,6 +786,11 @@ class assProgQuestion extends assQuestion {
 		
 		return $startrow + $i + 1;
 	}
+	
+	public function saveWorkingData($active_id, $pass = NULL, $authorized = Null ) {
+		
+	}
+	
 }
 
 ?>

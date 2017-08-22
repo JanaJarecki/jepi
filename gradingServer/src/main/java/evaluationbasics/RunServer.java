@@ -10,7 +10,7 @@ import java.util.Arrays;
 public class RunServer {
 
   public static void main(String[] args) {
-    int port = 8088;
+    int port = 1234;
     String[] acceptedAddresses = new String[]{};
 
     // try to parse a port number and allowed addresses
