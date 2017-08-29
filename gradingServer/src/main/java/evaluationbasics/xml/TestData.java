@@ -7,6 +7,7 @@ public class TestData {
     public int id = -1;
     public String name = "";
     public String description = "";
+    public String consoleOutput = "";
     public int points = 0;
     public int reachedPoints = 0;
     public boolean passed = false;

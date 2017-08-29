@@ -7,6 +7,7 @@ package evaluationbasics.evaluators;
 import evaluationbasics.xml.XMLConstructor;
 import org.jdom2.Document;
 import org.jdom2.Element;
+import org.jdom2.output.XMLOutputter;
 
 import java.io.*;
 import java.lang.reflect.InvocationTargetException;
@@ -54,8 +55,6 @@ public class EvaluationProcess {
         if (input.available() != 0) {
           try {
             Document response = (Document) ois.readObject();
-            String studentsOutput = (String) ois.readObject();
-            //todo: add students output to the response
             return response;
           } catch (IOException e) {
             XMLConstructor xml = new XMLConstructor();

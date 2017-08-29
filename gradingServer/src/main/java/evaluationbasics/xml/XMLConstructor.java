@@ -112,6 +112,9 @@ public class XMLConstructor {
             test.setAttribute("passedPartially", String.valueOf(td.passedPartially));
             test.setAttribute("pPoints", String.valueOf(td.points));
             test.setAttribute("reachedPoints", String.valueOf(td.reachedPoints));
+            Element console = new Element("console");
+            console.setText(td.consoleOutput);
+            test.addContent(console);
             element.addContent(test);
         }
         parent.addContent(element);
@@ -233,6 +236,11 @@ public class XMLConstructor {
                         par.setAttribute("value", deepToString(params.zReturn));
                     } else {
                         par.setAttribute("value", params.zReturn.toString());
+                    }
+                    if ( params.consoleOutput!=null ) {
+                        Element consoleOutput = new Element("console");
+                        consoleOutput.addContent(params.consoleOutput);
+                        par.addContent(consoleOutput);
                     }
                 } else {
                     par.setAttribute("error", "true");

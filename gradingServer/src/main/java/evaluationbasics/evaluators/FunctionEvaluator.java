@@ -32,12 +32,13 @@ public class FunctionEvaluator {
     String JAVA_CMD = System.getenv("JAVA_HOME");
     String CLASSPATH = System.getProperty("java.class.path");
     String CURRENTDIR = System.getProperty("user.dir");
+    String SECURITYFILE = System.getProperty("java.security.policy");
 
     try {
       ProcessBuilder builder = new ProcessBuilder(JAVA_CMD + File.separator + "bin" + File.separator + "java",
 //                    "-Xdebug -Xrunjdwp=transport=dt_socket,server=y,suspend=y,address=5005",
           "-cp", CLASSPATH,
-          "-Djava.security.policy=" + CURRENTDIR + File.separator + "security.policy",
+          "-Djava.security.policy=" + CURRENTDIR + File.separator + SECURITYFILE,
           "evaluationbasics.evaluators.FunctionEvaluator");
       Process child = builder.start();
       try {
@@ -87,14 +88,11 @@ public class FunctionEvaluator {
       try {
         Element request = (Element) ois.readObject();
 
-        SysOutGrabber grabber = new SysOutGrabber();
+
         Document response = new FunctionEvaluator().dispatchEvaluation(request);
-        String consoleOutput = grabber.getOutput();
-        grabber.detach();
 
         ObjectOutputStream oos = new ObjectOutputStream(System.out);
         oos.writeObject(response); oos.flush();
-        oos.writeObject(consoleOutput); oos.flush();
 
       } catch (ClassNotFoundException e) {
       } finally {
@@ -337,7 +335,10 @@ public class FunctionEvaluator {
     for (ParamGroup group : parameters) {
       for (Params params : group.params) {
         try {
+          SysOutGrabber grabber = new SysOutGrabber();
           params.zReturn = EvaluationHelper.runMethodOnParams(dcMethod, params.values);
+          params.consoleOutput = grabber.getOutput();
+          grabber.detach();
         } catch (UnknownObjectException e) {
           params.zReturn = null;
           params.error = "Could not run method on the value: {" + Arrays.toString(params.values) + "}\nMaybe the parameter does not match the required type.\n" + e.getMessage();

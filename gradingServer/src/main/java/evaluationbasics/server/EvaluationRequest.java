@@ -7,6 +7,7 @@ import java.net.Socket;
 import java.util.concurrent.TimeoutException;
 
 import evaluationbasics.evaluators.EvaluationProcess;
+import evaluationbasics.evaluators.TestNGEvaluator;
 import evaluationbasics.exceptions.PrintToSystemErrorExceptionHandler;
 import evaluationbasics.exceptions.StudentUncaughtExceptionHandler;
 import evaluationbasics.exceptions.ERROR_CODE;
@@ -54,9 +55,9 @@ public class EvaluationRequest extends Thread {
       String str = EvaluationHelper.getStringFromInputStream(CLIENT.getInputStream());
       request = builder.build(new StringReader(str));
 
-//      System.out.println("### XML-Request ###\n");
-//      System.out.println(new XMLOutputter(Format.getPrettyFormat()).outputString(request));
-//      System.out.println("\n--- END ---\n");
+      System.out.println("### XML-Request ###\n");
+      System.out.println(new XMLOutputter(Format.getPrettyFormat()).outputString(request));
+      System.out.println("\n--- END ---\n");
 
       Element eRoot = request.getRootElement();
       Element eType = eRoot.getChild("type");
@@ -67,7 +68,8 @@ public class EvaluationRequest extends Thread {
           break;
 
         case "testng":
-          response = EvaluationProcess.exec(eRoot,"evaluationbasics.evaluators.TestNGEvaluator",20000);
+          response = TestNGEvaluator.evalNotInProcess(eRoot);
+//          response = EvaluationProcess.exec(eRoot,"evaluationbasics.evaluators.TestNGEvaluator",20000);
         break;
 
         default:
@@ -95,9 +97,9 @@ public class EvaluationRequest extends Thread {
   }
 
   protected final void sendResponse(Document response) {
-//    System.out.println("@@@ XML-Response @@@\n");
-//    System.out.println(new XMLOutputter(Format.getPrettyFormat()).outputString(response));
-//    System.out.println("\n--- END ---\n");
+    System.out.println("@@@ XML-Response @@@\n");
+    System.out.println(new XMLOutputter(Format.getPrettyFormat()).outputString(response));
+    System.out.println("\n--- END ---\n");
 
     try {
       EvaluationHelper.setStringToOutputStream(CLIENT.getOutputStream(), new XMLOutputter().outputString(response));
@@ -111,7 +113,6 @@ public class EvaluationRequest extends Thread {
 
   public final void timeoutShutdown() {
     if (!CLIENT.isClosed()) {
-
       XMLConstructor writer = new XMLConstructor();
       writer.error(ERROR_CODE.TIMEOUT);
       setUncaughtExceptionHandler(new PrintToSystemErrorExceptionHandler());
