@@ -310,7 +310,7 @@ class assProgQuestionGUI extends assQuestionGUI {
 		$type = $result ['type'];
 		switch ($type) {
 			case 'success' :
-				ilUtil::sendSuccess ( nl2br ( htmlspecialchars ( $result ['message'] . "\nfoobar\n" . $result ['paramsreturn'] ) ) );
+				ilUtil::sendSuccess ( nl2br ( htmlspecialchars ( $result ['message'] . "\n\n" . $result ['paramsreturn'] ) ) );
 				break;
 			case 'failure' :
 			case 'compile error' :
@@ -552,7 +552,6 @@ class assProgQuestionGUI extends assQuestionGUI {
 				default :
 					ilUtil::sendInfo ( nl2br ( htmlspecialchars ( $rating_system_response ['message'] ) ) );
 			}
-			// $template->setVariable("RATING_SYSTEM_RESPONSE", $this->object->getEvaluationResponse());
 		}
 		
 		$questionoutput = $template->get ();

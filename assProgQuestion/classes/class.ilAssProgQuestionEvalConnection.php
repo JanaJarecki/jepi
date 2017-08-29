@@ -479,6 +479,10 @@ class ilAssProgQuestionEvalConnection {
 				$result ['message'] .= "\n" . $this->plugin->txt ( "failedtest" ) . " [" . $att ["description"] . "] ";
 				$reachedTotalPoints = false;
 			}
+			if ( $test->console != null && $test->console !== '') {
+				$formatedOutput = "> " . str_replace("\n","\n> ",$test->console);
+				$result['message'] .= "\nConsole output:\n" . rtrim($formatedOutput,"> ");
+			}
 		}
 		if (! $reachedTotalPoints) {
 			$result ['type'] = "warning";
@@ -523,6 +527,7 @@ class ilAssProgQuestionEvalConnection {
 	 * @return string
 	 */
 	private function parseFunctionResponse($response) {
+		$result = Array();
 		$xml = new SimpleXMLElement ( $response );
 		if ($xml->error) {
 			$result ['type'] = 'failure';
@@ -595,11 +600,15 @@ class ilAssProgQuestionEvalConnection {
 					$params = $group->xpath ( "params" );
 					foreach ( $params as $param ) {
 						$att = $param->attributes ();
+						$message .= "\n________________________________________________________________________________";
 						if ($att ["error"]) {
 							$message .= "\n" . $att ["params"] . " => " . $param;
 							$result ['type'] = "warning";
 						} else {
-							$message .= "\n" . $att ["params"] . " => " . $att ["value"];
+							$message .= "\nParameter:" . $att ["params"] . " Rückgabewert:" . $att ["value"];
+							if ( $param->console != null && $param->console !== '') {
+								$message .= "\n" . $param->console;
+							}
 						}
 					}
 				}
