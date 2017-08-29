@@ -49,7 +49,7 @@ public class TestNGEvaluator {
 //                    "-Xdebug -Xrunjdwp=transport=dt_socket,server=y,suspend=y,address=5005",
           "-cp", CLASSPATH,
           "-Djava.security.policy=" + CURRENTDIR + File.separator + SECURITYFILE,
-          "evaluationbasics.evaluators.FunctionEvaluator");
+          "evaluationbasics.evaluators.TestNGEvaluator");
       Process child = builder.start();
       try {
         OutputStream output = child.getOutputStream();
@@ -158,13 +158,11 @@ public class TestNGEvaluator {
     try {
       List<TestData> tests = XMLParser.parseTests(request);
       for (TestData test : tests) {
-        System.out.println(test.name);
         DiagnostedTest dc = complationTest(request, person, test.name);
         if (dc != null && dc.isValidClass()) {
           SysOutGrabber grabber = new SysOutGrabber();
           EvaluationHelper.runInstanceMethod(dc.getTestSuiteClass(), "RunTests", new Object[]{test});
           grabber.detach();
-//          test.consoleOutput = grabber.getOutput();
         }
       }
       xml.responseToRunTest(tests);
@@ -189,6 +187,9 @@ public class TestNGEvaluator {
       for (StackTraceElement s : e.getCause().getStackTrace()) stackTrace2 += s.toString() + "\n";
       xml.error("Target invocation error: " + e.getMessage() + "\n" + stackTrace1);
       xml.error("Target invocation error cause: " + e.getCause() + "\n" + stackTrace2);
+    } catch ( Exception e) {
+      System.out.println("ERROR: "+e);
+      xml.error("Unkown exception: " + e.getMessage() + "\n" + e.getStackTrace()[1]);
     }
   }
 
