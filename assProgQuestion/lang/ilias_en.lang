@@ -43,8 +43,10 @@ iterative#:#Require iteration
 iterativeinfo#:#Code will be checked for loops. If none are found, no points are awarded.
 iterativenorecursive#:#Require iteration, do not allow recursion
 iterativenorecursiveinfo#:#Code will be checked for loops. If none are found, no points are awarded. No points will be awarded if recursive function calls are found.
-solutionoutput_label_solution#:#Answer:
+solutionoutput_label_solution#:#Answer
+solutionoutput_label_solutions#:#Answers
 solutionoutput_label_points#:#Points:
+solutionoutput_label_maxpoints#:#Maximal Points:
 xls_label_solution#:#Answer
 xls_label_points#:#Points
 settings#:#Settings

@@ -43,8 +43,10 @@ iterative#:#Iteration
 iterativeinfo#:#Der Code wird auf Schleifen untersucht. Werden keine gefunden, werden für die Aufgabe keine Punkte vergeben.
 iterativenorecursive#:#Iteration, keine Rekursion
 iterativenorecursiveinfo#:#Der Code wird auf Schleifen untersucht. Werden keine gefunden, werden für die Aufgabe keine Punkte vergeben. Es werden außerdem keine Punkte vergeben, wenn Selbstaufrufe gefunden wurden.
-solutionoutput_label_solution#:#Antwort:
+solutionoutput_label_solution#:#Antwort
+solutionoutput_label_solutions#:#Antworten
 solutionoutput_label_points#:#Punkte:
+solutionoutput_label_maxpoints#:#Maximale Punkte:
 xls_label_solution#:#Antwort
 xls_label_points#:#Punkte
 settings#:#Einstellungen

@@ -182,6 +182,7 @@ class assProgQuestionDBConnection {
 			}
 		}
 	}
+	
 	public static function loadAssQuestion($prog_question, $question_id) {
 		global $ilDB;
 		

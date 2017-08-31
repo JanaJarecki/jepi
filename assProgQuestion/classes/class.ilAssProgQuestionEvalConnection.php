@@ -219,6 +219,7 @@ class ilAssProgQuestionEvalConnection {
 		$address = $config ['ratingsystem_address'];
 		
 		$resultxml = $this->sendMessage ( $this->xml, $address, $errno, $errstr );
+		print($resultxml);
 		
 		if ($resultxml === FALSE) {
 			$result ['type'] = 'failure';

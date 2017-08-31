@@ -359,83 +359,87 @@ class assProgQuestionGUI extends assQuestionGUI {
 	 * @see assQuestionGUI::getSolutionOutput()
 	 */
 	function getSolutionOutput($active_id, $pass = NULL, $graphicalOutput = FALSE, $result_output = FALSE, $show_question_only = TRUE, $show_feedback = FALSE, $show_correct_solution = FALSE, $show_manual_scoring = FALSE, $show_question_text = TRUE) {
-		if ($show_correct_solution) {
-			// get the contents of a correct solution
-			// adapt this to your structure of answers
-			$solutions = array (
-					array (
-							"value1" => 'progquest_studentsolution',
-							"value2" => $this->object->getSolution (),
-							"points" => $this->object->getMaximumPoints () 
-					) 
-			);
-		} elseif ($active_id > 0) {
-			// get the answers of the user for the active pass or from the last pass if allowed
-			$solutions = $this->object->getSolutionValues ( $active_id, $pass );
-		} else {
-			// get empty contents
-			// adapt this to your structure of answers
-			$solutions = array (
-					array (
-							"value1" => "progquest_studentsolution",
-							"value2" => "",
-							"points" => "0" 
-					) 
-			);
-		}
-		
-		// loop through the saved values of more records exist
-		// the last record wins
-		// adapt this to your structure of answers
-		foreach ( $solutions as $solution ) {
-			if ($solution ['value1'] == 'progquest_studentsolution') {
-				$value1 = isset ( $solution ["value1"] ) ? $solution ["value1"] : "";
-				$value2 = isset ( $solution ["value2"] ) ? $solution ["value2"] : "";
-				$points = isset ( $solution ["points"] ) ? $solution ["points"] : "0";
-			}
-		}
-		
-		// get the solution template
 		$template = $this->plugin->getTemplate ( "tpl.il_as_qpl_progquestion_output_solution.html" );
+
+		$maxPoints = $this->object->getMaximumPoints ();
 		
-		if ($active_id > 0 and $graphicalOutput) {
-			$points = $this->object->getReachedPoints ( $active_id, $pass ); // Da wir in DB die Points selber gar nicht haben, so abgreifen
-			                                                                 // output of ok/not ok icons for user entered solutions
-			                                                                 // in this example we have ony one relevant input field (points)
-			                                                                 // so we just need to tet the icon beneath this field
-			                                                                 // question types with partial answers may have a more complex output
-			if ($this->object->getReachedPoints ( $active_id, $pass ) == $this->object->getMaximumPoints ()) {
-				$template->setCurrentBlock ( "icon_ok" );
-				$template->setVariable ( "ICON_OK", ilUtil::getImagePath ( "icon_ok.png" ) );
-				$template->setVariable ( "TEXT_OK", $this->lng->txt ( "answer_is_right" ) );
-				$template->parseCurrentBlock ();
-			} else {
-				$template->setCurrentBlock ( "icon_ok" );
-				$template->setVariable ( "ICON_NOT_OK", ilUtil::getImagePath ( "icon_not_ok.png" ) );
-				$template->setVariable ( "TEXT_NOT_OK", $this->lng->txt ( "answer_is_wrong" ) );
-				$template->parseCurrentBlock ();
-			}
-		}
-		
-		// fill the template variables
-		// adapt this to your structure of answers
-		// $template->setVariable("LABEL_VALUE1", $this->plugin->txt('label_value1'));
-		$template->setVariable ( "LABEL_VALUE2", $this->plugin->txt ( 'solutionoutput_label_solution' ) );
-		$template->setVariable ( "LABEL_POINTS", $this->plugin->txt ( 'solutionoutput_label_points' ) );
-		
-		// $template->setVariable("VALUE1", empty($value1) ? "&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;" : ilUtil::prepareFormOutput($value1));
-		$template->setVariable ( "VALUE2", empty ( $value2 ) ? "&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;" : nl2br ( ilUtil::prepareFormOutput ( $value2 ) ) );
-		$template->setVariable ( "POINTS", empty ( $points ) ? "&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;" : ilUtil::prepareFormOutput ( $points ) );
-		
-		// TODO this should in most cases ensure different IDs for different elements, but it is not guaranteed
-		$template->setVariable ( "ID", 'cm' . mt_rand () );
-		
-		$questiontext = $this->object->getQuestion ();
 		if ($show_question_text == true) {
+			$questiontext = $this->object->getQuestion ();
+			$template->setCurrentBlock("questiontext");
 			$template->setVariable ( "QUESTIONTEXT", $this->object->prepareTextareaOutput ( $questiontext, TRUE ) );
+			$template->parseCurrentBlock ();
+		}
+	
+		if ($active_id > 0) {
+			// get the answers of the user for the active pass or from the last pass if allowed
+			$studentSolutions = $this->object->getSolutionValues ( $active_id, $pass );
+			$points = $this->object->getReachedPoints ( $active_id, $pass );
+
+			if ( $graphicalOutput ) {
+				if ( $points == $maxPoints ) {
+					$template->setCurrentBlock ( "icon_ok" );
+					$template->setVariable ( "ICON_OK", ilUtil::getImagePath ( "icon_ok.png" ) );
+					$template->setVariable ( "TEXT_OK", $this->lng->txt ( "answer_is_right" ) );
+					$template->parseCurrentBlock ();
+				} else {
+					$template->setCurrentBlock ( "icon_ok" );
+					$template->setVariable ( "ICON_NOT_OK", ilUtil::getImagePath ( "icon_not_ok.png" ) );
+					$template->setVariable ( "TEXT_NOT_OK", $this->lng->txt ( "answer_is_wrong" ) );
+					$template->parseCurrentBlock ();
+				}
+			}
+			
+			$template->setCurrentBlock("label2");
+			$template->setVariable("VALUE_1",$this->plugin->txt ( 'solutionoutput_label_solutions' ));
+			$template->parseCurrentBlock();
+			
+			foreach ( $studentSolutions as $idx => $studentSolution ) {
+				$studentSolution ["value1"] = isset ( $studentSolution ["value1"] ) ? $studentSolution ["value1"] : "";
+				$studentSolution ["value2"]  = isset ( $studentSolution ["value2"] ) ? $studentSolution ["value2"] : "";
+				$studentSolution ["points"] = isset ( $studentSolution ["points"] ) ? $studentSolution ["points"] : "0";
+				
+				$template->setCurrentBlock("label2");
+				$template->setVariable("VALUE_1",$this->plugin->txt ( 'solutionoutput_label_solution' ));
+				$template->setVariable("VALUE_2",$idx);
+				$template->parseCurrentBlock();
+				
+				$template->setCurrentBlock("codeblock");
+				$template->setVariable ( "SOLUTION", $studentSolution ["value2"] );
+				$template->setVariable ( "ID", 'cm' . mt_rand () );
+				$template->parseCurrentBlock ();
+				
+				$template->setCurrentBlock("points");
+				$template->setVariable ( "LABEL_POINTS", $this->plugin->txt( 'solutionoutput_label_points' ));
+				$template->setVariable ( "POINTS", $studentSolution ["points"]);
+				$template->parseCurrentBlock();
+			}
+			
 		}
 		
-		$template->setVariable ( "QUESTIONTEXT", $this->object->prepareTextareaOutput ( $questiontext, TRUE ) );
+		if ($show_correct_solution) {
+			$template->setCurrentBlock("label2");
+			$template->setVariable("VALUE_1",$this->plugin->txt ( 'solutionoutput_label_solution' ));
+			$template->parseCurrentBlock();
+			
+			$template->setCurrentBlock("codeblock");
+			$template->setVariable ( "SOLUTION", $this->object->getSolution () );
+			$template->setVariable ( "ID", 'cm' . mt_rand () );
+			$template->parseCurrentBlock ();
+			
+			$template->setCurrentBlock("label2");
+			$template->setVariable("VALUE_1",$this->plugin->txt ( 'testCode' ));
+			$template->parseCurrentBlock();
+			
+			$template->setCurrentBlock("codeblock");
+			$template->setVariable ( "SOLUTION", $this->object->getTestCode() );
+			$template->setVariable ( "ID", 'cm' . mt_rand () );
+			$template->parseCurrentBlock ();
+			
+			$template->setCurrentBlock("points");
+			$template->setVariable ( "LABEL_POINTS", $this->plugin->txt( 'solutionoutput_label_maxpoints' ));
+			$template->setVariable ( "POINTS", $maxPoints);
+			$template->parseCurrentBlock();
+		}
 		
 		$questionoutput = $template->get ();
 		
