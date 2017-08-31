@@ -27,59 +27,6 @@ public class FunctionEvaluator {
 
   private static final int TIMEOUT = 20000;
 
-  public static Document eval(Element request) {
-    int GRANULARITY = 50;
-    String JAVA_CMD = System.getenv("JAVA_HOME");
-    String CLASSPATH = System.getProperty("java.class.path");
-    String CURRENTDIR = System.getProperty("user.dir");
-    String SECURITYFILE = System.getProperty("java.security.policy");
-
-    try {
-      ProcessBuilder builder = new ProcessBuilder(JAVA_CMD + File.separator + "bin" + File.separator + "java",
-//                    "-Xdebug -Xrunjdwp=transport=dt_socket,server=y,suspend=y,address=5005",
-          "-cp", CLASSPATH,
-          "-Djava.security.policy=" + CURRENTDIR + File.separator + SECURITYFILE,
-          "evaluationbasics.evaluators.FunctionEvaluator");
-      Process child = builder.start();
-      try {
-        OutputStream output = child.getOutputStream();
-        ObjectOutputStream oos = new ObjectOutputStream(output);
-        oos.writeObject(request);
-        oos.flush();
-
-        InputStream input = child.getInputStream();
-        ObjectInputStream ois = new ObjectInputStream(input);
-        int total = 0;
-        while (total < TIMEOUT && input.available() == 0) {
-          try {
-            Thread.sleep(GRANULARITY);
-          } catch (InterruptedException e) {
-          }
-          total = total + GRANULARITY;
-        }
-        if (input.available() != 0) {
-          Document response = (Document) ois.readObject();
-          return response;
-        } else {
-          throw new TimeoutException("timed out after " + TIMEOUT + "ms");
-        }
-      } finally {
-        child.destroy();
-      }
-
-    } catch (IOException e) {
-//            System.out.println(e);
-    } catch (ClassNotFoundException e) {
-//            System.out.println(e);
-    } catch (TimeoutException e) {
-//            System.out.println(e);
-    }
-    XMLConstructor response = new XMLConstructor();
-    response.error("Some error occured while running a child process.");
-    return response.getDocument();
-
-  }
-
   public static void main(String... args) {
   SwitchableSecurityManager ssm = new SwitchableSecurityManager(1234, false);
     System.setSecurityManager(ssm);

@@ -95,7 +95,7 @@ public final class CompilationBox {
     String className = getPublicClassName(classCode);
     String testName = getSingleClassName(testCode);
 
-//        String testSuiteCode = generateTestNGSuiteCode(testName);
+//        String testSuiteCode = generateTestNGSuiteCode(testName); // OLD VERSION
     String testSuiteCode = generateSingleTestNGSuiteCode(testName,testMethodName);
     String testSuiteName = generateTestNGSuiteClassName();
 

@@ -64,16 +64,104 @@ public class XMLConstructor {
             cause = mc.group(1);
         }
 
-        switch (cause) {
-            case "cannot find symbol":
-                writeConnotFindSymbolAnalysis(element, error);
-                break;
-            default:
-                writeDiagnostic(test.getDiagnostic(), element);
+        System.err.println(error);
+        if (cause == "cannot find symbol") {
+            writeMissingSymbol(element, error);
+        } else if ( cause.contains("cannot be applied to given types") ) {
+            writeWrongParameters(element, error);
+        } else if ( cause.contains("incompatible types:") ) {
+            writeIncompatibleTpyes(element,error);
+        } else {
+            writeRawCompilationError(element, error);
         }
     }
 
-    private void writeConnotFindSymbolAnalysis(Element element, String error) {
+    private void writeRawCompilationError(Element element, String error) {
+        String message = "There occured an error during the compilation:\n";
+        message += error;
+        writeMessageAsDiagnostic(element,message);
+    }
+
+    private void writeIncompatibleTpyes(Element element, String error) {
+        String message = "";
+
+        String[] lines = error.split("\n");
+        int pos = lines[lines.length-1].indexOf('^');
+        String functionCalledOnLine = lines[lines.length-2].substring(0,pos);
+        Pattern functionNamePattern = Pattern.compile("\\.(.*)\\(");
+        Matcher functionNameMatcher = functionNamePattern.matcher(functionCalledOnLine);
+        boolean functionNameFound = functionNameMatcher.find();
+        if (functionNameFound) {
+            message = "Provided arguments do not match the function signature.";
+            String functionName = functionNameMatcher.group(1);
+            message += "\nIt happens for the function \""+functionName+"\".";
+        }
+
+        Pattern lossPattern = Pattern.compile("error: incompatible types: possible lossy conversion from (.*) to (.*)");
+        Matcher lossMatcher = lossPattern.matcher(error);
+        boolean lossFound = lossMatcher.find();
+        if (lossFound) {
+            String providedType = lossMatcher.group(1);
+            String expectedType = lossMatcher.group(2);
+            message += "\nThere would be a lossy conversion as...";
+            message += "\nthe function requires a \""+expectedType+"\".";
+            message += "\nbut provided is a \""+providedType+"\".";
+        }
+
+        Pattern conversionPattern = Pattern.compile("error: incompatible types: (.*) cannot be converted to (.*)");
+        Matcher conversionMatcher = conversionPattern.matcher(error);
+        boolean conversionFound = conversionMatcher.find();
+        if (conversionFound) {
+            String providedType = conversionMatcher.group(1);
+            String expectedType = conversionMatcher.group(2);
+            message += "\nThe is no known conversion from";
+            message += " a \""+providedType+"\"";
+            message += " to a \""+expectedType+"\".";
+        }
+
+
+        writeMessageAsDiagnostic(element, message);
+    }
+
+    private void writeMessageAsDiagnostic(Element element, String message) {
+        Element msg = new Element("message");
+        msg.setText(message);
+        Element diagnostic = new Element("diagnostic");
+        diagnostic.addContent(msg);
+        diagnostic.setAttribute("id", "1");
+        element.addContent(new Element("diagnostics").addContent(diagnostic));
+    }
+
+    private void writeWrongParameters(Element element, String error) {
+        Pattern namePattern = Pattern.compile("error: method (.*) in class (.*) cannot be applied to given types");
+        Matcher nameMatcher = namePattern.matcher(error);
+        boolean namesFound = nameMatcher.find();
+
+        Pattern requiredPattern = Pattern.compile("required: (.*)\n");
+        Matcher requiredMatcher = requiredPattern.matcher(error);
+        boolean requiredFound = requiredMatcher.find();
+
+        Pattern foundPattern = Pattern.compile("found: (.*)\n");
+        Matcher foundMatcher = foundPattern.matcher(error);
+        boolean foundFound = foundMatcher.find();
+
+        String message = "Some arguments do not match between the method signature and a call of the method.";
+        if ( namesFound && requiredFound && foundFound ) {
+            String methodName = nameMatcher.group(1);
+            String className = nameMatcher.group(2);
+            String foundParams = foundMatcher.group(1);
+            String requiredParams = requiredMatcher.group(1);
+
+            message += "\nThe method is \"" + methodName + "\" in the class \"" + className + "\".";
+            message += "\n\tThe methods signature needs  : " + requiredParams;
+            message += "\n\tAt the call site provided are: " + foundParams;
+
+        }
+
+        writeMessageAsDiagnostic(element, message);
+    }
+
+    private void writeMissingSymbol(Element element, String error) {
         Pattern p = Pattern.compile("symbol: (.*)\n");
         Matcher m = p.matcher(error);
         boolean found = m.find();
@@ -81,12 +169,8 @@ public class XMLConstructor {
         String message = "Expected symbol is missing in your code.";
         message += "\n\tThe missing symbol should be a " + what[0] + ".";
         message += "\n\tThe name should be \"" + what[1] + "\".";
-        Element msg = new Element("message");
-        msg.setText(message);
-        Element diagnostic = new Element("diagnostic");
-        diagnostic.addContent(msg);
-        diagnostic.setAttribute("id", "1");
-        element.addContent(new Element("diagnostics").addContent(diagnostic));
+
+        writeMessageAsDiagnostic(element, message);
     }
 
     public void responseToRunTest(List<TestData> tests) {
@@ -353,7 +437,7 @@ public class XMLConstructor {
     public void ZZZresponseMethodDiagnostics(String type, CodeUnit tempCU, Element response) {
         //Codeid,Compileable,Diagnostik
         Element eCode = new Element("code").setAttribute(new Attribute("codeid", String.valueOf(tempCU.id)))
-                .addContent(new Element("compileable").addContent(String.valueOf(tempCU.compileable)));
+            .addContent(new Element("compileable").addContent(String.valueOf(tempCU.compileable)));
         writeDiagnostic(tempCU.diagnostics, eCode, tempCU.lineOffset);
         if (!tempCU.error.equals(""))
             eCode = eCode.addContent(new Element("error").addContent(tempCU.error));
@@ -367,10 +451,10 @@ public class XMLConstructor {
                         eP = eP.addContent(new Element("error").addContent(tempPG.error));
                     if (type.equals("compareMethod"))
                         eP = eP.addContent(new Element("reachedpoints").addContent(String.valueOf(tempPG.points)))
-                                .addContent(new Element("equal").addContent(String.valueOf(tempPG.equals)));
+                            .addContent(new Element("equal").addContent(String.valueOf(tempPG.equals)));
                     for (Params tempP : tempPG.params) {
                         Element eParams = new Element("paramsreturn").setAttribute(new Attribute("paramsid", String.valueOf(tempP.id)))
-                                .addContent(new Element("return").addContent(String.valueOf(tempP.zReturn)));
+                            .addContent(new Element("return").addContent(String.valueOf(tempP.zReturn)));
                         if (!tempP.error.equals(""))
                             eParams = eParams.addContent(new Element("error").addContent(tempP.error));
                         if (type.equals("compareMethod"))
@@ -381,7 +465,7 @@ public class XMLConstructor {
                 }
             else //Methoden ohne Parameter
                 eCode = eCode.addContent(new Element("paramgroup").setAttribute(new Attribute("paramgroupid", "0"))
-                        .addContent(new Element("paramsreturn").setAttribute(new Attribute("paramsid", "0")).addContent(String.valueOf(tempCU.noParamsReturn))));
+                    .addContent(new Element("paramsreturn").setAttribute(new Attribute("paramsid", "0")).addContent(String.valueOf(tempCU.noParamsReturn))));
         }
         response.addContent(eCode);
     }

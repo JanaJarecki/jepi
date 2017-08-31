@@ -10,6 +10,7 @@ import java.util.Arrays;
 public class RunServer {
 
   public static void main(String[] args) {
+
     int port = 1234;
     String[] acceptedAddresses = new String[]{};
 

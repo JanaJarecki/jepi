@@ -24,11 +24,12 @@ public class EvaluationProcess {
       TimeoutException
   {
     int GRANULARITY = 50;
-    String JAVA_CMD = System.getenv("JAVA_HOME");
+    String JAVA_HOME = System.getenv("JAVA_HOME");
     String CLASSPATH = System.getProperty("java.class.path");
+    String CURRENTDIR = System.getProperty("user.dir");
     String SECURITY_FILE_PATH = System.getProperty("java.security.policy");
 
-    ProcessBuilder builder = new ProcessBuilder(JAVA_CMD + File.separator + "bin" + File.separator + "java",
+    ProcessBuilder builder = new ProcessBuilder(JAVA_HOME + File.separator + "bin" + File.separator + "java",
 //        "-Xdebug -Xrunjdwp=transport=dt_socket,server=y,suspend=y,address=5005",
         "-cp", CLASSPATH,
         "-Djava.security.policy=" + SECURITY_FILE_PATH,
