@@ -133,32 +133,44 @@ public class XMLConstructor {
     }
 
     private void writeWrongParameters(Element element, String error) {
-        Pattern namePattern = Pattern.compile("error: method (.*) in class (.*) cannot be applied to given types");
-        Matcher nameMatcher = namePattern.matcher(error);
-        boolean namesFound = nameMatcher.find();
+        String message = "Some arguments do not match between the method signature and a call of the method.";
+
+        Pattern functionPattern = Pattern.compile("error: method (.*) in class (.*) cannot be applied to given types");
+        Matcher functionMatcher = functionPattern.matcher(error);
+        boolean functionNameFound = functionMatcher.find();
+        if ( functionNameFound ) {
+            String methodName = functionMatcher.group(1);
+            String className = functionMatcher.group(2);
+
+            message += "\nThe method is \"" + methodName + "\" in the class \"" + className + "\".";
+        }
+
+        Pattern constructorPattern = Pattern.compile("error: constructor (.*) in class (.*) cannot be applied to given types");
+        Matcher constructorMatcher = constructorPattern.matcher(error);
+        boolean constructorNameFound = constructorMatcher.find();
+        if ( constructorNameFound ) {
+            String methodName = constructorMatcher.group(1);
+            String className = constructorMatcher.group(2);
+
+            message += "\nThe method is the constructor \"" + methodName + "\" from the class \"" + className + "\".";
+        }
 
         Pattern requiredPattern = Pattern.compile("required: (.*)\n");
         Matcher requiredMatcher = requiredPattern.matcher(error);
         boolean requiredFound = requiredMatcher.find();
-
         Pattern foundPattern = Pattern.compile("found: (.*)\n");
         Matcher foundMatcher = foundPattern.matcher(error);
         boolean foundFound = foundMatcher.find();
-
-        String message = "Some arguments do not match between the method signature and a call of the method.";
-        if ( namesFound && requiredFound && foundFound ) {
-            String methodName = nameMatcher.group(1);
-            String className = nameMatcher.group(2);
+        if ( requiredFound && foundFound ) {
             String foundParams = foundMatcher.group(1);
             String requiredParams = requiredMatcher.group(1);
 
-            message += "\nThe method is \"" + methodName + "\" in the class \"" + className + "\".";
             message += "\n\tThe methods signature needs  : " + requiredParams;
             message += "\n\tAt the call site provided are: " + foundParams;
 
         }
 
-        writeMessageAsDiagnostic(element, message);
+            writeMessageAsDiagnostic(element, message);
     }
 
     private void writeMissingSymbol(Element element, String error) {

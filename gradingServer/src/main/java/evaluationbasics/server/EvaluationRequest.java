@@ -6,7 +6,7 @@ import java.lang.reflect.InvocationTargetException;
 import java.net.Socket;
 import java.util.concurrent.TimeoutException;
 
-import evaluationbasics.evaluators.EvaluationProcess;
+import evaluationbasics.evaluators.EvaluationProcessStarter;
 import evaluationbasics.evaluators.TestNGEvaluator;
 import evaluationbasics.exceptions.PrintToSystemErrorExceptionHandler;
 import evaluationbasics.exceptions.StudentUncaughtExceptionHandler;
@@ -64,12 +64,12 @@ public class EvaluationRequest extends Thread {
 
       switch (eType.getValue()) {
         case "function_original":
-          response = EvaluationProcess.exec(eRoot,"evaluationbasics.evaluators.FunctionEvaluator",20000);
+          response = EvaluationProcessStarter.exec(eRoot,"evaluationbasics.evaluators.FunctionEvaluator",20000);
           break;
 
         case "testng":
           response = TestNGEvaluator.evalNotInProcess(eRoot);
-//          response = EvaluationProcess.exec(eRoot,"evaluationbasics.evaluators.TestNGEvaluator",20000);
+//          response = EvaluationProcessStarter.exec(eRoot,"evaluationbasics.evaluators.TestNGEvaluator",20000);
         break;
 
         default:
