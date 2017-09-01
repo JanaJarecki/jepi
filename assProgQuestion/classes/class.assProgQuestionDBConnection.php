@@ -183,10 +183,12 @@ class assProgQuestionDBConnection {
 		}
 	}
 	
+	/**
+	 * Load the basic data from the question.
+	 */
 	public static function loadAssQuestion($prog_question, $question_id) {
 		global $ilDB;
 		
-		// load the basic question data
 		$result = $ilDB->queryF ( "SELECT qpl_questions.* FROM qpl_questions WHERE question_id = %s", array (
 				'integer' 
 		), array (
@@ -212,6 +214,10 @@ class assProgQuestionDBConnection {
 			return false;
 		}
 	}
+	
+	/**
+	 * Load question specific data.
+	 */
 	public static function loadAssProgQuestion($prog_question, $question_id) {
 		global $ilDB;
 		// ProgQuestion spezifisch -> Musterloesung und Parameter
@@ -236,6 +242,10 @@ class assProgQuestionDBConnection {
 			return false;
 		}
 	}
+	
+	/**
+	 * Load parameters sets for question.
+	 */
 	public static function loadParams($prog_question, $question_id) {
 		global $ilDB;
 		

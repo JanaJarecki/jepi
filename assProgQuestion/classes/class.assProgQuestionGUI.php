@@ -342,14 +342,14 @@ class assProgQuestionGUI extends assQuestionGUI {
 	
 	/**
 	 *
+	 * Renders the test output of the question.
 	 * {@inheritdoc}
 	 *
 	 * @see assQuestionGUI::outQuestionForTest()
 	 */
-	function getTestOutput($formaction, $active_id, $pass = NULL, $is_postponed = FALSE, $use_post_solutions = FALSE, $show_feedback = FALSE) {
+	function getTestOutput($active_id, $pass = NULL, $is_postponed = FALSE, $use_post_solutions = FALSE, $show_feedback = FALSE) {
 		$test_output = $this->renderStudentView ( $active_id, $pass, $is_postponed, $use_post_solutions, $show_feedback );
-		$this->tpl->setVariable ( "QUESTION_OUTPUT", $test_output );
-		$this->tpl->setVariable ( "FORMACTION", $formaction );
+		return $test_output;
 	}
 	
 	/**
@@ -370,6 +370,7 @@ class assProgQuestionGUI extends assQuestionGUI {
 			$template->parseCurrentBlock ();
 		}
 	
+		// If an active id is given we print the solution for a student.
 		if ($active_id > 0) {
 			// get the answers of the user for the active pass or from the last pass if allowed
 			$studentSolutions = $this->object->getSolutionValues ( $active_id, $pass );
@@ -389,26 +390,22 @@ class assProgQuestionGUI extends assQuestionGUI {
 				}
 			}
 			
-			$template->setCurrentBlock("label2");
+			$template->setCurrentBlock("answer_title");
 			$template->setVariable("VALUE_1",$this->plugin->txt ( 'solutionoutput_label_solutions' ));
 			$template->parseCurrentBlock();
 			
-			foreach ( $studentSolutions as $idx => $studentSolution ) {
+			foreach ( array_reverse($studentSolutions,true) as $idx => $studentSolution ) {
 				$studentSolution ["value1"] = isset ( $studentSolution ["value1"] ) ? $studentSolution ["value1"] : "";
 				$studentSolution ["value2"]  = isset ( $studentSolution ["value2"] ) ? $studentSolution ["value2"] : "";
 				$studentSolution ["points"] = isset ( $studentSolution ["points"] ) ? $studentSolution ["points"] : "0";
 				
-				$template->setCurrentBlock("label2");
+				$template->setCurrentBlock("answer");
 				$template->setVariable("VALUE_1",$this->plugin->txt ( 'solutionoutput_label_solution' ));
-				$template->setVariable("VALUE_2",$idx);
-				$template->parseCurrentBlock();
+				$template->setVariable("VALUE_2",$idx + 1);
 				
-				$template->setCurrentBlock("codeblock");
 				$template->setVariable ( "SOLUTION", $studentSolution ["value2"] );
-				$template->setVariable ( "ID", 'cm' . mt_rand () );
-				$template->parseCurrentBlock ();
+				$template->setVariable ( "ID", 'cm' . $idx );
 				
-				$template->setCurrentBlock("points");
 				$template->setVariable ( "LABEL_POINTS", $this->plugin->txt( 'solutionoutput_label_points' ));
 				$template->setVariable ( "POINTS", $studentSolution ["points"]);
 				$template->parseCurrentBlock();
@@ -416,6 +413,7 @@ class assProgQuestionGUI extends assQuestionGUI {
 			
 		}
 		
+		// show the correct solution if requested
 		if ($show_correct_solution) {
 			$template->setCurrentBlock("label2");
 			$template->setVariable("VALUE_1",$this->plugin->txt ( 'solutionoutput_label_solution' ));
@@ -470,6 +468,7 @@ class assProgQuestionGUI extends assQuestionGUI {
 		$questiontext =  $this->object->getQuestion ();
 		$template->setVariable ( "QUESTIONTEXT", $this->object->prepareTextareaOutput ( $questiontext, TRUE ) );
 		$template->setVariable ( "SOLUTION_ON_WORK", $this->object->getSolution() );
+		$template->setVariable ( "ID", 'cm' . mt_rand () );
 		$questionoutput = $template->get ();
 		if (! $show_question_only) {
 			// get page object output
@@ -495,7 +494,7 @@ class assProgQuestionGUI extends assQuestionGUI {
 		$user_solution = "";
 		$user_params = "";
 		
-		if ($active_id) {
+		if ($active_id != NULL) {
 			$solutions = NULL;
 			include_once "./Modules/Test/classes/class.ilObjTest.php";
 			if (! ilObjTest::_getUsePreviousAnswers ( $active_id, true )) {
@@ -523,6 +522,8 @@ class assProgQuestionGUI extends assQuestionGUI {
 		$template->setVariable ( "QUESTIONTEXT", $this->object->prepareTextareaOutput ( $questiontext, TRUE ) );
 		
 		$template->setVariable ( "SOLUTION_ON_WORK", ilUtil::prepareFormOutput ( $user_solution ) );
+		$template->setVariable ( "ID", "cm" . mt_rand () );
+		$template->setVariable ( "READ_ONLY", "false" );
 		
 		$template->setVariable ( "CMD_COMPILE", 'handleQuestionAction' );
 		$template->setVariable ( "TEXT_COMPILE", $pl->txt ( "studcompile" ) );

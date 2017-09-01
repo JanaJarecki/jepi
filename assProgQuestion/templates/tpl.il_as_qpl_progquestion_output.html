@@ -3,7 +3,7 @@
 	<p><span class="feedback">{FEEDBACK}</span></p>
 <!-- END feedback -->
 
-<textarea style="border: 1px solid red;" name="prog_area" id="prog_area" class="noRTEditor"  wrap="virtual" cols="100" rows="10" style="width:90%;">{SOLUTION_ON_WORK}</textarea>
+<textarea style="border: 1px solid red;" name="prog_area" id="{ID}" class="noRTEditor"  wrap="virtual" cols="100" rows="10" style="width:90%;">{SOLUTION_ON_WORK}</textarea>
 
 <!--  BEGIN paramscompile --><br />
 <button type="submit" class="submit" name="cmd[{CMD_COMPILE}]" value="Compile">{TEXT_COMPILE}</button>
@@ -19,10 +19,11 @@
 <link rel="stylesheet" href="./Customizing/global/plugins/Modules/TestQuestionPool/Questions/assProgQuestion/js/codemirror/codemirror.css">
 <script>
 (function () {
-	var javaEditor = CodeMirror.fromTextArea(document.getElementById("prog_area"), {
+	var javaEditor = CodeMirror.fromTextArea(document.getElementById("{ID}"), {
     lineNumbers: true,
     matchBrackets: true,
     mode: "text/x-java"
+    <!-- BEGIN read_only -->, readOnly: {READ_ONLY}<!-- END read_only -->
   });
 }());
 </script>

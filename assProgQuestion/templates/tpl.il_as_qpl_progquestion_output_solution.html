@@ -2,11 +2,21 @@
 <p>{QUESTIONTEXT}</p>
 <!-- END questiontext -->
 
-<!-- BEGIN label2 -->
-<p>{VALUE_1} {VALUE_2}</p>
-<!-- END label2 -->
+<!-- BEGIN answer_title -->
+<p>{VALUE_1}</p>
+<!-- END answer_title -->
 
-<!-- BEGIN codeblock -->
+<!-- BEGIN answer -->
+<!--  "Answer X → Points N" ← this should be an example print out -->
+<p>{VALUE_1} {VALUE_2} → {LABEL_POINTS} {POINTS}
+    <!-- BEGIN icon_ok -->
+    <img src="{ICON_OK}" alt="{TEXT_OK}" title="{TEXT_OK}" />
+    <!-- END icon_ok -->
+    <!-- BEGIN icon_not_ok -->
+    <img src="{ICON_NOT_OK}" alt="{TEXT_NOT_OK}" title="{TEXT_NOT_OK}" />
+    <!-- END icon_not_ok -->
+</p>
+
 <p id="{ID}" class="noRTEditor"  wrap="virtual" cols="100" rows="20" style="width:90%;">
 <code>{SOLUTION}</code>
 </p>
@@ -27,16 +37,5 @@
 }());
 -->
 </script>
-<!-- END codeblock -->
 
-<!-- BEGIN points -->
-<p>
-    {LABEL_POINTS} {POINTS}
-    <!-- BEGIN icon_ok -->
-    <img src="{ICON_OK}" alt="{TEXT_OK}" title="{TEXT_OK}" />
-    <!-- END icon_ok -->
-    <!-- BEGIN icon_not_ok -->
-    <img src="{ICON_NOT_OK}" alt="{TEXT_NOT_OK}" title="{TEXT_NOT_OK}" />
-    <!-- END icon_not_ok -->
-</p>
-<!-- END points -->
+<!-- END answer -->
