@@ -39,11 +39,13 @@ public class EvaluationProcessStarter {
       OutputStream output = child.getOutputStream();
       ObjectOutputStream oos = new ObjectOutputStream(output);
 
+      InputStream input = child.getInputStream();
+
       oos.writeObject(request);
       oos.flush();
 
-      InputStream input = child.getInputStream();
       ObjectInputStream ois = new ObjectInputStream(input);
+
       int total = 0;
       while (total < TIMEOUT && input.available() == 0) {
         try {

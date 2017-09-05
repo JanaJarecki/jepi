@@ -68,8 +68,8 @@ public class EvaluationRequest extends Thread {
           break;
 
         case "testng":
-          response = TestNGEvaluator.evalNotInProcess(eRoot);
-//          response = EvaluationProcessStarter.exec(eRoot,"evaluationbasics.evaluators.TestNGEvaluator",20000);
+//          response = TestNGEvaluator.processRequestInMainThread(eRoot);
+          response = EvaluationProcessStarter.exec(eRoot,"evaluationbasics.evaluators.TestNGEvaluator",20000);
         break;
 
         default:

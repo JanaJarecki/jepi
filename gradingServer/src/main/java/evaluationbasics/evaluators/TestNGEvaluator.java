@@ -24,243 +24,233 @@ import static evaluationbasics.xml.XMLParser.parseParameterGroups;
  */
 public class TestNGEvaluator {
 
-  private static final int TIMEOUT = 20000;
+    private static final int TIMEOUT = 20000;
+    private XMLConstructor xml;
 
-  /**
-   * @param request
-   * @return
-   * @deprecated Do not use this method in the productive system. This remains only for debuggin purpose.
-   */
-  public static Document evalNotInProcess(Element request) {
-    XMLConstructor response = new XMLConstructor();
-    TestNGEvaluator eval = new TestNGEvaluator(response);
-    eval.dispatchEvaluation(request);
-    return response.getDocument();
-  }
-
-  public static void main(String... args) {
-    try {
-      PrintWriter pw = new PrintWriter(new File("/tmp/server.log"));
-      pw.write(System.getProperty("java.security.policy"));
-      pw.flush();
-      pw.close();
-    } catch ( Exception e) {
-
+    private TestNGEvaluator(XMLConstructor response) {
+        this.xml = response;
     }
-    SwitchableSecurityManager ssm = new SwitchableSecurityManager(1234, false);
-    System.setSecurityManager(ssm);
-    try {
-      ObjectInputStream ois = new ObjectInputStream(System.in);
-      ObjectOutputStream oos = new ObjectOutputStream(System.out);
-      try {
-        Element request = (Element) ois.readObject();
+
+    public static void main(String... args) {
+        SwitchableSecurityManager ssm = new SwitchableSecurityManager(1234, false);
+        System.setSecurityManager(ssm);
+        try {
+            ObjectInputStream ois = new ObjectInputStream(System.in);
+            ObjectOutputStream oos = new ObjectOutputStream(System.out);
+            try {
+                Element request = (Element) ois.readObject();
+                Document response = processRequest(request);
+                oos.writeObject(response);
+                oos.flush();
+            } catch (ClassNotFoundException e) {
+            } finally {
+            }
+        } catch (IOException e) {
+        } finally {
+        }
+    }
+
+    /** @deprecated This method should only be used for debugging but not in the productive system. */
+    public static Document processRequestInMainThread(Element request) {
+        SwitchableSecurityManager ssm = new SwitchableSecurityManager(1234, false);
+        System.setSecurityManager(ssm);
+        return processRequest(request);
+    }
+
+    public static Document processRequest(Element request) {
         XMLConstructor response = new XMLConstructor();
         TestNGEvaluator eval = new TestNGEvaluator(response);
         eval.dispatchEvaluation(request);
-        oos.writeObject(response.getDocument());
-        oos.flush();
-      } catch (ClassNotFoundException e) {
-      } finally {
-      }
-    } catch (IOException e) {
-    } finally {
+        return response.getDocument();
     }
-  }
 
+    /**
+     * Function handles the original question type. The passed functions are wrapped in a class and then compared if at
+     * least two are given.
+     *
+     * @param request xml Root element of the request
+     * @return The respose xml document containing the evaluation.
+     */
+    private void dispatchEvaluation(Element request) {
+        Element eAction = request.getChild("action");
+        String actionRequested = eAction.getValue().toLowerCase();
+        switch (actionRequested) {
+            case "compiletestng":
+                complationTest(request, "test","");
+                break;
 
-  private XMLConstructor xml;
+            case "compilestudenttestng":
+                complationTest(request, "student","");
+                break;
 
-  private TestNGEvaluator(XMLConstructor response) {
-    this.xml = response;
-  }
+            case "runtestng":
+                runTests(request, "test");
+                break;
 
-  /**
-   * Function handles the original question type. The passed functions are wrapped in a class and then compared if at
-   * least two are given.
-   *
-   * @param request xml Root element of the request
-   * @return The respose xml document containing the evaluation.
-   */
-  private void dispatchEvaluation(Element request) {
-    Element eAction = request.getChild("action");
-    String actionRequested = eAction.getValue().toLowerCase();
-    switch (actionRequested) {
-      case "compiletestng":
-        complationTest(request, "test","");
-        break;
+            case "runstudenttestng":
+                runStudentTests(request, "student");
+                break;
 
-      case "compilestudenttestng":
-        complationTest(request, "student","");
-        break;
+            case "feedbackstudenttestng":
+                feedbackTests(request, "student");
+                break;
 
-      case "runtestng":
-        runTests(request, "test");
-        break;
-
-      case "runstudenttestng":
-        runStudentTests(request, "student");
-        break;
-
-      case "feedbackstudenttestng":
-        feedbackTests(request, "student");
-        break;
-
-      default:
-        xml.error(ERROR_CODE.ACTION_NOT_KNOWN);
-    }
-  }
-
-  private void runTests(Element request, String person) {
-    try {
-      List<TestData> tests = XMLParser.parseTests(request);
-      for (TestData test : tests) {
-        DiagnostedTest dc = complationTest(request, person, test.name);
-        if (dc != null && dc.isValidClass()) {
-          SysOutGrabber grabber = new SysOutGrabber();
-          EvaluationHelper.runInstanceMethod(dc.getTestSuiteClass(), "RunTests", new Object[]{test});
-          grabber.detach();
-          test.consoleOutput = grabber.getOutput();
+            default:
+                xml.error(ERROR_CODE.ACTION_NOT_KNOWN);
         }
-      }
-      xml.responseToRunTest(tests);
-    } catch (TimeoutException e) {
-      xml.error("The execution took too long: " + e);
-    } catch (IOException e) {
-      xml.error("IOException "+ e);
-    } catch (ClassNotFoundException e) {
-      xml.error("ClassNotFoundException "+ e);
-    } catch (org.jdom2.DataConversionException e) {
-      xml.error("Found wrong datatype in xml: " + e);
-    } catch (IllegalAccessException e) {
-      xml.error("The method RunTests was not accessible." + e);
-    } catch (InstantiationException e) {
-      xml.error("Class Initialization error:" + e);
-    } catch (WrongNumberOfProvidedJavaElementsException e) {
-      xml.error(e.getMessage());
-    } catch (InvocationTargetException e) {
-      String stackTrace1 = "";
-      for (StackTraceElement s : e.getStackTrace()) stackTrace1 += s.toString() + "\n";
-      String stackTrace2 = "";
-      for (StackTraceElement s : e.getCause().getStackTrace()) stackTrace2 += s.toString() + "\n";
-      xml.error("Target invocation error: " + e.getMessage() + "\n" + stackTrace1);
-      xml.error("Target invocation error cause: " + e.getCause() + "\n" + stackTrace2);
-    } catch ( Exception e) {
-      System.out.println("ERROR: "+e);
-      xml.error("Unkown exception: " + e.getMessage() + "\n" + e.getStackTrace()[1]);
     }
-  }
 
-  private void feedbackTests(Element request, String person) {
-    try {
-      Element solutionXML = request.getChild("solution");
-      List<ParamGroup> groups = parseParameterGroups(solutionXML);
-
-      DiagnostedTest dc = complationTest(request, person,"");
-      if (dc != null && dc.isValidClass()) {
-        List<TestData> tests = XMLParser.parseTests(request);
-        EvaluationHelper.runInstanceMethod(dc.getTestSuiteClass(), "RunTests", new Object[]{tests});
-        xml.responseToRunTest(tests);
-      }
-    } catch (TimeoutException e) {
-      xml.error("The execution took too long: " + e);
-    } catch (IOException e) {
-
-    } catch (ClassNotFoundException e) {
-
-    } catch (org.jdom2.DataConversionException e) {
-      xml.error("Found wrong datatype in xml: " + e);
-    } catch (IllegalAccessException e) {
-      xml.error("The main method was not accessible. Probably the class or the main method is missing or has a too strict access modifier.");
-    } catch (InstantiationException e) {
-      xml.error("Class Initialization error:" + e);
-    } catch (WrongNumberOfProvidedJavaElementsException e) {
-      xml.error(e.getMessage());
-    } catch (InvocationTargetException e) {
-      xml.errorInvocationTargetException(e);
-    }
-  }
-
-  private void runStudentTests(Element request, String person) {
-    try {
-      Element solutionXML = request.getChild("solution");
-      List<ParamGroup> groups = parseParameterGroups(solutionXML);
-
-      DiagnostedTest dc = complationTest(request, person,"TODO");
-      if (dc != null && dc.isValidClass()) {
-        for (ParamGroup group : groups) {
-          for (Params param : group.params) {
-            String[] args = new String[param.values.length];
-            for (int i = 0; i < param.values.length; ++i) {
-              args[i] = (String) param.values[i];
+    private void runTests(Element request, String person) {
+        try {
+            List<TestData> tests = XMLParser.parseTests(request);
+            for (TestData test : tests) {
+                DiagnostedTest dc = complationTest(request, person, test.name);
+                if (dc != null && dc.isValidClass()) {
+                    SysOutGrabber grabber = new SysOutGrabber();
+                    EvaluationHelper.runInstanceMethod(dc.getTestSuiteClass(), "RunTests", new Object[]{test});
+                    grabber.detach();
+                    test.consoleOutput = grabber.getOutput();
+                }
             }
-
-            SysOutGrabber grabber = new SysOutGrabber();
-            param.zReturn = EvaluationHelper.runMainMethodWithParams(dc, args);
-            param.consoleOutput = grabber.getOutput();
-            grabber.detach();
-          }
+            xml.responseToRunTest(tests);
+        } catch (TimeoutException e) {
+            xml.error("The execution took too long: " + e);
+        } catch (IOException e) {
+            xml.error("IOException "+ e);
+        } catch (ClassNotFoundException e) {
+            xml.error("ClassNotFoundException "+ e);
+        } catch (org.jdom2.DataConversionException e) {
+            xml.error("Found wrong datatype in xml: " + e);
+        } catch (IllegalAccessException e) {
+            xml.error("The method RunTests was not accessible." + e);
+        } catch (InstantiationException e) {
+            xml.error("Class Initialization error:" + e);
+        } catch (WrongNumberOfProvidedJavaElementsException e) {
+            xml.error(e.getMessage());
+        } catch (InvocationTargetException e) {
+            String stackTrace1 = "";
+            for (StackTraceElement s : e.getStackTrace()) stackTrace1 += s.toString() + "\n";
+            String stackTrace2 = "";
+            for (StackTraceElement s : e.getCause().getStackTrace()) stackTrace2 += s.toString() + "\n";
+            xml.error("Target invocation error: " + e.getMessage() + "\n" + stackTrace1);
+            xml.error("Target invocation error cause: " + e.getCause() + "\n" + stackTrace2);
+        } catch ( Exception e) {
+            System.out.println("ERROR: "+e);
+            xml.error("Unkown exception: " + e.getMessage() + "\n" + e.getStackTrace()[1]);
         }
-        xml.responseToRunStudentTest(groups);
-
-        List<TestData> tests = XMLParser.parseTests(request);
-        EvaluationHelper.runInstanceMethod(dc.getTestSuiteClass(), "RunTests", new Object[]{tests});
-        xml.responseToRunTest(tests);
-      }
-    } catch (TimeoutException e) {
-      xml.error("The execution took too long: " + e);
-    } catch (IOException e) {
-
-    } catch (ClassNotFoundException e) {
-
-    } catch (NoSuchMethodException e) {
-      xml.error("The main method was not accessible. Probably the main method is missing or has a too strict access modifier.");
-    } catch (org.jdom2.DataConversionException e) {
-      xml.error("Found wrong datatype in xml: " + e);
-    } catch (IllegalAccessException e) {
-      xml.error("The main method was not accessible. Probably the class or the main method is missing or has a too strict access modifier.");
-    } catch (InstantiationException e) {
-      xml.error("Class Initialization error:" + e);
-    } catch (WrongNumberOfProvidedJavaElementsException e) {
-      xml.error(e.getMessage());
-    } catch (InvocationTargetException e) {
-      xml.errorInvocationTargetException(e);
     }
-  }
 
+    private void feedbackTests(Element request, String person) {
+        try {
+            Element solutionXML = request.getChild("solution");
+            List<ParamGroup> groups = parseParameterGroups(solutionXML);
 
-  private DiagnostedTest complationTest(Element request, String person, String testName) {
-    DiagnostedTest dc = null;
-    try {
+            DiagnostedTest dc = complationTest(request, person,"");
+            if (dc != null && dc.isValidClass()) {
+                List<TestData> tests = XMLParser.parseTests(request);
+                EvaluationHelper.runInstanceMethod(dc.getTestSuiteClass(), "RunTests", new Object[]{tests});
+                xml.responseToRunTest(tests);
+            }
+        } catch (TimeoutException e) {
+            xml.error("The execution took too long: " + e);
+        } catch (IOException e) {
 
-      Element solutionXML = request.getChild("solution");
-      Element testXML = request.getChild("testgroup");
+        } catch (ClassNotFoundException e) {
 
-      String solutionCode = XMLParser.getCode(solutionXML);
-      String testCode = XMLParser.getCode(testXML);
-
-      dc = compileTest(solutionCode, testCode, person, testName);
-      if (dc != null) {
-        xml.responseToCompileTest(dc);
-      }
-      return dc;
-
-    } catch (EmptyCodeException e) {
-      xml.error("Provided code was empty: \n" + e);
+        } catch (org.jdom2.DataConversionException e) {
+            xml.error("Found wrong datatype in xml: " + e);
+        } catch (IllegalAccessException e) {
+            xml.error("The main method was not accessible. Probably the class or the main method is missing or has a too strict access modifier.");
+        } catch (InstantiationException e) {
+            xml.error("Class Initialization error:" + e);
+        } catch (WrongNumberOfProvidedJavaElementsException e) {
+            xml.error(e.getMessage());
+        } catch (InvocationTargetException e) {
+            xml.errorInvocationTargetException(e);
+        }
     }
-    return dc;
-  }
 
-  private DiagnostedTest compileTest(String solution, String test, String person, String testName) {
-    DiagnostedTest dc = null;
-    try {
-      CompilationBox cb = new CompilationBox();
-      dc = cb.compileClassWithTest(solution, test, person, testName);
-    } catch (WrongNumberOfProvidedJavaElementsException e) {
-      xml.error(e);
-    } catch (ClassNotFoundException e) {
-      xml.error(e.toString());
+    private void runStudentTests(Element request, String person) {
+        try {
+            Element solutionXML = request.getChild("solution");
+            List<ParamGroup> groups = parseParameterGroups(solutionXML);
+
+            DiagnostedTest dc = complationTest(request, person,"TODO");
+            if (dc != null && dc.isValidClass()) {
+                for (ParamGroup group : groups) {
+                    for (Params param : group.params) {
+                        String[] args = new String[param.values.length];
+                        for (int i = 0; i < param.values.length; ++i) {
+                            args[i] = (String) param.values[i];
+                        }
+
+                        SysOutGrabber grabber = new SysOutGrabber();
+                        param.zReturn = EvaluationHelper.runMainMethodWithParams(dc, args);
+                        param.consoleOutput = grabber.getOutput();
+                        grabber.detach();
+                    }
+                }
+                xml.responseToRunStudentTest(groups);
+
+                List<TestData> tests = XMLParser.parseTests(request);
+                EvaluationHelper.runInstanceMethod(dc.getTestSuiteClass(), "RunTests", new Object[]{tests});
+                xml.responseToRunTest(tests);
+            }
+        } catch (TimeoutException e) {
+            xml.error("The execution took too long: " + e);
+        } catch (IOException e) {
+
+        } catch (ClassNotFoundException e) {
+
+        } catch (NoSuchMethodException e) {
+            xml.error("The main method was not accessible. Probably the main method is missing or has a too strict access modifier.");
+        } catch (org.jdom2.DataConversionException e) {
+            xml.error("Found wrong datatype in xml: " + e);
+        } catch (IllegalAccessException e) {
+            xml.error("The main method was not accessible. Probably the class or the main method is missing or has a too strict access modifier.");
+        } catch (InstantiationException e) {
+            xml.error("Class Initialization error:" + e);
+        } catch (WrongNumberOfProvidedJavaElementsException e) {
+            xml.error(e.getMessage());
+        } catch (InvocationTargetException e) {
+            xml.errorInvocationTargetException(e);
+        }
     }
-    return dc;
-  }
+
+
+    private DiagnostedTest complationTest(Element request, String person, String testName) {
+        DiagnostedTest dc = null;
+        try {
+
+            Element solutionXML = request.getChild("solution");
+            Element testXML = request.getChild("testgroup");
+
+            String solutionCode = XMLParser.getCode(solutionXML);
+            String testCode = XMLParser.getCode(testXML);
+
+            dc = compileTest(solutionCode, testCode, person, testName);
+            if (dc != null) {
+                xml.responseToCompileTest(dc);
+            }
+            return dc;
+
+        } catch (EmptyCodeException e) {
+            xml.error("Provided code was empty: \n" + e);
+        }
+        return dc;
+    }
+
+    private DiagnostedTest compileTest(String solution, String test, String person, String testName) {
+        DiagnostedTest dc = null;
+        try {
+            CompilationBox cb = new CompilationBox();
+            dc = cb.compileClassWithTest(solution, test, person, testName);
+        } catch (WrongNumberOfProvidedJavaElementsException e) {
+            xml.error(e);
+        } catch (ClassNotFoundException e) {
+            xml.error(e.toString());
+        }
+        return dc;
+    }
 
 }
