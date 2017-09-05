@@ -490,6 +490,7 @@ class ilAssProgQuestionEvalConnection {
 		}
 		return $result;
 	}
+	
 	private function parseStudentTestNGResponse($xml) {
 		$result = $this->parseCompileTestNGResponse ( $xml );
 		if ($result ['type'] == "failure")
@@ -510,6 +511,7 @@ class ilAssProgQuestionEvalConnection {
 		$result ['message'] .= $message;
 		return $result;
 	}
+	
 	private function parseErrors($xml) {
 		$message = '';
 		$errors = $xml->error;
@@ -588,6 +590,7 @@ class ilAssProgQuestionEvalConnection {
 	 * @return string
 	 */
 	private function parseRunResponse($xml) {
+		$result ['type'] = "success";
 		$response = $xml->runmethod;
 		$diagnostics = $response->diagnostics;
 		if ($diagnostics === null || count ( $diagnostics->children () ) == 0) {

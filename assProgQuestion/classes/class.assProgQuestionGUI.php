@@ -310,7 +310,7 @@ class assProgQuestionGUI extends assQuestionGUI {
 		$type = $result ['type'];
 		switch ($type) {
 			case 'success' :
-				ilUtil::sendSuccess ( nl2br ( htmlspecialchars ( $result ['message'] . "\n\n" . $result ['paramsreturn'] ) ) );
+				ilUtil::sendSuccess ( nl2br ( htmlspecialchars ( $result ['message'] ) ) ); // . "\n\n" . $result ['paramsreturn'] 
 				break;
 			case 'failure' :
 			case 'compile error' :
