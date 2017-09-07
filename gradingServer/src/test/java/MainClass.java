@@ -77,7 +77,7 @@ public class MainClass {
 
             String solutionName = "MyClass";
             CompilationBox cp = new CompilationBox();
-            DiagnostedClass dc = cp.compileClassWithTest(solution,test,"test","");
+            DiagnostedClass dc = cp.compileClassWithTest(solution,test,"");
 
             List<TestData> tests = Arrays.asList(new TestData[]{
                     new TestData(0,"testFirst","Erster Test",3),

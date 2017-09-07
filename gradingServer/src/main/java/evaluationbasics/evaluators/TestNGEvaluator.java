@@ -76,23 +76,23 @@ public class TestNGEvaluator {
         String actionRequested = eAction.getValue().toLowerCase();
         switch (actionRequested) {
             case "compiletestng":
-                complationTest(request, "test","");
+                complationTest(request, "");
                 break;
 
             case "compilestudenttestng":
-                complationTest(request, "student","");
+                complationTest(request, "");
                 break;
 
             case "runtestng":
-                runTests(request, "test");
+                runTests(request);
                 break;
 
             case "runstudenttestng":
-                runStudentTests(request, "student");
+                runStudentTests(request);
                 break;
 
             case "feedbackstudenttestng":
-                feedbackTests(request, "student");
+                runTests(request);
                 break;
 
             default:
@@ -100,11 +100,11 @@ public class TestNGEvaluator {
         }
     }
 
-    private void runTests(Element request, String person) {
+    private void runTests(Element request) {
         try {
             List<TestData> tests = XMLParser.parseTests(request);
             for (TestData test : tests) {
-                DiagnostedTest dc = complationTest(request, person, test.name);
+                DiagnostedTest dc = complationTest(request, test.name);
                 if (dc != null && dc.isValidClass()) {
                     SysOutGrabber grabber = new SysOutGrabber();
                     EvaluationHelper.runInstanceMethod(dc.getTestSuiteClass(), "RunTests", new Object[]{test});
@@ -140,42 +140,12 @@ public class TestNGEvaluator {
         }
     }
 
-    private void feedbackTests(Element request, String person) {
+    private void runStudentTests(Element request) {
         try {
             Element solutionXML = request.getChild("solution");
             List<ParamGroup> groups = parseParameterGroups(solutionXML);
 
-            DiagnostedTest dc = complationTest(request, person,"");
-            if (dc != null && dc.isValidClass()) {
-                List<TestData> tests = XMLParser.parseTests(request);
-                EvaluationHelper.runInstanceMethod(dc.getTestSuiteClass(), "RunTests", new Object[]{tests});
-                xml.responseToRunTest(tests);
-            }
-        } catch (TimeoutException e) {
-            xml.error("The execution took too long: " + e);
-        } catch (IOException e) {
-
-        } catch (ClassNotFoundException e) {
-
-        } catch (org.jdom2.DataConversionException e) {
-            xml.error("Found wrong datatype in xml: " + e);
-        } catch (IllegalAccessException e) {
-            xml.error("The main method was not accessible. Probably the class or the main method is missing or has a too strict access modifier.");
-        } catch (InstantiationException e) {
-            xml.error("Class Initialization error:" + e);
-        } catch (WrongNumberOfProvidedJavaElementsException e) {
-            xml.error(e.getMessage());
-        } catch (InvocationTargetException e) {
-            xml.errorInvocationTargetException(e);
-        }
-    }
-
-    private void runStudentTests(Element request, String person) {
-        try {
-            Element solutionXML = request.getChild("solution");
-            List<ParamGroup> groups = parseParameterGroups(solutionXML);
-
-            DiagnostedTest dc = complationTest(request, person,"TODO");
+            DiagnostedTest dc = complationTest(request, "");
             if (dc != null && dc.isValidClass()) {
                 for (ParamGroup group : groups) {
                     for (Params param : group.params) {
@@ -191,10 +161,6 @@ public class TestNGEvaluator {
                     }
                 }
                 xml.responseToRunStudentTest(groups);
-
-                List<TestData> tests = XMLParser.parseTests(request);
-                EvaluationHelper.runInstanceMethod(dc.getTestSuiteClass(), "RunTests", new Object[]{tests});
-                xml.responseToRunTest(tests);
             }
         } catch (TimeoutException e) {
             xml.error("The execution took too long: " + e);
@@ -208,17 +174,13 @@ public class TestNGEvaluator {
             xml.error("Found wrong datatype in xml: " + e);
         } catch (IllegalAccessException e) {
             xml.error("The main method was not accessible. Probably the class or the main method is missing or has a too strict access modifier.");
-        } catch (InstantiationException e) {
-            xml.error("Class Initialization error:" + e);
-        } catch (WrongNumberOfProvidedJavaElementsException e) {
-            xml.error(e.getMessage());
         } catch (InvocationTargetException e) {
             xml.errorInvocationTargetException(e);
         }
     }
 
 
-    private DiagnostedTest complationTest(Element request, String person, String testName) {
+    private DiagnostedTest complationTest(Element request, String testName) {
         DiagnostedTest dc = null;
         try {
 
@@ -228,7 +190,7 @@ public class TestNGEvaluator {
             String solutionCode = XMLParser.getCode(solutionXML);
             String testCode = XMLParser.getCode(testXML);
 
-            dc = compileTest(solutionCode, testCode, person, testName);
+            dc = compileTest(solutionCode, testCode, testName);
             if (dc != null) {
                 xml.responseToCompileTest(dc);
             }
@@ -240,11 +202,11 @@ public class TestNGEvaluator {
         return dc;
     }
 
-    private DiagnostedTest compileTest(String solution, String test, String person, String testName) {
+    private DiagnostedTest compileTest(String solution, String test, String testName) {
         DiagnostedTest dc = null;
         try {
             CompilationBox cb = new CompilationBox();
-            dc = cb.compileClassWithTest(solution, test, person, testName);
+            dc = cb.compileClassWithTest(solution, test, testName);
         } catch (WrongNumberOfProvidedJavaElementsException e) {
             xml.error(e);
         } catch (ClassNotFoundException e) {

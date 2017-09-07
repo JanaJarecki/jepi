@@ -100,7 +100,6 @@ public class EvaluationHelper {
   }
 
   public static Object runInstanceMethod(Class<?> clazz, String methodName, Object[] args) throws WrongNumberOfProvidedJavaElementsException, IllegalAccessException, InvocationTargetException, InstantiationException, IOException, ClassNotFoundException, TimeoutException {
-//        assert (dc.isValidClass());
     if (args == null) {
       args = new Object[]{};
     }
