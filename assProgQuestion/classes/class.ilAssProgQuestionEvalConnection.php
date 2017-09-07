@@ -219,7 +219,6 @@ class ilAssProgQuestionEvalConnection {
 		$address = $config ['ratingsystem_address'];
 		
 		$resultxml = $this->sendMessage ( $this->xml, $address, $errno, $errstr );
-		print($resultxml);
 		
 		if ($resultxml === FALSE) {
 			$result ['type'] = 'failure';
@@ -239,7 +238,7 @@ class ilAssProgQuestionEvalConnection {
 	 * This creates the XML request for function_original type question. The XML is sended later to
 	 * the evaluation server.
 	 *
-	 * @return mixed
+	 * @
 	 */
 	private function createFunctionXML() {
 		$this->student_code_id = 0;
