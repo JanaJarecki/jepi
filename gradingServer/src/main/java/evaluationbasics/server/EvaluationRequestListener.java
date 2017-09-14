@@ -33,7 +33,7 @@ class EvaluationRequestListener extends Thread {
     }
 
     /**
-     * Does the work of accepting clients.
+     * Event loop accepting clients.
      */
     public void run() {
         Socket client = null;
@@ -54,12 +54,11 @@ class EvaluationRequestListener extends Thread {
         } catch (ClassCastException e) {
             e.printStackTrace();
         }
-
         shutdownServer();
     }
 
     /**
-     * Shutdown the server properly.
+     * Shutdown the server and terminates the console listener.
      */
     private void shutdownServer() {
         closeServer();
@@ -73,9 +72,9 @@ class EvaluationRequestListener extends Thread {
      */
     private void reportAccessDeniedToClient(Socket client) {
         try {
-            XMLConstructor response = new XMLConstructor();
-            response.error(ERROR_CODE.CLIENT_ADRESS_NOT_ALLOWED);
-            EvaluationHelper.setStringToOutputStream(client.getOutputStream(), new XMLOutputter().outputString(response.getDocument()));
+            XMLConstructor message = new XMLConstructor();
+            message.error(ERROR_CODE.CLIENT_ADRESS_NOT_ALLOWED);
+            EvaluationHelper.setStringToOutputStream(client.getOutputStream(), new XMLOutputter().outputString(message.getDocument()));
             client.close();
         } catch (IOException e) {
             e.printStackTrace();

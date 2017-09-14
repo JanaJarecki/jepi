@@ -6,9 +6,11 @@ import evaluationbasics.exceptions.EmptyCodeException;
 import evaluationbasics.exceptions.WrongNumberOfProvidedJavaElementsException;
 import evaluationbasics.exceptions.ERROR_CODE;
 import evaluationbasics.security.SwitchableSecurityManager;
+import evaluationbasics.utils.SysOutGrabber;
 import evaluationbasics.xml.*;
 import org.jdom2.Document;
 import org.jdom2.Element;
+import org.jdom2.internal.SystemProperty;
 
 import java.io.*;
 import java.lang.reflect.InvocationTargetException;
@@ -23,69 +25,10 @@ import static evaluationbasics.xml.XMLParser.parseParameterGroups;
 public class TestNGEvaluator {
 
     private static final int TIMEOUT = 20000;
+    private XMLConstructor xml;
 
-    /**
-     * @param request
-     * @return
-     * @deprecated Do not use this method in the productive system. This remains only for debuggin purpose.
-     */
-    public static Document evalNotInProcess(Element request) {
-        XMLConstructor response = new XMLConstructor();
-        TestNGEvaluator eval = new TestNGEvaluator(response);
-        eval.dispatchEvaluation(request);
-        return response.getDocument();
-    }
-
-    public static Document eval(Element request) {
-        int GRANULARITY = 50;
-        String JAVA_CMD = System.getenv("JAVA_HOME");
-        String CLASSPATH = System.getProperty("java.class.path");
-        String CURRENTDIR = System.getProperty("user.dir");
-
-        try {
-            ProcessBuilder builder = new ProcessBuilder(JAVA_CMD + File.separator + "bin" + File.separator + "java",
-//                    "-Xdebug -Xrunjdwp=transport=dt_socket,server=y,suspend=y,address=5005",
-                    "-cp", CLASSPATH,
-                    "-Djava.security.policy=" + CURRENTDIR + File.separator + "security.policy",
-                    "evaluationbasics.evaluators.FunctionEvaluator");
-            Process child = builder.start();
-            try {
-                OutputStream output = child.getOutputStream();
-                ObjectOutputStream oos = new ObjectOutputStream(output);
-                oos.writeObject(request);
-                oos.flush();
-
-                InputStream input = child.getInputStream();
-                ObjectInputStream ois = new ObjectInputStream(input);
-                int total = 0;
-                while (total < TIMEOUT && input.available() == 0) {
-                    try {
-                        Thread.sleep(GRANULARITY);
-                    } catch (InterruptedException e) {
-                    }
-                    total = total + GRANULARITY;
-                }
-                if (input.available() != 0) {
-                    Document response = (Document) ois.readObject();
-                    return response;
-                } else {
-                    throw new TimeoutException("timed out after " + TIMEOUT + "ms");
-                }
-            } finally {
-                child.destroy();
-            }
-
-        } catch (IOException e) {
-            System.out.println(e);
-        } catch (ClassNotFoundException e) {
-            System.out.println(e);
-        } catch (TimeoutException e) {
-            System.out.println(e);
-        }
-        XMLConstructor response = new XMLConstructor();
-        response.error("Some error occured while running a child process.");
-        return response.getDocument();
-
+    private TestNGEvaluator(XMLConstructor response) {
+        this.xml = response;
     }
 
     public static void main(String... args) {
@@ -96,10 +39,8 @@ public class TestNGEvaluator {
             ObjectOutputStream oos = new ObjectOutputStream(System.out);
             try {
                 Element request = (Element) ois.readObject();
-                XMLConstructor response = new XMLConstructor();
-                TestNGEvaluator eval = new TestNGEvaluator(response);
-                eval.dispatchEvaluation(request);
-                oos.writeObject(response.getDocument());
+                Document response = processRequest(request);
+                oos.writeObject(response);
                 oos.flush();
             } catch (ClassNotFoundException e) {
             } finally {
@@ -109,11 +50,18 @@ public class TestNGEvaluator {
         }
     }
 
+    /** @deprecated This method should only be used for debugging but not in the productive system. */
+    public static Document processRequestInMainThread(Element request) {
+        SwitchableSecurityManager ssm = new SwitchableSecurityManager(1234, false);
+        System.setSecurityManager(ssm);
+        return processRequest(request);
+    }
 
-    private XMLConstructor xml;
-
-    private TestNGEvaluator(XMLConstructor response) {
-        this.xml = response;
+    public static Document processRequest(Element request) {
+        XMLConstructor response = new XMLConstructor();
+        TestNGEvaluator eval = new TestNGEvaluator(response);
+        eval.dispatchEvaluation(request);
+        return response.getDocument();
     }
 
     /**
@@ -128,23 +76,23 @@ public class TestNGEvaluator {
         String actionRequested = eAction.getValue().toLowerCase();
         switch (actionRequested) {
             case "compiletestng":
-                complationTest(request, "test");
+                complationTest(request, "");
                 break;
 
             case "compilestudenttestng":
-                complationTest(request, "student");
+                complationTest(request, "");
                 break;
 
             case "runtestng":
-                runTests(request, "test");
+                runTests(request);
                 break;
 
             case "runstudenttestng":
-                runStudentTests(request, "student");
+                runStudentTests(request);
                 break;
 
             case "feedbackstudenttestng":
-                feedbackTests(request, "student");
+                runTests(request);
                 break;
 
             default:
@@ -152,20 +100,25 @@ public class TestNGEvaluator {
         }
     }
 
-    private void runTests(Element request, String person) {
+    private void runTests(Element request) {
         try {
             List<TestData> tests = XMLParser.parseTests(request);
-            DiagnostedTest dc = complationTest(request, person);
-            if (dc != null && dc.isValidClass()) {
-                EvaluationHelper.runInstanceMethod(dc.getTestSuiteClass(), "RunTests", new Object[]{tests});
-                xml.responseToRunTest(tests);
+            for (TestData test : tests) {
+                DiagnostedTest dc = complationTest(request, test.name);
+                if (dc != null && dc.isValidClass()) {
+                    SysOutGrabber grabber = new SysOutGrabber();
+                    EvaluationHelper.runInstanceMethod(dc.getTestSuiteClass(), "RunTests", new Object[]{test});
+                    grabber.detach();
+                    test.consoleOutput = grabber.getOutput();
+                }
             }
+            xml.responseToRunTest(tests);
         } catch (TimeoutException e) {
             xml.error("The execution took too long: " + e);
         } catch (IOException e) {
-
+            xml.error("IOException "+ e);
         } catch (ClassNotFoundException e) {
-
+            xml.error("ClassNotFoundException "+ e);
         } catch (org.jdom2.DataConversionException e) {
             xml.error("Found wrong datatype in xml: " + e);
         } catch (IllegalAccessException e) {
@@ -181,46 +134,18 @@ public class TestNGEvaluator {
             for (StackTraceElement s : e.getCause().getStackTrace()) stackTrace2 += s.toString() + "\n";
             xml.error("Target invocation error: " + e.getMessage() + "\n" + stackTrace1);
             xml.error("Target invocation error cause: " + e.getCause() + "\n" + stackTrace2);
+        } catch ( Exception e) {
+            System.out.println("ERROR: "+e);
+            xml.error("Unkown exception: " + e.getMessage() + "\n" + e.getStackTrace()[1]);
         }
     }
 
-    private void feedbackTests(Element request, String person) {
+    private void runStudentTests(Element request) {
         try {
             Element solutionXML = request.getChild("solution");
             List<ParamGroup> groups = parseParameterGroups(solutionXML);
 
-            DiagnostedTest dc = complationTest(request, person);
-            if (dc != null && dc.isValidClass()) {
-
-                List<TestData> tests = XMLParser.parseTests(request);
-                EvaluationHelper.runInstanceMethod(dc.getTestSuiteClass(), "RunTests", new Object[]{tests});
-                xml.responseToRunTest(tests);
-            }
-        } catch (TimeoutException e) {
-            xml.error("The execution took too long: " + e);
-        } catch (IOException e) {
-
-        } catch (ClassNotFoundException e) {
-
-        } catch (org.jdom2.DataConversionException e) {
-            xml.error("Found wrong datatype in xml: " + e);
-        } catch (IllegalAccessException e) {
-            xml.error("The main method was not accessible. Probably the class or the main method is missing or has a too strict access modifier.");
-        } catch (InstantiationException e) {
-            xml.error("Class Initialization error:" + e);
-        } catch (WrongNumberOfProvidedJavaElementsException e) {
-            xml.error(e.getMessage());
-        } catch (InvocationTargetException e) {
-            xml.errorInvocationTargetException(e);
-        }
-    }
-
-    private void runStudentTests(Element request, String person) {
-        try {
-            Element solutionXML = request.getChild("solution");
-            List<ParamGroup> groups = parseParameterGroups(solutionXML);
-
-            DiagnostedTest dc = complationTest(request, person);
+            DiagnostedTest dc = complationTest(request, "");
             if (dc != null && dc.isValidClass()) {
                 for (ParamGroup group : groups) {
                     for (Params param : group.params) {
@@ -228,14 +153,14 @@ public class TestNGEvaluator {
                         for (int i = 0; i < param.values.length; ++i) {
                             args[i] = (String) param.values[i];
                         }
+
+                        SysOutGrabber grabber = new SysOutGrabber();
                         param.zReturn = EvaluationHelper.runMainMethodWithParams(dc, args);
+                        param.consoleOutput = grabber.getOutput();
+                        grabber.detach();
                     }
                 }
                 xml.responseToRunStudentTest(groups);
-
-                List<TestData> tests = XMLParser.parseTests(request);
-                EvaluationHelper.runInstanceMethod(dc.getTestSuiteClass(), "RunTests", new Object[]{tests});
-                xml.responseToRunTest(tests);
             }
         } catch (TimeoutException e) {
             xml.error("The execution took too long: " + e);
@@ -249,17 +174,13 @@ public class TestNGEvaluator {
             xml.error("Found wrong datatype in xml: " + e);
         } catch (IllegalAccessException e) {
             xml.error("The main method was not accessible. Probably the class or the main method is missing or has a too strict access modifier.");
-        } catch (InstantiationException e) {
-            xml.error("Class Initialization error:" + e);
-        } catch (WrongNumberOfProvidedJavaElementsException e) {
-            xml.error(e.getMessage());
         } catch (InvocationTargetException e) {
             xml.errorInvocationTargetException(e);
         }
     }
 
 
-    private DiagnostedTest complationTest(Element request, String person) {
+    private DiagnostedTest complationTest(Element request, String testName) {
         DiagnostedTest dc = null;
         try {
 
@@ -269,7 +190,7 @@ public class TestNGEvaluator {
             String solutionCode = XMLParser.getCode(solutionXML);
             String testCode = XMLParser.getCode(testXML);
 
-            dc = compileTest(solutionCode, testCode, person);
+            dc = compileTest(solutionCode, testCode, testName);
             if (dc != null) {
                 xml.responseToCompileTest(dc);
             }
@@ -281,11 +202,11 @@ public class TestNGEvaluator {
         return dc;
     }
 
-    private DiagnostedTest compileTest(String solution, String test, String person) {
+    private DiagnostedTest compileTest(String solution, String test, String testName) {
         DiagnostedTest dc = null;
         try {
             CompilationBox cb = new CompilationBox();
-            dc = cb.compileClassWithTest(solution, test, person);
+            dc = cb.compileClassWithTest(solution, test, testName);
         } catch (WrongNumberOfProvidedJavaElementsException e) {
             xml.error(e);
         } catch (ClassNotFoundException e) {
@@ -294,15 +215,4 @@ public class TestNGEvaluator {
         return dc;
     }
 
-    private Object compileSolutionPart(String solution) {
-        return null;
-    }
-
-    private Object runTest(Object test) {
-        return null;
-    }
-
-    private Object runSolutionMain(Object test) {
-        return null;
-    }
 }

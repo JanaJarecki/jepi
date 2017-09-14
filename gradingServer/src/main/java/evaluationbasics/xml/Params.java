@@ -9,6 +9,7 @@ public class Params {
     public Object zReturn;
     public boolean equals = false;
     public String error = "";
+    public String consoleOutput = null;
 
     public Params( int id, Object[] values) {
         this.id = id;
@@ -21,5 +22,6 @@ public class Params {
         this.zReturn = other.zReturn;
         this.equals = other.equals;
         this.error = other.error;
+        this.consoleOutput = other.consoleOutput;
     }
 }

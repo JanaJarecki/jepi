@@ -3,6 +3,10 @@
     <error>
         <error>could not read back Object
             java.io.EOFException
-            [java.io.ObjectInputStream$BlockDataInputStream.peekByte(ObjectInputStream.java:2626), java.io.ObjectInputStream.readObject0(ObjectInputStream.java:1321), java.io.ObjectInputStream.readObject(ObjectInputStream.java:373), evaluationbasics.evaluators.EvaluationProcess.exec(EvaluationProcess.java:57), evaluationbasics.server.EvaluationRequest.run(EvaluationRequest.java:70)]</error>
+            [java.io.ObjectInputStream$BlockDataInputStream.peekByte(ObjectInputStream.java:2626),
+            java.io.ObjectInputStream.readObject0(ObjectInputStream.java:1321),
+            java.io.ObjectInputStream.readObject(ObjectInputStream.java:373),
+            evaluationbasics.evaluators.EvaluationProcessStarter.exec(EvaluationProcess.java:57),
+            evaluationbasics.server.EvaluationRequest.run(EvaluationRequest.java:70)]</error>
     </error>
 </response>

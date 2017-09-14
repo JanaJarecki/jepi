@@ -61,7 +61,6 @@ public final class CompilationBox {
     }
 
     public CompilationBox() {
-
         compiler = ToolProvider.getSystemJavaCompiler();
         if (compiler == null)
             throw new IllegalArgumentException("Compiler cannot be found!");
@@ -70,14 +69,9 @@ public final class CompilationBox {
         classLoader = new MemClassLoader();
         fileManager = new MemJavaFileManager(compiler, classLoader, diagnostics);
 
-//        String testNGURL = "file://home/ilias/Downloads/testng.jar";
-//        String hamcrestURL = "file://home/ilias/Downloads/hamcrest.jar";
-
         classLoader.addClass("TestData",TestData.class);
 
-        options = Arrays.asList(new String[]{
-                //"-classpath", testNGURL + ":" + hamcrestURL
-        });
+        options = Arrays.asList(new String[]{});
     }
 
     public void close() {
@@ -88,20 +82,31 @@ public final class CompilationBox {
         }
     }
 
-    public DiagnostedTest compileClassWithTest(String classCode, String testCode, String person) throws WrongNumberOfProvidedJavaElementsException, ClassNotFoundException {
+    /**
+     * Compiles the class code and the test code together while aiming to execute exactly one test method.
+     *
+     * @param classCode The class to be tested.
+     * @param testCode The test code.
+     * @param testMethodName The test method which should be run.
+     * @return
+     * @throws WrongNumberOfProvidedJavaElementsException
+     * @throws ClassNotFoundException
+     */
+    public DiagnostedTest compileClassWithTest(String classCode, String testCode, String testMethodName) throws WrongNumberOfProvidedJavaElementsException, ClassNotFoundException {
         assert (!(classCode == null || classCode.equals("")));
         assert (!(testCode == null || testCode.equals("")));
 
         String className = getPublicClassName(classCode);
         String testName = getSingleClassName(testCode);
 
-        String testSuiteCode = generateTestNGSuiteCode(testName);
+//        String testSuiteCode = generateTestNGSuiteCode(testName); // OLD VERSION
+        String testSuiteCode = generateSingleTestNGSuiteCode(testName,testMethodName);
         String testSuiteName = generateTestNGSuiteClassName();
 
         StringJavaFileObject[] classes = {
-                new StringJavaFileObject(className, classCode),
-                new StringJavaFileObject(testName, testCode),
-                new StringJavaFileObject(testSuiteName, testSuiteCode)
+            new StringJavaFileObject(className, classCode),
+            new StringJavaFileObject(testName, testCode),
+            new StringJavaFileObject(testSuiteName, testSuiteCode)
         };
 
         boolean compileSuccess = compileClasses(Arrays.asList(classes));
@@ -114,11 +119,10 @@ public final class CompilationBox {
             testClass = classLoader.findClass(testName);
             testSuiteClass = classLoader.findClass(testSuiteName);
         }
-        DiagnostedTest dc = new DiagnostedTest(compileSuccess, diagnostics,
-                className, classCode, classClass,
-                testName, testCode, testClass,
-                testSuiteName, testSuiteCode, testSuiteClass);
-        return dc;
+        return new DiagnostedTest(compileSuccess, diagnostics,
+            className, classCode, classClass,
+            testName, testCode, testClass,
+            testSuiteName, testSuiteCode, testSuiteClass);
     }
 
 
@@ -242,7 +246,7 @@ public final class CompilationBox {
      * @see DiagnostedMethodClass
      */
     private DiagnostedMethodClass compileMethod(String methodCode, String[] importPackages)
-            throws TooManyMethodsException, ClassNotFoundException {
+        throws TooManyMethodsException, ClassNotFoundException {
         assert (!(methodCode == null || methodCode.isEmpty()));
         assert (importPackages != null);
         int offset = 0;
@@ -256,9 +260,9 @@ public final class CompilationBox {
         }
 
         String classCode = importStatements +
-                "public class " + className + "{\n" +
-                methodCode + "\n" +
-                "}";
+            "public class " + className + "{\n" +
+            methodCode + "\n" +
+            "}";
         offset += 1;
 
         DiagnostedClass dcMethod = compileClass(classCode, className);
@@ -292,7 +296,7 @@ public final class CompilationBox {
      * @see DiagnostedMethodClass
      */
     public DiagnostedMethodClass compileMethods(String mCode, String[] imports, String mName)
-            throws TooManyMethodsException, ClassNotFoundException {
+        throws TooManyMethodsException, ClassNotFoundException {
         DiagnostedClass dcMethod = compileMethod(mCode, imports);
         return defineDiagnostedMethodClass(dcMethod, mName, null);
     }
@@ -311,7 +315,7 @@ public final class CompilationBox {
      * @return Vollstaendiges DiagnostedMethodClass Objekt oder Invalides DiagnostedMethodClass Objekt, sofern die Methode syntaktisch nicht korrekt war.
      */
     public DiagnostedMethodClass compileMethods(String pMethodsCode, String[] pImportedPackages, String pMethodName, Class<?>[] pArgTypes)
-            throws TooManyMethodsException, ClassNotFoundException {
+        throws TooManyMethodsException, ClassNotFoundException {
         DiagnostedClass diagnosedClass = compileMethod(pMethodsCode, pImportedPackages);
         if (diagnosedClass.isValidClass())
             try {
@@ -388,13 +392,13 @@ public final class CompilationBox {
             String sReturn = "";
             for (Diagnostic<?> diag : diagnostics.getDiagnostics()) {
                 sReturn = sReturn + "Quelle: " + diag.getSource() + "\n" +
-                        "Code: " + diag.getCode() + "\n" +
-                        "Nachricht: " + diag.getMessage(null) + "\n" +
-                        "Zeile:" + (diag.getLineNumber() + startLine) + "\n" +
-                        "Position/Spalte:" + diag.getPosition() + "/" +
-                        diag.getColumnNumber() + "\n" +
-                        "Startpostion/Endposition: n" + diag.getStartPosition() + "/" +
-                        diag.getEndPosition() + "\n\n";
+                    "Code: " + diag.getCode() + "\n" +
+                    "Nachricht: " + diag.getMessage(null) + "\n" +
+                    "Zeile:" + (diag.getLineNumber() + startLine) + "\n" +
+                    "Position/Spalte:" + diag.getPosition() + "/" +
+                    diag.getColumnNumber() + "\n" +
+                    "Startpostion/Endposition: n" + diag.getStartPosition() + "/" +
+                    diag.getEndPosition() + "\n\n";
             }
             return sReturn;
         }
@@ -450,8 +454,8 @@ public final class CompilationBox {
                     pClassInstance = null;
                 return m.invoke(pClassInstance, pMethodArgs);
             } catch (IllegalAccessException | IllegalArgumentException
-                    | InvocationTargetException |
-                    NoSuchMethodException | SecurityException e) {
+                | InvocationTargetException |
+                NoSuchMethodException | SecurityException e) {
                 throw e;
             }
         } else
@@ -474,7 +478,7 @@ public final class CompilationBox {
      */
     public static String primitiveToWrapper(String code) {
         final String primToWrap[][] = {{"boolean", "Boolean"}, {"byte", "Byte"}, {"char", "Character"},
-                {"short", "Short"}, {"int", "Integer"}, {"long", "Long"}, {"float", "Float"}, {"double", "Double"}};
+            {"short", "Short"}, {"int", "Integer"}, {"long", "Long"}, {"float", "Float"}, {"double", "Double"}};
 
         StringBuffer sbuf = new StringBuffer(code);
         Matcher matcher;
@@ -558,65 +562,154 @@ public final class CompilationBox {
         return "EvaluationServerTestMainClass";
     }
 
-    private static String generateTestNGSuiteCode(String name) {
 
+    private static String generateSingleTestNGSuiteCode(String className, String testName) {
         return "import java.util.*;\n" +
-                "import org.testng.TestListenerAdapter;\n" +
-                "import org.testng.TestNG;\n" +
-                "import org.testng.ITestNGListener;\n" +
-                "import org.testng.ITestResult;\n" +
-                "\n" +
-                "import java.util.function.Consumer;\n" +
-                "import java.util.function.IntFunction;\n" +
-                "import static java.util.stream.Collectors.toSet;" +
-                "import evaluationbasics.xml.TestData;\n" +
-                "import java.util.stream.Stream;" +
-                "\n" +
-                "import static java.util.stream.Collectors.toSet;\n" +
-                "\n" +
-                "public class EvaluationServerTestMainClass{\n" +
-                "\n" +
-                "public static void RunTests(List<TestData> tests) {\n" +
-                "\n" +
-                "        TestListenerAdapter tla = new TestListenerAdapter();\n" +
-                "        TestNG testng = new TestNG();\n" +
-                "        testng.setUseDefaultListeners(false);\n" +
-                "        testng.setVerbose(0);\n" +
-                "        testng.setTestClasses(new Class[] { "+name+".class });\n" +
-                "        testng.addListener((ITestNGListener)tla);\n" +
-                "        testng.run();\n" +
-                "\n" +
-                "        try {\n" +
-                "            Set<String> partiallyPassedTests = new HashSet<>();\n" +
-                "            for ( ITestResult result : tla.getPassedTests() ) partiallyPassedTests.add(result.getName());\n" +
-                "\n" +
-                "            Set<String> failedTests = new HashSet<>();\n" +
-                "            for ( ITestResult result : tla.getFailedTests() ) failedTests.add(result.getName() );\n" +
-                "\n" +
-                "            Set<String> fullyPassedTests = new HashSet<String>(partiallyPassedTests);" +
-                "\n" +
-                "            fullyPassedTests.removeAll(failedTests);\n" +
-                "            partiallyPassedTests.removeAll(fullyPassedTests);\n" +
-                "            failedTests.removeAll(partiallyPassedTests);\n" +
-                "\n" +
-                "            for ( String x: failedTests) writeToTest(x,tests,-1);\n" +
-                "            for ( String x: partiallyPassedTests) writeToTest(x,tests,0);\n" +
-                "            for ( String x: fullyPassedTests) writeToTest(x,tests,1);" +
-                "        } catch (Exception e) {\n" +
-                "        }\n" +
-                "    }\n" +
-                "\n" +
-                "    public static void writeToTest(String name, List<TestData> list, int result) {\n" +
-                "        for ( TestData t: list) {\n" +
-                "            if (t.name.equals(name)) {\n" +
-                "                t.passed = result > 0;\n" +
-                "                t.passedPartially = result >= 0;\n" +
-                "                t.reachedPoints = (t.passed) ? t.points : 0;\n" +
-                "            }\n" +
-                "        }\n" +
-                "    }\n" +
-                "\n" +
-                "}";
+            "import org.testng.TestListenerAdapter;\n" +
+            "import org.testng.TestNG;\n" +
+            "import org.testng.ITestNGListener;\n" +
+            "import org.testng.ITestResult;\n" +
+            "\n" +
+            "import org.testng.xml.XmlSuite;\n" +
+            "import org.testng.xml.XmlTest;\n" +
+            "import org.testng.xml.XmlInclude;\n" +
+            "import org.testng.xml.XmlClass;\n" +
+            "import evaluationbasics.utils.SysOutGrabber;" +
+            "\n" +
+            "import java.util.function.Consumer;\n" +
+            "import java.util.function.IntFunction;\n" +
+            "import static java.util.stream.Collectors.toSet;" +
+            "import evaluationbasics.xml.TestData;\n" +
+            "import java.util.stream.Stream;" +
+            "\n" +
+            "import static java.util.stream.Collectors.toSet;\n" +
+            "\n" +
+            "public class EvaluationServerTestMainClass{\n" +
+            "\n" +
+            "public static void RunTests(TestData testData) {\n" +
+            "\n" +
+            "   TestListenerAdapter tla = new TestListenerAdapter();\n" +
+            "\n" +
+            "    XmlSuite suite = new XmlSuite();\n" +
+            "    suite.setName(\"TmpSuite\");\n" +
+            "\n" +
+            "    XmlTest test = new XmlTest(suite);\n" +
+            "    test.setName(\"TmpTest\");\n" +
+            "\n" +
+            "    XmlInclude inc = new XmlInclude(\""+testName+"\");\n" +
+            "    List<XmlInclude> testToExecute = new ArrayList<XmlInclude>();\n" +
+            "    testToExecute.add(inc);\n" +
+            "\n" +
+            "    XmlClass testedClass = new XmlClass( "+className+".class);\n" +
+            "    testedClass.setIncludedMethods(testToExecute);\n" +
+            "\n" +
+            "    List<XmlClass> classes = new ArrayList<XmlClass>();\n" +
+            "    classes.add(testedClass);\n" +
+            "    test.setXmlClasses(classes);\n" +
+            "\n" +
+            "    List<XmlSuite> suites = new ArrayList<XmlSuite>();\n" +
+            "    suites.add(suite);\n" +
+            "\n" +
+            "    TestNG tng = new TestNG();\n" +
+            "    tng.setXmlSuites(suites);\n" +
+            "    tng.addListener((ITestNGListener)tla);\n" +
+            "    tng.setUseDefaultListeners(false);\n" +
+            "    tng.setVerbose(0);\n" +
+            "\n" +
+            "    tng.run();\n" +
+            "\n" +
+            "\n" +
+            "\n" +
+            "\n" +
+            "    try {\n" +
+            "      Set<String> partiallyPassedTests = new HashSet<>();\n" +
+            "      for ( ITestResult result : tla.getPassedTests() ) partiallyPassedTests.add(result.getName());\n" +
+            "\n" +
+            "      Set<String> failedTests = new HashSet<>();\n" +
+            "      for ( ITestResult result : tla.getFailedTests() ) failedTests.add(result.getName() );\n" +
+            "\n" +
+            "      Set<String> fullyPassedTests = new HashSet<String>(partiallyPassedTests);\n" +
+            "      fullyPassedTests.removeAll(failedTests);\n" +
+            "      partiallyPassedTests.removeAll(fullyPassedTests);\n" +
+            "      failedTests.removeAll(partiallyPassedTests);\n" +
+            "\n" +
+            "      for ( String x: failedTests) if (x == \""+testName+"\") writeToTest(x,testData,-1);\n" +
+            "      for ( String x: partiallyPassedTests) if (x == \""+testName+"\") writeToTest(x,testData,0);\n" +
+            "      for ( String x: fullyPassedTests) if (x == \""+testName+"\") writeToTest(x,testData,1);\n" +
+            "    } catch (Exception e) {\n" +
+            "    }" +
+            "  }\n" +
+            "\n" +
+            "  public static void writeToTest(String name, TestData t, int result) {\n" +
+            "      if (t.name.equals(name)) {\n" +
+            "        t.passed = result > 0;\n" +
+            "        t.passedPartially = result >= 0;\n" +
+            "        t.reachedPoints = (t.passed) ? t.points : 0;\n" +
+            "      }\n" +
+            "  }" +
+            "\n" +
+            "}";
+    }
+
+
+    private static String generateTestNGSuiteCode(String name) {
+        return "import java.util.*;\n" +
+            "import org.testng.TestListenerAdapter;\n" +
+            "import org.testng.TestNG;\n" +
+            "import org.testng.ITestNGListener;\n" +
+            "import org.testng.ITestResult;\n" +
+            "\n" +
+            "import java.util.function.Consumer;\n" +
+            "import java.util.function.IntFunction;\n" +
+            "import static java.util.stream.Collectors.toSet;" +
+            "import evaluationbasics.xml.TestData;\n" +
+            "import java.util.stream.Stream;" +
+            "\n" +
+            "import static java.util.stream.Collectors.toSet;\n" +
+            "\n" +
+            "public class EvaluationServerTestMainClass{\n" +
+            "\n" +
+            "public static void RunTests(List<TestData> tests) {\n" +
+            "\n" +
+            "        TestListenerAdapter tla = new TestListenerAdapter();\n" +
+            "        TestNG testng = new TestNG();\n" +
+            "        testng.setUseDefaultListeners(false);\n" +
+            "        testng.setVerbose(0);\n" +
+            "        testng.setTestClasses(new Class[] { "+name+".class });\n" +
+            "        testng.addListener((ITestNGListener)tla);\n" +
+            "        testng.run();\n" +
+            "\n" +
+            "        try {\n" +
+            "            Set<String> partiallyPassedTests = new HashSet<>();\n" +
+            "            for ( ITestResult result : tla.getPassedTests() ) partiallyPassedTests.add(result.getName());\n" +
+            "\n" +
+            "            Set<String> failedTests = new HashSet<>();\n" +
+            "            for ( ITestResult result : tla.getFailedTests() ) failedTests.add(result.getName() );\n" +
+            "\n" +
+            "            Set<String> fullyPassedTests = new HashSet<String>(partiallyPassedTests);" +
+            "\n" +
+            "            fullyPassedTests.removeAll(failedTests);\n" +
+            "            partiallyPassedTests.removeAll(fullyPassedTests);\n" +
+            "            failedTests.removeAll(partiallyPassedTests);\n" +
+            "\n" +
+            "            for ( String x: failedTests) writeToTest(x,tests,-1);\n" +
+            "            for ( String x: partiallyPassedTests) writeToTest(x,tests,0);\n" +
+            "            for ( String x: fullyPassedTests) writeToTest(x,tests,1);" +
+            "        } catch (Exception e) {\n" +
+            "        }\n" +
+            "    }\n" +
+            "\n" +
+            "    public static void writeToTest(String name, List<TestData> list, int result) {\n" +
+            "        for ( TestData t: list) {\n" +
+            "            if (t.name.equals(name)) {\n" +
+            "                t.passed = result > 0;\n" +
+            "                t.passedPartially = result >= 0;\n" +
+            "                t.reachedPoints = (t.passed) ? t.points : 0;\n" +
+            "            }\n" +
+            "        }\n" +
+            "    }\n" +
+            "\n" +
+            "}";
 
 //        return "\n" +
 //                "import evaluationbasics.analysis.ASTHelper;\n" +

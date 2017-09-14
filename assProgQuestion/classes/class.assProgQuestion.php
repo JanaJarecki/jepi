@@ -786,8 +786,6 @@ class assProgQuestion extends assQuestion {
 		
 		return $startrow + $i + 1;
 	}
-
-
 }
 
 ?>
