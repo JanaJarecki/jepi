@@ -389,26 +389,33 @@ class assProgQuestionGUI extends assQuestionGUI {
 					$template->parseCurrentBlock ();
 				}
 			}
-			
-			$template->setCurrentBlock("answer_title");
-			$template->setVariable("VALUE_1",$this->plugin->txt ( 'solutionoutput_label_solutions' ));
-			$template->parseCurrentBlock();
+
 			
 			foreach ( array_reverse($studentSolutions,true) as $idx => $studentSolution ) {
+				
+				if ( $studentSolution["value1"]=="progquest_studentsolution") {
 				$studentSolution ["value1"] = isset ( $studentSolution ["value1"] ) ? $studentSolution ["value1"] : "";
 				$studentSolution ["value2"]  = isset ( $studentSolution ["value2"] ) ? $studentSolution ["value2"] : "";
-				$studentSolution ["points"] = isset ( $studentSolution ["points"] ) ? $studentSolution ["points"] : "0";
+				if ( $pass == NULL) {
+					$studentSolution ["points"] = isset ( $studentSolution ["points"] ) ? $studentSolution ["points"] : "0";
+				} else {
+					$studentSolution ["points"] = $points;
+				}
 				
-				$template->setCurrentBlock("answer");
+				
+				$template->setCurrentBlock("points");
 				$template->setVariable("VALUE_1",$this->plugin->txt ( 'solutionoutput_label_solution' ));
 				$template->setVariable("VALUE_2",$idx + 1);
-				
-				$template->setVariable ( "SOLUTION", $studentSolution ["value2"] );
-				$template->setVariable ( "ID", 'cm' . $idx );
 				
 				$template->setVariable ( "LABEL_POINTS", $this->plugin->txt( 'solutionoutput_label_points' ));
 				$template->setVariable ( "POINTS", $studentSolution ["points"]);
 				$template->parseCurrentBlock();
+				
+				$template->setCurrentBlock("answer");
+				$template->setVariable ( "SOLUTION", $studentSolution ["value2"] );
+				$template->setVariable ( "ID", 'cm' . $idx );
+				$template->parseCurrentBlock();
+				}
 			}
 			
 		}
