@@ -64,13 +64,12 @@ public class XMLConstructor {
             cause = mc.group(1);
         }
 
-        System.err.println(error);
-        if (cause == "cannot find symbol") {
+        if (cause.contains("cannot find symbol")) {
             writeMissingSymbol(element, error);
         } else if ( cause.contains("cannot be applied to given types") ) {
             writeWrongParameters(element, error);
         } else if ( cause.contains("incompatible types:") ) {
-            writeIncompatibleTpyes(element,error);
+            writeIncompatibleTypes(element,error);
         } else {
             writeRawCompilationError(element, error);
         }
@@ -82,7 +81,7 @@ public class XMLConstructor {
         writeMessageAsDiagnostic(element,message);
     }
 
-    private void writeIncompatibleTpyes(Element element, String error) {
+    private void writeIncompatibleTypes(Element element, String error) {
         String message = "";
 
         String[] lines = error.split("\n");
