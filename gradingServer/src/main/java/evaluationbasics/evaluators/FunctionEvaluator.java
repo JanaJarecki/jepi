@@ -111,20 +111,21 @@ public class FunctionEvaluator {
     }
 
     protected void compileMethod(Element request, String person) {
+        Pair<DiagnostedMethodClass, CodeUnit> smethod = null;
+        List<ParamGroup> sparams = null;
         try {
             Element codeOwner = request.getChild(person);
 
-            Pair<DiagnostedMethodClass, CodeUnit> smethod = compileMethod(codeOwner);
-            List<ParamGroup> sparams = parseParameterGroups(codeOwner);
+            smethod = compileMethod(codeOwner);
+            sparams = parseParameterGroups(codeOwner);
 
             runMethodOnParams(smethod.getKey(), sparams);
 
             xml.responseToCompileMethod(sparams, smethod.getValue());
-
         } catch (EmptyCodeException e) {
             xml.error("Provided code was empty: " + e);
         } catch (TooManyMethodsException e) {
-            xml.error("Too many methods provided: " + e);
+            xml.error("NotExactlyOneMethodFound");
         } catch (org.jdom2.DataConversionException e) {
             xml.error("Found wrong datatype in xml: " + e);
         } catch (Exception e) {
@@ -141,7 +142,7 @@ public class FunctionEvaluator {
         } catch (EmptyCodeException e) {
             xml.error("Provided code was empty: " + e);
         } catch (TooManyMethodsException e) {
-            xml.error("Too many methods provided: " + e);
+            xml.error("NotExactlyOneMethodFound");
         } catch (org.jdom2.DataConversionException e) {
             xml.error("Found wrong datatype in xml: " + e);
         } catch (Exception e) {
@@ -163,7 +164,7 @@ public class FunctionEvaluator {
         } catch (EmptyCodeException e) {
             xml.error("Provided code was empty: " + e);
         } catch (TooManyMethodsException e) {
-            xml.error("Too many methods provided: " + e);
+            xml.error("NotExactlyOneMethodFound");
         } catch (org.jdom2.DataConversionException e) {
             xml.error("Found wrong datatype in xml: " + e);
         } catch (Exception e) {
@@ -198,11 +199,10 @@ public class FunctionEvaluator {
             compareParamGroupLists(parameters, parameters2);
 
             xml.respondseToCompareMethods(parameters, testeeMethod.getValue());
-
         } catch (EmptyCodeException e) {
             xml.error("Provided code was empty: " + e);
         } catch (TooManyMethodsException e) {
-            xml.error("Too many methods provided: " + e);
+            xml.error("NotExactlyOneMethodFound");
         } catch (org.jdom2.DataConversionException e) {
             xml.error("Found wrong datatype in xml: " + e);
         } catch (Exception e) {

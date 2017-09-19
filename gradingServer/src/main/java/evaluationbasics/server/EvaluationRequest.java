@@ -66,8 +66,8 @@ public class EvaluationRequest extends Thread {
 
             switch (eType.getValue()) {
                 case "function_original":
-//          response = FunctionEvaluator.processRequestInMainThread(eRoot);
-                    response = EvaluationProcessStarter.exec(eRoot,"evaluationbasics.evaluators.FunctionEvaluator",20000);
+          response = FunctionEvaluator.processRequestInMainThread(eRoot);
+//                    response = EvaluationProcessStarter.exec(eRoot,"evaluationbasics.evaluators.FunctionEvaluator",20000);
                     break;
 
                 case "testng":

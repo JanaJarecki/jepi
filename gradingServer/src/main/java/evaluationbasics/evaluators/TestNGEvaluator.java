@@ -169,11 +169,11 @@ public class TestNGEvaluator {
         } catch (ClassNotFoundException e) {
 
         } catch (NoSuchMethodException e) {
-            xml.error("The main method was not accessible. Probably the main method is missing or has a too strict access modifier.");
+            xml.error("MainMethodNotFound");
         } catch (org.jdom2.DataConversionException e) {
             xml.error("Found wrong datatype in xml: " + e);
         } catch (IllegalAccessException e) {
-            xml.error("The main method was not accessible. Probably the class or the main method is missing or has a too strict access modifier.");
+            xml.error("MainMethodNotFound");
         } catch (InvocationTargetException e) {
             xml.errorInvocationTargetException(e);
         }

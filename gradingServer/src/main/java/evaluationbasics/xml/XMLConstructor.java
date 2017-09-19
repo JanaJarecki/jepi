@@ -244,6 +244,8 @@ public class XMLConstructor {
         if (studentsCode.compileable) {
             writeMethodType(studentsCode, element);
             writeCompareResult(studentResults, element);
+        } else {
+            writeMethodType(studentsCode, element);
         }
         root.addContent(element);
     }

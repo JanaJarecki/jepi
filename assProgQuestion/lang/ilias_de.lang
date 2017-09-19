@@ -62,3 +62,6 @@ function_original#:#Funktion
 testng#:#Test mit TestNG
 error_103#:#UNERLAUBTES SZENARIO: Das Auswertungssystem konnte Ihre Anfrage nicht bearbeiten.
 error_105#:#TIMEOUT: Ihr Program lief zu lange und wurde abgebrochen. Überprüfen Sie ob Sie nicht ausversehen eine Endlosschleife geschrieben haben.
+error_MainMethodNotFound#:#Es wurde keine öffentliche Klassen-Methode mit Name main gefunden. Überfprüfen Sie den Namen und die Zugriffsmodifizierer.
+error_NotExactlyOneMethodFound#:#Es wurde nicht genau eine Methode gefunden. Bitte schreiben Sie genau eine Methode und keine Klasse welche die Funktion umschliesst.
+

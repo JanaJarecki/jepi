@@ -24,7 +24,7 @@ import org.eclipse.jdt.core.dom.WhileStatement;
  *
  */
 public class ASTHelper {
-	
+
 	/**
 	 * Diese Methode gibt die Art der Programmierung zurueck.
 	 * [0] -> Rekursion {true/false}
@@ -36,7 +36,7 @@ public class ASTHelper {
 	 * @return Rueckgabearray. Formatierung siehe Beschreibung
 	 * @throws TooManyMethodsException sofern mehrere Methoden uebergeben wurden
 	 */
-	public static Map<String,Boolean> getMethodType(String sMethod) throws TooManyMethodsException{
+	public static Map<String,Boolean> getMethodType(String sMethod) throws TooManyMethodsException {
 		ASTParser parser = ASTParser.newParser(AST.JLS8);
 		parser.setSource(("public class A{"+sMethod+"}").toCharArray());
 		parser.setKind(ASTParser.K_COMPILATION_UNIT);

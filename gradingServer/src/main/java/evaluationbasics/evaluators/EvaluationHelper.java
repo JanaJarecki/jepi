@@ -77,19 +77,23 @@ public class EvaluationHelper {
       Class<?>[] pClassType = dcMethod.getMainMethod().getParameterTypes();
       if (pClassType.length > 0 && pTestArgs == null) {
         throw new WrongNumberOfParametersException("Expected number of parameters: " + pClassType.length + " but none provided.");
-      } else if (pClassType.length != pTestArgs.length) {
+      } else if (pClassType.length > 0 && pClassType.length != pTestArgs.length) {
         throw new WrongNumberOfParametersException("Expected number of parameters: " + pClassType.length + " but " + pTestArgs.length + " provided.");
       } else {
-        for (int i = 0; i < pTestArgs.length; i++) {
+        for (int i = 0; i < pClassType.length; i++) {
           try {
-            pTestArgs[i] = EvaluationHelper.stringToType(pClassType[i], pTestArgs[i].toString());
+              pTestArgs[i] = EvaluationHelper.stringToType(pClassType[i], pTestArgs[i].toString());
           } catch (NumberFormatException e) {
             throw new NumberFormatException("Exception when parsing parameter[" + i + "]: Could not parse string \"" + pTestArgs[i].toString() + "\" to a number.");
           }
         }
       }
       try {
-        return callMethod(dcMethod, pTestArgs);
+        if ( pClassType.length == 0 ) {
+          return callMethod(dcMethod, null);
+        } else {
+          return callMethod(dcMethod, pTestArgs);
+        }
       } catch (InvocationTargetException e) {
         return e.getTargetException();
       } catch (Exception e) {
