@@ -66,12 +66,13 @@ public class EvaluationRequest extends Thread {
 
             switch (eType.getValue()) {
                 case "function_original":
-          response = FunctionEvaluator.processRequestInMainThread(eRoot);
-//                    response = EvaluationProcessStarter.exec(eRoot,"evaluationbasics.evaluators.FunctionEvaluator",20000);
+//          response = FunctionEvaluator.processRequestInMainThread(eRoot); // for debugging
+                    response = EvaluationProcessStarter.exec(eRoot,"evaluationbasics.evaluators.FunctionEvaluator",20000);
                     break;
 
                 case "testng":
-//          response = TestNGEvaluator.processRequestInMainThread(eRoot);
+//          response = TestNGEvaluator.processRequestInMainThread(eRoot); // for debugging
+                    System.out.println("... processing ...");
                     response = EvaluationProcessStarter.exec(eRoot,"evaluationbasics.evaluators.TestNGEvaluator",20000);
                     break;
 
@@ -85,9 +86,13 @@ public class EvaluationRequest extends Thread {
         } catch (IOException e) {
             writer.error("Problem with client input stream"+"\n"+e.toString());//ERROR_CODE.INPUTSTREAM_IO_ERROR);
         } catch ( InvocationTargetException e) {
+            System.out.println("InvocationTargetException");
         } catch ( IllegalAccessException e ) {
+            System.out.println("IllegalAccessException");
         } catch ( ClassNotFoundException e ) {
+            System.out.println("ClassNotFoundException");
         } catch ( Exception e) {
+            System.out.println(e);
         } finally {
             if ( writer.getDocument().getContentSize() == 0) {
                 writer.error(ERROR_CODE.COULD_NOT_CREATE_RESPONSEXML);

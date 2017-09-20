@@ -16,65 +16,68 @@ import java.util.concurrent.TimeoutException;
 
 public class EvaluationProcessStarter {
 
-  public static Document exec(Element request, String evaluator, final int TIMEOUT)
-      throws
-      InvocationTargetException,
-      IllegalAccessException,
-      ClassNotFoundException,
-      TimeoutException
-  {
-    int GRANULARITY = 50;
-    String JAVA_HOME = System.getenv("JAVA_HOME");
-    String CLASSPATH = System.getProperty("java.class.path");
-    String CURRENTDIR = System.getProperty("user.dir");
-    String SECURITY_FILE_PATH = System.getProperty("java.security.policy");
+    public static Document exec(Element request, String evaluator, final int TIMEOUT)
+        throws
+        InvocationTargetException,
+        IllegalAccessException,
+        ClassNotFoundException,
+        TimeoutException
+    {
+        int GRANULARITY = 50;
+        String JAVA_HOME = System.getProperty("java.home");
+        String CLASSPATH = System.getProperty("java.class.path");
+        String SECURITY_FILE_PATH = System.getProperty("java.security.policy");
+        String EXECUTABLE = JAVA_HOME + File.separator + "bin" + File.separator + "java";
+        if (System.getProperty("os.name").toLowerCase().contains("win")) {
+            EXECUTABLE += ".exe";
+        }
 
-    ProcessBuilder builder = new ProcessBuilder(JAVA_HOME + File.separator + "bin" + File.separator + "java",
+        ProcessBuilder builder = new ProcessBuilder(EXECUTABLE ,
 //        "-Xdebug -Xrunjdwp=transport=dt_socket,server=y,suspend=y,address=5005",
-        "-cp", CLASSPATH,
-        "-Djava.security.policy=" + SECURITY_FILE_PATH,
-        evaluator);
-    try {
-      Process child = builder.start();
-      OutputStream output = child.getOutputStream();
-      ObjectOutputStream oos = new ObjectOutputStream(output);
-
-      InputStream input = child.getInputStream();
-
-      oos.writeObject(request);
-      oos.flush();
-
-      ObjectInputStream ois = new ObjectInputStream(input);
-
-      int total = 0;
-      while (total < TIMEOUT && input.available() == 0) {
+            "-cp", CLASSPATH,
+            "-Djava.security.policy=" + SECURITY_FILE_PATH,
+            evaluator);
         try {
-          Thread.sleep(GRANULARITY);
-        } catch (InterruptedException e) {
-        }
-        total = total + GRANULARITY;
-      }
-      try {
-        if (input.available() != 0) {
-          try {
-            Document response = (Document) ois.readObject();
-            return response;
-          } catch (IOException e) {
+            Process child = builder.start();
+            OutputStream output = child.getOutputStream();
+            ObjectOutputStream oos = new ObjectOutputStream(output);
+
+            InputStream input = child.getInputStream();
+
+            oos.writeObject(request);
+            oos.flush();
+
+            ObjectInputStream ois = new ObjectInputStream(input);
+
+            int total = 0;
+            while (total < TIMEOUT && input.available() == 0) {
+                try {
+                    Thread.sleep(GRANULARITY);
+                } catch (InterruptedException e) {
+                }
+                total = total + GRANULARITY;
+            }
+            try {
+                if (input.available() != 0) {
+                    try {
+                        Document response = (Document) ois.readObject();
+                        return response;
+                    } catch (IOException e) {
+                        XMLConstructor xml = new XMLConstructor();
+                        xml.error("could not read back Object", e);
+                        return xml.getDocument();
+                    }
+                } else {
+                    throw new TimeoutException("timed out after " + TIMEOUT + "ms");
+                }
+            } finally {
+                child.destroy();
+            }
+        } catch (IOException e) {
             XMLConstructor xml = new XMLConstructor();
-            xml.error("could not read back Object", e);
+            xml.error("could not start builder", e);
             return xml.getDocument();
-          }
-        } else {
-          throw new TimeoutException("timed out after " + TIMEOUT + "ms");
         }
-      } finally {
-        child.destroy();
-      }
-    } catch (IOException e) {
-      XMLConstructor xml = new XMLConstructor();
-      xml.error("could not start builder", e);
-      return xml.getDocument();
     }
-  }
 
 }
