@@ -36,11 +36,10 @@ class EvaluationRequestListener extends Thread {
      * Event loop accepting clients.
      */
     public void run() {
-        Socket client = null;
         CONSOLE_LISTENER.start();
         try {
             while (true) {
-                client = SERVER_SOCKET.accept();
+                Socket client = SERVER_SOCKET.accept();
                 if (checkClientsAccessPermission(client)) {
                     new EvaluationRequest(client).start();
                 } else {

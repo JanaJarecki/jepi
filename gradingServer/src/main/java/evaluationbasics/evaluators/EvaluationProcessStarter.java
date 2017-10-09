@@ -24,6 +24,9 @@ public class EvaluationProcessStarter {
         TimeoutException
     {
         int GRANULARITY = 50;
+        int TOTAL_TIME = 0;
+        long THREAD_ID = Thread.currentThread().getId();
+
         String JAVA_HOME = System.getProperty("java.home");
         String CLASSPATH = System.getProperty("java.class.path");
         String SECURITY_FILE_PATH = System.getProperty("java.security.policy");
@@ -49,14 +52,14 @@ public class EvaluationProcessStarter {
 
             ObjectInputStream ois = new ObjectInputStream(input);
 
-            int total = 0;
-            while (total < TIMEOUT && input.available() == 0) {
+            while ( (TOTAL_TIME < TIMEOUT) && (input.available() == 0)) {
                 try {
                     Thread.sleep(GRANULARITY);
                 } catch (InterruptedException e) {
                 }
-                total = total + GRANULARITY;
+                TOTAL_TIME += GRANULARITY;
             }
+
             try {
                 if (input.available() != 0) {
                     try {
@@ -68,10 +71,11 @@ public class EvaluationProcessStarter {
                         return xml.getDocument();
                     }
                 } else {
-                    throw new TimeoutException("timed out after " + TIMEOUT + "ms");
+                    throw new TimeoutException("timed out after " + TOTAL_TIME + "ms");
                 }
             } finally {
                 child.destroy();
+                child.destroyForcibly();
             }
         } catch (IOException e) {
             XMLConstructor xml = new XMLConstructor();
