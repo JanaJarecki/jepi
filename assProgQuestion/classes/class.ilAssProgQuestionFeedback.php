@@ -24,14 +24,14 @@
 require_once 'Modules/TestQuestionPool/classes/feedback/class.ilAssSingleOptionQuestionFeedback.php';
 
 /**
-* This class represents a text area property in a property form.
-*
-* @author Guido Vollbach <gvollbach@databay.de>
-* @version $Id: class.ilMOTextAreaInputGUI.php 1318 2010-03-03 10:19:37Z hschottm $
-* @ingroup	ServicesForm
-*/
-class ilAssProgQuestionFeedback extends ilAssSingleOptionQuestionFeedback
-{
+ * This class represents a text area property in a property form.
+ *
+ * @author     Guido Vollbach <gvollbach@databay.de>
+ * @version    $Id: class.ilMOTextAreaInputGUI.php 1318 2010-03-03 10:19:37Z hschottm $
+ * @ingroup    ServicesForm
+ */
+class ilAssProgQuestionFeedback extends ilAssSingleOptionQuestionFeedback {
+
 	// DIESE KLASSE WIRD BENOETIGT. ILIAS zeigt noch nicht mal eine Seite an wenn sie nicht da ist.
 	/*
 	 * check!

@@ -1,5 +1,6 @@
 <#1>
 <?php
+require_once "Customizing/global/plugins/Modules/TestQuestionPool/Questions/assProgQuestion/classes/class.ilassProgQuestionPlugin.php";
 // Create the database entry when the database does not yet exists.
 //   1. Ask for the entry of the plugin in `qpl_qst_type`.
 //   2. If the entry for the plugin does not exists:
@@ -9,7 +10,7 @@
 $res = $ilDB->queryF ( "SELECT * FROM qpl_qst_type WHERE type_tag = %s", array (
 		'text' 
 ), array (
-		'assProgQuestion' 
+	ilassProgQuestionPlugin::PLUGIN_NAME 
 ) );
 // (2)
 if ($res->numRows () == 0) {
@@ -24,14 +25,15 @@ if ($res->numRows () == 0) {
 			"integer" 
 	), array (
 			$max,
-			'assProgQuestion',
+			ilassProgQuestionPlugin::PLUGIN_NAME,
 			1 
 	) );
 }
 ?>
 <#2>
 <?php
-// $ilDB->createTable('il_qpl_qst_mo_question',
+//require_once "Customizing/global/plugins/Modules/TestQuestionPool/Questions/assProgQuestion/classes/class.assProgQplQstMoQuestion.php";
+// $ilDB->createTable(assProgQplQstMoQuestion::TABLE_NAME,
 // array(
 // 'question_fi' =>
 // array(
@@ -58,23 +60,26 @@ if ($res->numRows () == 0) {
 // true
 // );
 
-// $ilDB->addPrimaryKey('il_qpl_qst_mo_question', array('question_fi'));
-// $ilDB->addIndex('il_qpl_qst_mo_question',array('mo_id'),'i1');
+// $ilDB->addPrimaryKey(assProgQplQstMoQuestion::TABLE_NAME, array('question_fi'));
+// $ilDB->addIndex(assProgQplQstMoQuestion::TABLE_NAME,array('mo_id'),'i1');
 ?>
 <#3>
 <?php
 // Umbenennung alter Tabellen.
-// if ($ilDB->tableExists("il_qpl_qst_mathematikonline_question"))
+//require_once "Customizing/global/plugins/Modules/TestQuestionPool/Questions/assProgQuestion/classes/class.assProgQplQstMathematikOnlineQuestion.php";
+//require_once "Customizing/global/plugins/Modules/TestQuestionPool/Questions/assProgQuestion/classes/class.assProgQplQstMoQuestion.php";
+// if ($ilDB->tableExists(assProgQplQstMathematikOnlineQuestion::TABLE_NAME))
 // {
-// $ilDB->manipulate("RENAME TABLE `il_qpl_qst_mathematikonline_question` TO `il_qpl_qst_mo_question`");
-// $ilDB->addIndex('il_qpl_qst_mo_question',array('mo_id'),'i1');
+// $ilDB->manipulate("RENAME TABLE `".assProgQplQstMathematikOnlineQuestion::TABLE_NAME."` TO `".assProgQplQstMoQuestion::TABLE_NAME."`");
+// $ilDB->addIndex(assProgQplQstMoQuestion::TABLE_NAME,array('mo_id'),'i1');
 // }
 ?>
 <#4>
 <?php
 // Erstellung der zusaetzlich benoetigten Tabellen
 // question_fi ist in MO wohl die zugehoerige ID der Frage. Warum heisst das so?
-$ilDB->createTable ( 'il_qpl_qst_prog_quest', array (
+require_once "Customizing/global/plugins/Modules/TestQuestionPool/Questions/assProgQuestion/classes/class.assProgQplQstProgQuest.php";
+$ilDB->createTable ( assProgQplQstProgQuest::TABLE_NAME, array (
 		'question_fi' => array (
 				'type' => 'integer',
 				'length' => 4,
@@ -88,14 +93,15 @@ $ilDB->createTable ( 'il_qpl_qst_prog_quest', array (
 				'notnull' => true 
 		) 
 ), true );
-$ilDB->addPrimaryKey ( 'il_qpl_qst_prog_quest', array (
+$ilDB->addPrimaryKey ( assProgQplQstProgQuest::TABLE_NAME, array (
 		'question_fi' 
 ) );
 ?>
 <#5>
-<?php>
+<?php
 // +answer_id, +question_fi, +answertext, +points, ?aorder, -imagefile, ?tstamp
-$ilDB->createTable ( 'il_qpl_qst_prog_params', array (
+require_once "Customizing/global/plugins/Modules/TestQuestionPool/Questions/assProgQuestion/classes/class.assProgQplQstProgParams.php";
+$ilDB->createTable ( assProgQplQstProgParams::TABLE_NAME, array (
 		'answer_id' => array (
 				'type' => 'integer',
 				'length' => 4,
@@ -126,23 +132,25 @@ $ilDB->createTable ( 'il_qpl_qst_prog_params', array (
 				'notnull' => true 
 		) 
 ), true );
-$ilDB->addPrimaryKey ( 'il_qpl_qst_prog_params', array (
+$ilDB->addPrimaryKey ( assProgQplQstProgParams::TABLE_NAME, array (
 		'answer_id' 
 ) );
 ?>
 <#6>
 <?php
-$ilDB->createSequence("il_qpl_qst_prog_params");
+require_once "Customizing/global/plugins/Modules/TestQuestionPool/Questions/assProgQuestion/classes/class.assProgQplQstProgParams.php";
+$ilDB->createSequence(assProgQplQstProgParams::TABLE_NAME);
 ?>
 <#7>
-<?php 
-$ilDB->addTableColumn('il_qpl_qst_prog_quest', 'check_recursive', array (
+<?php
+require_once "Customizing/global/plugins/Modules/TestQuestionPool/Questions/assProgQuestion/classes/class.assProgQplQstProgQuest.php";
+$ilDB->addTableColumn(assProgQplQstProgQuest::TABLE_NAME, 'check_recursive', array (
 		'type' => 'integer',
 		'length' => 1,
 		'default' => 0,
 		'notnull' => true
 ));
-$ilDB->addTableColumn('il_qpl_qst_prog_quest', 'check_iterative', array (
+$ilDB->addTableColumn(assProgQplQstProgQuest::TABLE_NAME, 'check_iterative', array (
 		'type' => 'integer',
 		'length' => 1,
 		'default' => 0,
@@ -150,14 +158,15 @@ $ilDB->addTableColumn('il_qpl_qst_prog_quest', 'check_iterative', array (
 ));
 ?>
 <#8>
-<?php 
-$ilDB->addTableColumn('il_qpl_qst_prog_quest', 'forbid_recursive', array (
+<?php
+require_once "Customizing/global/plugins/Modules/TestQuestionPool/Questions/assProgQuestion/classes/class.assProgQplQstProgQuest.php";
+$ilDB->addTableColumn(assProgQplQstProgQuest::TABLE_NAME, 'forbid_recursive', array (
 		'type' => 'integer',
 		'length' => 1,
 		'default' => 0,
 		'notnull' => true
 ));
-$ilDB->addTableColumn('il_qpl_qst_prog_quest', 'forbid_iterative', array (
+$ilDB->addTableColumn(assProgQplQstProgQuest::TABLE_NAME, 'forbid_iterative', array (
 		'type' => 'integer',
 		'length' => 1,
 		'default' => 0,
@@ -165,8 +174,9 @@ $ilDB->addTableColumn('il_qpl_qst_prog_quest', 'forbid_iterative', array (
 ));
 ?>
 <#9>
-<?php 
-$ilDB->createTable ( 'il_qpl_qst_prog_config', array (
+<?php
+require_once "Customizing/global/plugins/Modules/TestQuestionPool/Questions/assProgQuestion/classes/class.assProgQplQstProgConfig.php";
+$ilDB->createTable ( assProgQplQstProgConfig::TABLE_NAME, array (
 		'name' => array (
 				'type' => 'text',
 				'length' => 30,
@@ -182,8 +192,9 @@ $ilDB->createTable ( 'il_qpl_qst_prog_config', array (
 ), true );
 ?>
 <#10>
-<?php 
-$ilDB->addTableColumn('il_qpl_qst_prog_quest', 'quest_type', array (
+<?php
+require_once "Customizing/global/plugins/Modules/TestQuestionPool/Questions/assProgQuestion/classes/class.assProgQplQstProgQuest.php";
+$ilDB->addTableColumn(assProgQplQstProgQuest::TABLE_NAME, 'quest_type', array (
 		'type' => 'text',
 		'length' => 64,
 		'default' => 'function_original',
@@ -191,14 +202,16 @@ $ilDB->addTableColumn('il_qpl_qst_prog_quest', 'quest_type', array (
 ));
 ?>
 <#11>
-<?php 
-$ilDB->addTableColumn('il_qpl_qst_prog_quest', 'test_code', array (
+<?php
+require_once "Customizing/global/plugins/Modules/TestQuestionPool/Questions/assProgQuestion/classes/class.assProgQplQstProgQuest.php";
+$ilDB->addTableColumn(assProgQplQstProgQuest::TABLE_NAME, 'test_code', array (
 		'type' => 'clob'
 ));
 ?>
 <#12>
-<?php 
-$ilDB->addTableColumn('il_qpl_qst_prog_params', 'paramset_name', array (
+<?php
+require_once "Customizing/global/plugins/Modules/TestQuestionPool/Questions/assProgQuestion/classes/class.assProgQplQstProgParams.php";
+$ilDB->addTableColumn(assProgQplQstProgParams::TABLE_NAME, 'paramset_name', array (
 		'type' => 'text',
 				'length' => 4000,
 				'default' => '',

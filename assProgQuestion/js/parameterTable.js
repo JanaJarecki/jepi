@@ -1,71 +1,70 @@
-
 var ilAssProgQuestParaInputWizardTemplate = {
 	tag_container: 'tbody.apqpi',
 	tag_row: 'tr.apqpi',
 	tag_button: 'apqpi',
 
-	getRowFromEvent: function(e) {
+	getRowFromEvent: function (e) {
 		return $(e.target).closest(this.tag_row);
 	},
 
-	getContainerFromEvent: function(e) {
+	getContainerFromEvent: function (e) {
 		return $(e.target).closest(this.tag_container);
 	},
 
-	cleanRow: function(row) {
+	cleanRow: function (row) {
 		$(row).find('input:text').val('');
 		$(row).find('textarea').val('');
 		$(row).find('div.imagepresentation').remove();
 	},
 
-	reindexRows: function(tbody) {
+	reindexRows: function (tbody) {
 		var that = this;
 		var rowindex = 0;
 
 		// process all rows
-		$(tbody).find(this.tag_row).each(function() {
+		$(tbody).find(this.tag_row).each(function () {
 
 			// name
-			$(this).find('input:text[id*="[name]"]').each(function() {
+			$(this).find('input:text[id*="[name]"]').each(function () {
 				that.handleId(this, 'name', rowindex);
 				that.handleId(this, 'id', rowindex);
 			});
 
 			// answer
-			$(this).find('input:text[id*="[answer]"]').each(function() {
+			$(this).find('input:text[id*="[answer]"]').each(function () {
 				that.handleId(this, 'name', rowindex);
 				that.handleId(this, 'id', rowindex);
 			});
 
-			$(this).find('textarea[id*="[answer]"]').each(function() {
+			$(this).find('textarea[id*="[answer]"]').each(function () {
 				that.handleId(this, 'name', rowindex);
 				that.handleId(this, 'id', rowindex);
 			});
 
 			// points
-			$(this).find('input:text[id*="[points]"]').each(function() {
+			$(this).find('input:text[id*="[points]"]').each(function () {
 				that.handleId(this, 'name', rowindex);
 				that.handleId(this, 'id', rowindex);
 			});
 
 			// fileupload
-			$(this).find('input:file[id*="[image]"]').each(function() {
+			$(this).find('input:file[id*="[image]"]').each(function () {
 				that.handleId(this, 'id', rowindex);
 				that.handleId(this, 'name', rowindex);
 			});
 
 			// submit upload
-			$(this).find('input:submit[name*="[uploadchoice]"]').each(function() {
+			$(this).find('input:submit[name*="[uploadchoice]"]').each(function () {
 				that.handleId(this, 'name', rowindex);
 			});
 
 			// delete image button
-			$(this).find('input:submit[name*="[removeimagechoice]"]').each(function() {
+			$(this).find('input:submit[name*="[removeimagechoice]"]').each(function () {
 				that.handleId(this, 'name', rowindex);
 			});
 
 			// button
-			$(this).find('button').each(function() {
+			$(this).find('button').each(function () {
 				that.handleId(this, 'id', rowindex);
 				that.handleId(this, 'name', rowindex);
 			});
@@ -74,20 +73,20 @@ var ilAssProgQuestParaInputWizardTemplate = {
 		});
 	},
 
-	initEvents: function(rootel) {
+	initEvents: function (rootel) {
 		var that = this;
 
 		if (typeof tinyMCE == 'undefined' || $(rootel).closest('table').find('textarea').size() == 0) {
-			$(rootel).find('button.' + this.tag_button + '_add').click(function(e) {
+			$(rootel).find('button.' + this.tag_button + '_add').click(function (e) {
 				that.addRow(e);
 			});
-			$(rootel).find('button.' + this.tag_button + '_remove').click(function(e) {
+			$(rootel).find('button.' + this.tag_button + '_remove').click(function (e) {
 				that.removeRow(e);
 			});
-			$(rootel).find('button.' + this.tag_button + '_up').click(function(e) {
+			$(rootel).find('button.' + this.tag_button + '_up').click(function (e) {
 				that.moveRowUp(e);
 			});
-			$(rootel).find('button.' + this.tag_button + '_down').click(function(e) {
+			$(rootel).find('button.' + this.tag_button + '_down').click(function (e) {
 				that.moveRowDown(e);
 			});
 		} else {
@@ -100,7 +99,7 @@ var ilAssProgQuestParaInputWizardTemplate = {
 	}
 };
 
-$(document).ready(function() {
+$(document).ready(function () {
 	var ilAssProgQuestParaInput = $.extend({}, ilWizardInput, ilAssProgQuestParaInputWizardTemplate);
 	ilAssProgQuestParaInput.init();
 });

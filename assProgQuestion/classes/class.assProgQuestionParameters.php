@@ -10,14 +10,15 @@ require_once './Modules/TestQuestionPool/classes/class.assAnswerBinaryState.php'
  * indicator (checked/unchecked, set/unset) and an image file
  *
  */
-class assProgQuestionParameters
-{
+class assProgQuestionParameters {
+
 	protected $name;
 	protected $params;
 	protected $order;
 	protected $state;
 	protected $id;
 	protected $points;
+
 
 	/**
 	 * assProgQuestionParameters constructor
@@ -33,8 +34,7 @@ class assProgQuestionParameters
 	 *
 	 * @return ASS_AnswerBinaryStateImage
 	 */
-	public function __construct( $name = "", $params = "", $points = 0.0, $order = 0, $state = 0, $id = -1 )
-	{
+	public function __construct($name = "", $params = "", $points = 0.0, $order = 0, $state = 0, $id = - 1) {
 		$this->name = $name;
 		$this->params = $params;
 		$this->points = $points;
@@ -42,13 +42,25 @@ class assProgQuestionParameters
 		$this->state = $state;
 		$this->id = $id;
 	}
-	
+
+
 	public function getName() { return $this->name; }
+
+
 	public function getparams() { return $this->params; }
+
+
 	public function getPoints() { return $this->points; }
+
+
 	public function getOrder() { return $this->order; }
+
+
 	public function setOrder($val) { $this->order = $val; }
+
+
 	public function getState() { return $this->state; }
+
+
 	public function getId() { return $this->id; }
-	
 }
