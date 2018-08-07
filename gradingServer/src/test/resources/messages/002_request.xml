@@ -1,0 +1,30 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<progquestion>
+    <type>function_original</type>
+    <action>runteacher</action>
+    <teacher>
+        <code type="method" id="0" checkmethodtype="false">int[] f( int[] N ) {&#xD;
+            int n = N[0];&#xD;
+            if ( n &lt; 1 ) return new int[0];&#xD;
+            int[] arr = new int[n];&#xD;
+            for(int i=0; i&lt;n; ++i) {&#xD;
+            arr[i] = i;&#xD;
+            }&#xD;
+            return arr;&#xD;
+            }</code>
+        <paramgroup id="0" description="asd" points="3">
+            <params id="0">
+                <param>3~4~5</param>
+            </params>
+            <params id="1">
+                <param>3~5~6</param>
+            </params>
+            <params id="2">
+                <param>4</param>
+            </params>
+        </paramgroup>
+    </teacher>
+    <student>
+        <code type="method" id="0" checkmethodtype="false" />
+    </student>
+</progquestion>

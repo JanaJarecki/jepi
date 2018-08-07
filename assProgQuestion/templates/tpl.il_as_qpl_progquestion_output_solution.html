@@ -1,10 +1,29 @@
-{QUESTIONTEXT}
-<p>
-    {LABEL_VALUE2}<br />
-   
-    <p id="{ID}" class="noRTEditor"  wrap="virtual" cols="100" rows="20" style="width:90%;"><code>{VALUE2}</code></p>
+<!-- BEGIN questiontext -->
+<p>{QUESTIONTEXT}</p>
+<!-- END questiontext -->
+
+<!-- BEGIN answer_title -->
+<p>{VALUE_1}</p>
+<!-- END answer_title -->
+
+<!-- BEGIN points -->
+<!--  "Answer X → Points N" ← this should be an example print out -->
+<p>{VALUE_1} {VALUE_2}<!-- BEGIN points_feedback --> → {LABEL_POINTS} {POINTS}<!-- END points_feedback -->
+    <!-- BEGIN icon_ok -->
+    <img src="{ICON_OK}" alt="{TEXT_OK}" title="{TEXT_OK}" />
+    <!-- END icon_ok -->
+    <!-- BEGIN icon_not_ok -->
+    <img src="{ICON_NOT_OK}" alt="{TEXT_NOT_OK}" title="{TEXT_NOT_OK}" />
+    <!-- END icon_not_ok -->
+</p>
+<!-- END points -->
+
+<!-- BEGIN answer -->
+<p id="{ID}" class="noRTEditor"  wrap="virtual" cols="100" rows="20" style="width:90%;">
+<code>{SOLUTION}</code>
+</p>
 <script src="Customizing/global/plugins/Modules/TestQuestionPool/Questions/assProgQuestion/js/codemirror/codemirror-compressed.js"></script>
-<link rel="stylesheet" href="Customizing/global/plugins/Modules/TestQuestionPool/Questions/assProgQuestion/js/codemirror/codemirror.css">
+<link rel="stylesheet" href="Customizing/global/plugins/Modules/TestQuestionPool/Questions/assProgQuestion/js/codemirror/codemirror.css"/>
 <script>
 <!--
  (function () {
@@ -21,13 +40,4 @@
 -->
 </script>
 
-</p>
-<p>
-    {LABEL_POINTS} {POINTS}
-    <!-- BEGIN icon_ok -->
-    <img src="{ICON_OK}" alt="{TEXT_OK}" title="{TEXT_OK}" />
-    <!-- END icon_ok -->
-    <!-- BEGIN icon_not_ok -->
-    <img src="{ICON_NOT_OK}" alt="{TEXT_NOT_OK}" title="{TEXT_NOT_OK}" />
-    <!-- END icon_not_ok -->
-</p>
+<!-- END answer -->

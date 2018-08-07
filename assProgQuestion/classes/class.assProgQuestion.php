@@ -1,6 +1,23 @@
 <?php
-/*
- * +----------------------------------------------------------------------------+ | ILIAS open source | +----------------------------------------------------------------------------+ | Copyright (c) 1998-2001 ILIAS open source, University of Cologne | | | | This program is free software; you can redistribute it and/or | | modify it under the terms of the GNU General Public License | | as published by the Free Software Foundation; either version 2 | | of the License, or (at your option) any later version. | | | | This program is distributed in the hope that it will be useful, | | but WITHOUT ANY WARRANTY; without even the implied warranty of | | MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the | | GNU General Public License for more details. | | | | You should have received a copy of the GNU General Public License | | along with this program; if not, write to the Free Software | | Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA. | +----------------------------------------------------------------------------+
+/**
+ * ILIAS open source
+ *
+ * Copyright (c) 1998-2016 ILIAS open source, University of Köln / Basel
+ *
+ * This program is free software; you can redistribute it and/or
+ * modify it under the terms of the GNU General Public License
+ * as published by the Free Software Foundation; either version 2
+ * of the License, or (at your option) any later version.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License
+ * along with this program; if not, write to the Free Software
+ * Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
+ *
  */
 include_once "./Modules/TestQuestionPool/classes/class.assQuestion.php";
 include_once "./Modules/Test/classes/inc.AssessmentConstants.php";
@@ -18,14 +35,20 @@ include_once "./Modules/Test/classes/inc.AssessmentConstants.php";
 class assProgQuestion extends assQuestion {
 	private $plugin;
 	
-	// neu
-	private $test_parameterset = array ();
+	// authored parameters of the question
+	private $prog_question_type = "";
 	private $solution = "";
-	private $rating_system_response = "";
+	private $test_code = "";
+	private $test_parameterset = array ();
+	private $rating_system_response = array ();
 	private $check_recursive = false;
 	private $check_iterative = false;
 	private $forbid_recursive = false;
 	private $forbid_iterative = false;
+	
+	// student answers
+	private $answer = "";
+	private $student_values = array ();
 	
 	/**
 	 * assProgQuestion Konstruktor
@@ -86,167 +109,44 @@ class assProgQuestion extends assQuestion {
 	}
 	
 	/**
-	 * Speichert ein assProgQuestion Objekt in die Datenbank.
-	 * 
+	 * Save the question data to the database.
+	 *
 	 * @access public
 	 */
 	function saveToDb($original_id = "") {
-		global $ilDB, $ilLog;
-		
+		$this->getPlugin ()->includeClass ( "class.assProgQuestionDBConnection.php" );
 		$this->saveQuestionDataToDb ( $original_id );
-		
-		// save additional data
-		// Musterloesung
-		$affectedRows = $ilDB->manipulateF ( "DELETE FROM " . $this->getAdditionalTableName () . " WHERE question_fi = %s", array (
-				"integer" 
-		), array (
-				$this->getId () 
-		) );
-		
-		$affectedRows = $ilDB->manipulateF ( "INSERT INTO " . $this->getAdditionalTableName () . " (question_fi, solution, check_recursive, check_iterative, forbid_recursive, forbid_iterative) VALUES (%s, %s, %s, %s, %s, %s)", array (
-				'integer',
-				'text',
-				'integer',
-				'integer',
-				'integer',
-				'integer' 
-		), array (
-				$this->getId (),
-				$this->getSolution (),
-				( int ) $this->getCheckRecursive (),
-				( int ) $this->getCheckIterative (),
-				( int ) $this->getForbidRecursive (),
-				( int ) $this->getForbidIterative () 
-		)
-		 );
-		// Parameter werden in die Datenbank gespeichert
-		$this->saveParamsToDb ();
-		
+		assProgQuestionDBConnection::saveassProgQuestion ( $this );
+		assProgQuestionDBConnection::saveParamsToDb ( $this );
 		parent::saveToDb ( $original_id );
 	}
 	
 	/**
-	 * Speichert die Parameter in die Datenbank.
-	 */
-	public function saveParamsToDb() {
-		/**
-		 * @var ilDB $ilDB
-		 */
-		global $ilDB;
-		// if (!$this->isSingleline)
-		// {
-		// ilUtil::delDir( $this->getImagePath() );
-		// }
-		$ilDB->manipulateF ( "DELETE FROM " . $this->getAnswerTableName () . " WHERE question_fi = %s", array (
-				'integer' 
-		), array (
-				$this->getId () 
-		) );
-		
-		foreach ( $this->test_parameterset as $key => $answer_obj ) {
-			/**
-			 * @var ASS_AnswerMultipleResponseImage $answer_obj
-			 */
-			$answer_obj = $this->test_parameterset [$key]; // TODO bringt das was? sieht redundant aus.
-			if ($answer_obj->getAnswertext () != NULL) {
-				$next_id = $ilDB->nextId ( $this->getAnswerTableName () );
-				// answer_id,question_fi,params,points,aorder
-				$ilDB->manipulateF ( "INSERT INTO " . $this->getAnswerTableName () . " (answer_id, question_fi, params, points, aorder) VALUES (%s, %s, %s, %s, %s)", array (
-						'integer',
-						'integer',
-						'text',
-						'float',
-						'integer' 
-				), array (
-						$next_id,
-						$this->getId (),
-						// ilRTE::_replaceMediaObjectImageSrc( ($answer_obj->getAnswertext()!=NULL?$answer_obj->getAnswertext():""), 0 ),
-						$answer_obj->getAnswertext (),
-						$answer_obj->getPoints (),
-						$answer_obj->getOrder () 
-				) );
-			}
-		}
-		// $this->rebuildThumbnails();
-	}
-	
-	/**
-	 * Laedt ein assProgQuestion Objekt, inklusive der Musterloesung, aus der Datenbank.
+	 * Loads the question data from the database.
 	 *
-	 * @param object $db
-	 *        	A pear DB object
 	 * @param integer $question_id
 	 *        	A unique key which defines the multiple choice test in the database
 	 * @access public
 	 */
 	function loadFromDb($question_id) {
-		global $ilDB;
-		
-		// load the basic question data
-		$result = $ilDB->queryF ( "SELECT qpl_questions.* FROM qpl_questions WHERE question_id = %s", array (
-				'integer' 
-		), array (
-				$question_id 
-		) );
-		if ($result->numRows () == 1) {
-			$data = $ilDB->fetchAssoc ( $result );
-			$this->setId ( $question_id );
-			$this->setTitle ( $data ["title"] );
-			$this->setComment ( $data ["description"] );
-			$this->setSuggestedSolution ( $data ["solution_hint"] );
-			$this->setOriginalId ( $data ["original_id"] );
-			$this->setObjId ( $data ["obj_fi"] );
-			$this->setAuthor ( $data ["author"] );
-			$this->setOwner ( $data ["owner"] );
-			$this->setPoints ( $data ["points"] );
-			
-			include_once ("./Services/RTE/classes/class.ilRTE.php");
-			$this->setQuestion ( ilRTE::_replaceMediaObjectImageSrc ( $data ["question_text"], 1 ) );
-			$this->setEstimatedWorkingTime ( substr ( $data ["working_time"], 0, 2 ), substr ( $data ["working_time"], 3, 2 ), substr ( $data ["working_time"], 6, 2 ) );
-			
-			// ProgQuestion spezifisch -> Musterloesung und Parameter
-			// load additional data
-			// Solution
-			$result = $ilDB->queryF ( "SELECT * FROM " . $this->getAdditionalTableName () . " WHERE question_fi = %s", array (
-					'integer' 
-			), array (
-					$question_id 
-			) );
-			if ($result->numRows () == 1) {
-				$data = $ilDB->fetchAssoc ( $result );
-				$this->setSolution ( $data ['solution'] );
-				$this->setCheckIterative ( $data ['check_iterative'] );
-				$this->setCheckRecursive ( $data ['check_recursive'] );
-				$this->setForbidIterative ( $data ['forbid_iterative'] );
-				$this->setForbidRecursive ( $data ['forbid_recursive'] );
-			}
-			// Params
-			$result = $ilDB->queryF ( "SELECT * FROM " . $this->getAnswerTableName () . " WHERE question_fi = %s", array (
-					'integer' 
-			), array (
-					$question_id 
-			) );
-			if ($result->numRows () > 0) {
-				include_once "./Modules/TestQuestionPool/classes/class.assAnswerBinaryStateImage.php";
-				while ( $data = $ilDB->fetchAssoc ( $result ) ) {
-					// $data = $ilDB->fetchAssoc($result);
-					$this->addTestParameterset ( $data ["params"], $data ["points"], $data ["aorder"] );
-					// array_push($this->test_parameterset, new ASS_AnswerBinaryStateImage($data["answertext"], $data["points"], $data["aorder"], 1, $data["imagefile"]));
-				}
+		$this->getPlugin ()->includeClass ( "class.assProgQuestionDBConnection.php" );
+		$validQuestion = assProgQuestionDBConnection::loadAssQuestion ( $this, $question_id );
+		if ($validQuestion) {
+			$validProgQuestion = assProgQuestionDBConnection::loadAssProgQuestion ( $this, $question_id );
+			if ($validProgQuestion) {
+				assProgQuestionDBConnection::loadParams ( $this, $question_id );
+				parent::loadFromDb ( $question_id );
 			}
 		}
-		
-		// loads additional stuff like suggested solutions
-		parent::loadFromDb ( $question_id );
 	}
 	
 	/**
-	 * Dupliziert eine Frage.
-	 * Wird beim Kopieren von Fragen aufgerufen.
 	 *
-	 * @access public
+	 * {@inheritdoc}
+	 *
+	 * @see assQuestion::duplicate()
 	 */
-	function duplicate($for_test = true, $title = "", $author = "", $owner = "") {
+	function duplicate($for_test = true, $title = "", $author = "", $owner = "", $testObjId = NULL) {
 		if ($this->id <= 0) {
 			// The question has not been saved. It cannot be duplicated
 			return;
@@ -286,7 +186,6 @@ class assProgQuestion extends assQuestion {
 	}
 	
 	/**
-	 * Gibt die maximale Punktzahl zurueck, die ein Student erreichen kann
 	 *
 	 * @access public
 	 * @see $points
@@ -296,9 +195,9 @@ class assProgQuestion extends assQuestion {
 	}
 	
 	/**
-	 * Berechnet die erreichten Punkte des Studenten.
-	 * Dazu wird die Loesung des Studenten an das Bewertungssystem geschickt,
-	 * welches die Punkte berechnet und diese dann zurueckgibt.
+	 * Get the points for the provided solution.
+	 * The solution is added to the DB and then sent to the rating system. The points
+	 * are then  
 	 *
 	 * @param integer $user_id
 	 *        	The database ID of the learner
@@ -308,7 +207,7 @@ class assProgQuestion extends assQuestion {
 	 *        	(deprecated !!)
 	 * @access public
 	 */
-	function calculateReachedPoints($active_id, $pass = NULL, $returndetails = FALSE) {
+	function calculateReachedPoints($active_id, $pass = NULL, $authorizedSolution = true, $returndetails = FALSE) {
 		global $ilDB;
 		
 		$reachedpoints = 0;
@@ -325,36 +224,57 @@ class assProgQuestion extends assQuestion {
 				$this->getId (),
 				$pass 
 		) );
-		while ( $data = $ilDB->fetchAssoc ( $result ) ) { // TODO was tun bei mehreren results??
-		                                             // Programmcode finden - data1, data2 entspricht key, value
+		while ( $data = $ilDB->fetchAssoc ( $result ) ) {
 			if ($data ['value1'] == 'progquest_studentsolution') {
-				$params = array ();
-				$points = array ();
 				$studentcode = $data ['value2'];
+				$points = array ();
+				//$params = array ();
 				foreach ( $this->getTestParameterset () as $paramObject ) {
-					$params [] = $paramObject->getAnswertext ();
+					//$params [] = $paramObject->getParams ();
 					$points [] = $paramObject->getPoints ();
 				}
 				
-				$this->getPlugin ()->includeClass ( "class.ilAssProgQuestionRatingSystemConnector.php" );
-				$connector = new ilAssProgQuestionRatingSystemConnector ( $this->getPlugin () );
-				// sende Programmcode an das Bewertungssystem zum Kompilieren
-				// TODO Inputvalidierung
-				if ($this->getCheckRecursive () || $this->getCheckIterative () || $this->getForbidRecursive () || $this->getForbidIterative ())
-					$checkStructure = true;
-				else
-					$checkStructure = false;
-				$ratingsystemresult = $connector->compile ( $studentcode, $params, 'compare', $this->solution, $points, $checkStructure );
-				if (isset ( $ratingsystemresult ['points'] )) {
-					// Vergebe Punkte nicht, wenn Rekursion gefordert ist und keine gemacht wurde
-					if ((! $this->getCheckRecursive () || $ratingsystemresult ['recursive']) && (! $this->getForbidRecursive () || ! $ratingsystemresult ['recursive']) && (! $this->getCheckIterative () || $ratingsystemresult ['iterative']) && (! $this->getForbidIterative () || ! $ratingsystemresult ['iterative'])) {
-						$reachedpoints = $ratingsystemresult ['points'];
-					} else
-						$reachedpoints = 0;
+				$this->getPlugin ()->includeClass ( "class.ilAssProgQuestionEvalConnection.php" );
+				$reachedpoints = 0;
+				switch ($this->getProgQuestionType ()) {
+					case "function_original" :
+						$ratingsystemresult = ilAssProgQuestionEvalConnection::compareCode ( $this, $studentcode );
+						if (isset ( $ratingsystemresult ['points'] )) {
+							$fulfillsRec = ! $this->getCheckRecursive () || $ratingsystemresult ['recursive'];
+							$followNotRec = ! $this->getForbidRecursive () || ! $ratingsystemresult ['recursive'];
+							$fulfillsIter = ! $this->getCheckIterative () || $ratingsystemresult ['iterative'];
+							$followNotIter = ! $this->getForbidIterative () || ! $ratingsystemresult ['iterative'];
+							if ($fulfillsRec && $followNotRec && $fulfillsIter && $followNotIter) {
+								$reachedpoints = $ratingsystemresult ['points'];
+							}
+						}
+						break;
+					case "testng" :
+						$ratingsystemresult = ilAssProgQuestionEvalConnection::runTestNG ( $this, $studentcode );
+						if (isset ( $ratingsystemresult ['points'] )) {
+							$reachedpoints = $ratingsystemresult ['points'];
+						}
+						break;
 				}
+				break;
 			}
 		}
 		return min ( $reachedpoints, $this->getMaximumPoints () );
+	}
+	
+	/**
+	 * Calculate the reached points for a submitted user input
+	 *
+	 * @param
+	 *        	mixed user input (scalar, object or array)
+	 *        	
+	 * @todo implement this new required function
+	 *       // This function is not pre-defined in assQuestion but must be present in a question type for "check"
+	 *       // functionality on a question pools "preview" screen. It gets a posted user solution and calculates
+	 *       // the reached points for it. The actual data type of solution is not defined but must match the type
+	 *       // returned by getSolutionSubmit().
+	 */
+	public function calculateReachedPointsforSolution($solution) {
 	}
 	
 	/**
@@ -366,7 +286,13 @@ class assProgQuestion extends assQuestion {
 	 * @access public
 	 * @see $answers
 	 */
-	function saveWorkingData($active_id, $pass = NULL) {
+	/**
+	 *
+	 * {@inheritdoc}
+	 *
+	 * @see assQuestion::saveWorkingData()
+	 */
+	function saveWorkingData($active_id, $pass = NULL, $authorized = Null) {
 		global $ilDB;
 		global $ilUser;
 		
@@ -386,50 +312,20 @@ class assProgQuestion extends assQuestion {
 				$this->getId (),
 				$pass 
 		) );
-		$text = ilUtil::stripSlashes ( $_POST ["prog_area"], FALSE );
-		
-		$entered_values = 0;
-		if (strlen ( $text )) {
-			// Pruefe ob "kompilieren"-Button gedrueckt wurde
-			// Dadurch dass ohne Knopfdrucken ein leerer Wert gespeichert wird,
-			// ist rating_system_response trotz speichern in DB ein temporaerer Wert.
-			if ($_POST ['cmd'] ['handleQuestionAction']) {
-				// Hier muss das Bewertungssystem aufgerufen werden
-				$this->getPlugin ()->includeClass ( "class.ilAssProgQuestionRatingSystemConnector.php" );
-				$connector = new ilAssProgQuestionRatingSystemConnector ( $this->getPlugin () );
-				// sende Programmcode an das Bewertungssystem zum Kompilieren
-				// TODO Inputvalidierung
-				$result = $connector->compile ( $text, array (
-						$_POST ['prog_params'] 
-				) );
-				// TODO NIEMALS NIE Serialisieren, das kann sehr boese werden wenn daten manipuliert wurden!
-				// $this->rating_system_response = serialize($result);
-				$this->rating_system_response = $result;
-			} else
-				$this->rating_system_response = array ();
-			
+		$code = ilUtil::stripSlashes ( $_POST ["prog_area"], FALSE );
+		if (strlen ( $code )) {
 			$time = time ();
 			
-			$points = null;
-			$this->saveWorkingDataValue ( $active_id, $pass, 'progquest_studentsolution', trim ( $text ), $points, $time );
+			$this->saveWorkingDataValue ( $active_id, $pass, 'progquest_studentsolution', trim ( $code ), null, $time );
+			$this->saveWorkingDataValue ( $active_id, $pass, 'progquest_studentparams', trim ( $_POST ["prog_params"] ), null, $time );
+
+			$this->rating_system_response = $this->handleStudentCode ( $code );
 			if (is_array ( $this->rating_system_response )) {
 				foreach ( $this->rating_system_response as $key => $value ) {
 					$this->saveWorkingDataValue ( $active_id, $pass, 'progquest_ratingsystemresponse_' . $key, $value, null, $time );
 				}
 			}
-			// $next_id = $ilDB->nextId('tst_solutions');
-			// $affectedRows = $ilDB->insert("tst_solutions", array(
-			// "solution_id" => array("integer", $next_id),
-			// "active_fi" => array("integer", $active_id),
-			// "question_fi" => array("integer", $this->getId()),
-			// "value1" => array("clob", trim($text)),
-			// "value2" => array("clob", $this->rating_system_response),
-			// "pass" => array("integer", $pass),
-			// "tstamp" => array("integer", time())
-			// ));
-			$entered_values ++;
-		}
-		if ($entered_values) {
+			
 			include_once ("./Modules/Test/classes/class.ilObjAssessmentFolder.php");
 			if (ilObjAssessmentFolder::_enabledAssessmentLogging ()) {
 				$this->logAction ( $this->lng->txtlng ( "assessment", "log_user_entered_values", ilObjAssessmentFolder::_getLogLanguage () ), $active_id, $this->getId () );
@@ -442,6 +338,60 @@ class assProgQuestion extends assQuestion {
 		}
 		
 		return true;
+	}
+	
+	/**
+	 *
+	 * @param string $code        	
+	 */
+	private function handleStudentCode($code) {
+		$result = array ();
+		$action = $_POST ['cmd'] ['handleQuestionAction'];
+		$params = $_POST ['prog_params'];
+		$type = $this->getProgQuestionType ();
+		
+		$this->getPlugin ()->includeClass ( "class.ilAssProgQuestionEvalConnection.php" );
+		switch ($action) {
+			case "Compile" :
+				switch ($type) {
+					case "function_original" :
+						$result = ilAssProgQuestionEvalConnection::compileCode ( $this, $code, 'student' );
+						break;
+					case "testng" :
+						$result = ilAssProgQuestionEvalConnection::compileTestNG ( $this, $code );
+						break;
+				}
+				break;
+			case "Run" :
+				switch ($type) {
+					case "function_original" :
+						$result = ilAssProgQuestionEvalConnection::runCode ( $this, $code, 'student', array (
+								$params 
+						) );
+						break;
+					case "testng" :
+						$result = ilAssProgQuestionEvalConnection::runStudentTestNG ( $this, $code, array (
+								$params 
+						) );
+						break;
+				}
+				break;
+			case "Feedback" :
+				switch ($type) {
+					case "function_original" :
+						$result = ilAssProgQuestionEvalConnection::feedbackCode ( $this, $code, 'student', array (
+								$params 
+						) );
+						break;
+					case "testng" :
+						$result = ilAssProgQuestionEvalConnection::feedbackStudentTestNG ( $this, $code, array (
+								$params 
+						) );
+						break;
+				}
+				break;
+		}
+		return $result;
 	}
 	
 	/**
@@ -534,26 +484,6 @@ class assProgQuestion extends assQuestion {
 	}
 	
 	/**
-	 * Gibt den Namen der Tabelle mit den zusaetzlichen Daten zurueck, die fuer die Programmierfrage benoetigt werden.
-	 *
-	 * @return mixed the name(s) of the additional tables (array or string)
-	 * @access public
-	 */
-	function getAdditionalTableName() {
-		return "il_qpl_qst_prog_quest";
-	}
-	
-	/**
-	 * Gibt den Namen der Tabelle mit den Antworten der Fragen zurueck
-	 *
-	 * @return string The answer table name
-	 * @access public
-	 */
-	function getAnswerTableName() {
-		return "il_qpl_qst_prog_params";
-	}
-	
-	/**
 	 * Erstellt eine Frage aus einer QTI Datei.
 	 * Erhaelt Parameter von einem QTI Parser und erstellt ein ILIAS Fragenobjekt.
 	 *
@@ -593,8 +523,8 @@ class assProgQuestion extends assQuestion {
 	/**
 	 * Setzt die Loesung
 	 */
-	public function setSolution($s) {
-		$this->solution = $s;
+	public function setSolution($code) {
+		$this->solution = $code;
 	}
 	
 	/**
@@ -602,6 +532,26 @@ class assProgQuestion extends assQuestion {
 	 */
 	public function getSolution() {
 		return $this->solution;
+	}
+	public function setTestCode($code) {
+		$this->test_code = $code;
+	}
+	public function getTestCode() {
+		return $this->test_code;
+	}
+	
+	/**
+	 * Get the submitted user input as a serializable value
+	 *
+	 * @return mixed user input (scalar, object or array)
+	 *        
+	 * @todo implement this new function (do we need functionality?)
+	 *       // This function is not pre-defined in assQuestion but must be present in a question type for "check"
+	 *       // functionality on a question pools "preview" screen. It should provide the posted user input in a
+	 *       // data structure that can be stored in the user session. The actual data type is not defined but must be
+	 *       // known by the corresponding function calculateReachedPointsforSolution().
+	 */
+	public function getSolutionSubmit() {
 	}
 	
 	/**
@@ -677,13 +627,18 @@ class assProgQuestion extends assQuestion {
 	}
 	
 	/**
-	 * Fuegt ein neues Set von Testparametern hinzu
+	 * Adds new test parameters.
+	 *
+	 * @param string $answertext        	
+	 * @param real $points        	
+	 * @param number $order        	
+	 * @param string $answerimage        	
 	 */
-	function addTestParameterset($answertext = "", $points = 0.0, $order = 0, $answerimage = "") {
-		include_once "./Modules/TestQuestionPool/classes/class.assAnswerBinaryStateImage.php";
+	function addTestParameterset($name = "", $answertext = "", $points = 0.0, $order = 0) {
+		$this->getPlugin()->includeClass ( "class.assProgQuestionParameters.php" );
 		if (array_key_exists ( $order, $this->test_parameterset )) {
 			// insert answer
-			$answer = new ASS_AnswerBinaryStateImage ( $answertext, $points, $order, 1, $answerimage );
+			$answer = new assProgQuestionParameters ( $name, $answertext, $points, $order );
 			$newchoices = array ();
 			for($i = 0; $i < $order; $i ++) {
 				array_push ( $newchoices, $this->test_parameterset [$i] );
@@ -697,7 +652,7 @@ class assProgQuestion extends assQuestion {
 			$this->test_parameterset = $newchoices;
 		} else {
 			// add answer
-			$answer = new ASS_AnswerBinaryStateImage ( $answertext, $points, count ( $this->answers ), 1, $answerimage );
+			$answer = new assProgQuestionParameters ( $name, $answertext, $points, count ( $this->answers ) );
 			array_push ( $this->test_parameterset, $answer );
 		}
 	}
@@ -757,31 +712,35 @@ class assProgQuestion extends assQuestion {
 	}
 	
 	/**
-	 * Der Imagepfad der Testparameter wird fuer den Export in einen String gepackt.
-	 *
-	 * @param unknown $i        	
-	 * @return Der Imagepfad der Testparameter als String.
-	 */
-	function getTestParameterImageToXML($i) {
-		$image;
-		
-		$image .= $this->test_parameterset [$i]->getImage ();
-		
-		return image;
-	}
-	
-	/**
 	 * Gibt das Set von Testparametern zurueck.
 	 */
-	function &getTestParameterset() {
+	function getTestParameterset() {
 		return $this->test_parameterset;
 	}
 	
 	/**
 	 * Gibt die Antwort des Bewertungssystems zurueck
 	 */
-	function getRatingSystemResponse() {
+	function getEvaluationResponse() {
 		return $rating_system_response;
+	}
+	
+	/**
+	 * Set the type of the programming question.
+	 *
+	 * @param string $type        	
+	 */
+	function setProgQuestionType($type) {
+		$this->prog_question_type = ( string ) $type;
+	}
+	
+	/**
+	 * Returns the type of the programming question.
+	 *
+	 * @return string
+	 */
+	function getProgQuestionType() {
+		return $this->prog_question_type;
 	}
 	
 	/**

@@ -1,0 +1,31 @@
+{QUESTIONTEXT}
+<p>
+{LABEL_VALUE2}<br />
+<p id="{ID}" class="noRTEditor"  wrap="virtual" cols="100" rows="20" style="width:90%;"><code>{VALUE2}</code></p>
+<script src="Customizing/global/plugins/Modules/TestQuestionPool/Questions/assProgQuestion/js/codemirror/codemirror-compressed.js"></script>
+<link rel="stylesheet" href="Customizing/global/plugins/Modules/TestQuestionPool/Questions/assProgQuestion/js/codemirror/codemirror.css">
+<script>
+<!--
+ (function () {
+	myTextArea = document.getElementById("{ID}");
+	var myCodeMirror = CodeMirror(function(elt) {
+		  myTextArea.parentNode.replaceChild(elt, myTextArea);
+		}, {value: myTextArea.textContent,
+		    lineNumbers: true,
+		    matchBrackets: true,
+		    mode: "text/x-java",
+		    readOnly: true
+		});
+}());
+-->
+</script>
+
+<p>
+    {LABEL_POINTS} {POINTS}
+    <!-- BEGIN icon_ok -->
+    <img src="{ICON_OK}" alt="{TEXT_OK}" title="{TEXT_OK}" />
+    <!-- END icon_ok -->
+    <!-- BEGIN icon_not_ok -->
+    <img src="{ICON_NOT_OK}" alt="{TEXT_NOT_OK}" title="{TEXT_NOT_OK}" />
+    <!-- END icon_not_ok -->
+</p>

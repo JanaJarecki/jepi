@@ -1,6 +1,23 @@
 <?php
-/*
- * +----------------------------------------------------------------------------+ | ILIAS open source | +----------------------------------------------------------------------------+ | Copyright (c) 1998-2001 ILIAS open source, University of Cologne | | | | This program is free software; you can redistribute it and/or | | modify it under the terms of the GNU General Public License | | as published by the Free Software Foundation; either version 2 | | of the License, or (at your option) any later version. | | | | This program is distributed in the hope that it will be useful, | | but WITHOUT ANY WARRANTY; without even the implied warranty of | | MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the | | GNU General Public License for more details. | | | | You should have received a copy of the GNU General Public License | | along with this program; if not, write to the Free Software | | Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA. | +----------------------------------------------------------------------------+
+/**
+ * ILIAS open source
+ *
+ * Copyright (c) 1998-2016 ILIAS open source, University of Köln / Basel
+ *
+ * This program is free software; you can redistribute it and/or
+ * modify it under the terms of the GNU General Public License
+ * as published by the Free Software Foundation; either version 2
+ * of the License, or (at your option) any later version.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License
+ * along with this program; if not, write to the Free Software
+ * Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
+ *
  */
 
 // TODO Fehler bei nichtausgefuellten Parametern beim Kompilieren (nur Speichern: Fehlermeldung, aber funzt)
@@ -34,7 +51,10 @@ class assProgQuestionGUI extends assQuestionGUI {
 	 * @var assProgQuestion question object
 	 */
 	var $object = null;
-	
+	private $quest_types = array (
+			"function_original",
+			"testng" 
+	);
 	/**
 	 * assProgQuestionGUI constructor
 	 *
@@ -66,8 +86,9 @@ class assProgQuestionGUI extends assQuestionGUI {
 	 * Evaluates a posted edit form and writes the form data in the question object.
 	 * Called when question is saved.
 	 *
-	 * check!
-	 * Die Funktion schreibt die Eingaben aus dem Formular in ein ProgQuestion-Objekt
+	 * {@inheritdoc}
+	 *
+	 * @see assQuestionGUI::writePostData()
 	 *
 	 * @return integer A positive value, if one of the required fields wasn't set, else 0
 	 */
@@ -77,14 +98,16 @@ class assProgQuestionGUI extends assQuestionGUI {
 			$this->object->setTitle ( $_POST ["title"] );
 			$this->object->setAuthor ( $_POST ["author"] );
 			$this->object->setComment ( $_POST ["comment"] );
-			include_once "./Services/AdvancedEditing/classes/class.ilObjAdvancedEditing.php";
-			$questiontext = $_POST ["question"];
-			$this->object->setQuestion ( $questiontext );
+			// include_once "./Services/AdvancedEditing/classes/class.ilObjAdvancedEditing.php";
+			$this->object->setProgQuestionType ( $this->quest_types [$_POST ["quest_type"]] );
+			$this->object->setQuestion ( $_POST ["question"] );
 			$this->object->setEstimatedWorkingTime ( $_POST ["Estimated"] ["hh"], $_POST ["Estimated"] ["mm"], $_POST ["Estimated"] ["ss"] );
 			$this->object->setPoints ( $_POST ["points"] );
 			
 			// NEU
 			$this->object->setSolution ( $_POST ["solution"] );
+			$this->object->setTestCode ( $_POST ["test_code"] );
+			
 			if ($_POST ['structure'] == 'iterative' || $_POST ['structure'] == 'iterativenorecursive') {
 				$this->object->setCheckIterative ( true );
 			} else {
@@ -95,17 +118,17 @@ class assProgQuestionGUI extends assQuestionGUI {
 				$this->object->setForbidRecursive ( true );
 			} else {
 				$this->object->setForbidRecursive ( false );
-			}		
+			}
 			if ($_POST ['structure'] == 'recursive' || $_POST ['structure'] == 'recursivenoiterative') {
 				$this->object->setCheckRecursive ( true );
 			} else {
 				$this->object->setCheckRecursive ( false );
 			}
 			
-			if ( $_POST ['structure'] == 'recursivenoiterative' ) {
-				$this->object->setForbidIterative(true);
+			if ($_POST ['structure'] == 'recursivenoiterative') {
+				$this->object->setForbidIterative ( true );
 			} else {
-				$this->object->setForbidIterative(false);
+				$this->object->setForbidIterative ( false );
 			}
 			
 			$this->writeParamSpecificPostData ();
@@ -126,8 +149,10 @@ class assProgQuestionGUI extends assQuestionGUI {
 		// Delete all existing answers and create new answers from the form data
 		$this->object->flushParams ();
 		foreach ( $_POST ['choice'] ['answer'] as $index => $answer ) {
-			$answertext = $answer;
-			$this->object->addTestParameterset ( $answertext, $_POST ['choice'] ['points'] [$index], $index );
+			$name =  $_POST ['choice'] ['name'] [$index];
+			$params = $answer;
+			$points = $_POST ['choice'] ['points'] [$index];
+			$this->object->addTestParameterset ( $name, $params, $points, $index );
 		}
 	}
 	
@@ -142,221 +167,67 @@ class assProgQuestionGUI extends assQuestionGUI {
 	}
 	
 	/**
-	 * Creates an output of the edit form for the question
-	 *
-	 * Methode wird beim Erstellen der Frage aufgerufen
-	 *
-	 * check!
-	 * Funktion stimmt mit Beispiel-Plugin ueberein + ProgQuestion spezifische Aenderungen
-	 *
-	 * @access public
+	 * Creates the HTML of the authoring view where new questions are created or existing ones edited.
 	 */
 	function editQuestion() {
-		// #1
 		global $lng;
-		$save = ((strcmp ( $this->ctrl->getCmd (), "save" ) == 0) || (strcmp ( $this->ctrl->getCmd (), "saveEdit" ) == 0)) ? TRUE : FALSE;
 		$this->getQuestionTemplate ();
 		
-		// #2
 		include_once ("./Services/Form/classes/class.ilPropertyFormGUI.php");
 		$form = new ilPropertyFormGUI ();
 		
-		// $form->addCommandButton("save","Save");
-		// $form->addCommandButton("saveReturn","SaveR");
 		$form->setFormAction ( $this->ctrl->getFormAction ( $this ) );
 		$form->setTitle ( $this->outQuestionType () );
 		$form->setMultipart ( FALSE );
 		$form->setTableWidth ( "100%" );
 		$form->setId ( "assprogquestionquestion" );
 		
-		// title
-		$title = new ilTextInputGUI ( $this->lng->txt ( "title" ), "title" );
-		$title->setValue ( $this->object->getTitle () );
-		$title->setRequired ( TRUE );
-		$form->addItem ( $title );
+		$save = ((strcmp ( $this->ctrl->getCmd (), "save" ) == 0) || (strcmp ( $this->ctrl->getCmd (), "saveEdit" ) == 0)) ? TRUE : FALSE;
+		$testMode = $this->getSelfAssessmentEditingMode ();
+		$question = $this->object;
+		$plugin = $question->getPlugin ();
 		
-		// #3
-		if (! $this->getSelfAssessmentEditingMode ()) {
-			// author
-			$author = new ilTextInputGUI ( $this->lng->txt ( "author" ), "author" );
-			$author->setValue ( $this->object->getAuthor () );
-			$author->setRequired ( TRUE );
-			$form->addItem ( $author );
-			
-			// description
-			$description = new ilTextInputGUI ( $this->lng->txt ( "description" ), "comment" );
-			$description->setValue ( $this->object->getComment () );
-			$description->setRequired ( FALSE );
-			$form->addItem ( $description );
+		$plugin->includeClass ( "class.assProgQuestionGUIComponentFactory.php" );
+		$factory = new assProgQuestionGUIComponentFactory ( $plugin, $this->lng );
+		
+		$form->addItem ( $factory->title ( $question->getTitle () ) );
+		
+		if ($testMode) {
+			$form->addItem ( $factory->hiddenAuthor ( $question->getAuthor () ) );
 		} else {
-			// author as hidden field
-			$hi = new ilHiddenInputGUI ( "author" );
-			$author = ilUtil::prepareFormOutput ( $this->object->getAuthor () );
-			if (trim ( $author ) == "") {
-				$author = "-";
-			}
-			$hi->setValue ( $author );
-			$form->addItem ( $hi );
+			$form->addItem ( $factory->author ( $question->getAuthor () ) );
+			$form->addItem ( $factory->description ( $question->getComment () ) );
 		}
 		
-		// #4
+		$questionText = $question->prepareTextareaOutput ( $question->getQuestion () );
+		$form->addItem ( $factory->question ( $questionText, $question->getId () ) );
 		
-		// #5
-		// questiontext
-		// $this->object->getPlugin()->includeClass("class.ilMOTextAreaInputGUI.php");
-		// $question = new ilMOTextAreaInputGUI($this->lng->txt("question"), "question");
-		$question = new ilTextAreaInputGUI ( $this->lng->txt ( "question" ), "question" );
-		$question->setValue ( $this->object->prepareTextareaOutput ( $this->object->getQuestion () ) );
-		$question->setRequired ( TRUE );
-		$question->setRows ( 10 );
-		$question->setCols ( 80 );
-		// if (!$this->getSelfAssessmentEditingMode())
-		// {
-		$question->setUseRte ( TRUE );
-		include_once "./Services/AdvancedEditing/classes/class.ilObjAdvancedEditing.php";
-		$tags = ilObjAdvancedEditing::_getUsedHTMLTags ( "assessment" );
-		array_push ( $tags, 'input' );
-		array_push ( $tags, 'select' );
-		array_push ( $tags, 'option' );
-		array_push ( $tags, 'button' );
-		$question->setRteTags ( $tags );
-		$question->addPlugin ( "latex" );
-		$question->addButton ( "latex" );
-		$question->addButton ( "pastelatex" );
-		$question->setRTESupport ( $this->object->getId (), "qpl", "assessment" );
-		// }
-		$form->addItem ( $question );
-		
-		// #6
-		if (! $this->getSelfAssessmentEditingMode ()) {
-			// duration
-			$duration = new ilDurationInputGUI ( $this->lng->txt ( "working_time" ), "Estimated" );
-			$duration->setShowHours ( TRUE );
-			$duration->setShowMinutes ( TRUE );
-			$duration->setShowSeconds ( TRUE );
-			$ewt = $this->object->getEstimatedWorkingTime ();
-			$duration->setHours ( $ewt ["h"] );
-			$duration->setMinutes ( $ewt ["m"] );
-			$duration->setSeconds ( $ewt ["s"] );
-			$duration->setRequired ( FALSE );
-			$form->addItem ( $duration );
+		if ($testMode) {
+			$form->addItem ( $factory->numberOfTries ( $question->getNrOfTries (), $this->getDefaultNrOfTries () ) );
 		} else {
-			// number of tries
-			if (strlen ( $this->object->getNrOfTries () )) {
-				$nr_tries = $this->object->getNrOfTries ();
-			} else {
-				$nr_tries = $this->getDefaultNrOfTries ();
-			}
-			if ($nr_tries <= 0) {
-				$nr_tries = 1;
-			}
-			$ni = new ilNumberInputGUI ( $this->lng->txt ( "qst_nr_of_tries" ), "nr_of_tries" );
-			$ni->setValue ( $nr_tries );
-			$ni->setMinValue ( 1 );
-			$ni->setSize ( 5 );
-			$ni->setMaxLength ( 5 );
-			$ni->setRequired ( true );
-			$form->addItem ( $ni );
+			$estimatedWorkingTime = $question->getEstimatedWorkingTime ();
+			$form->addItem ( $factory->duration ( $estimatedWorkingTime ) );
 		}
 		
-		// #7
-		// points
-		$points = new ilNumberInputGUI ( $this->lng->txt ( "points" ), "points" );
-		$points->setValue ( $this->object->getPoints () );
-		$points->setRequired ( TRUE );
-		$points->setSize ( 3 );
-		$points->setMinValue ( 0.0 );
-		$form->addItem ( $points );
+		$form->addItem ( $factory->maximumPoints ( $question->getPoints () ) );
+		$form->addItem ( $factory->questionType ( $question->getProgQuestionType (), $this->quest_types ) );
+		$form->addItem ( $factory->solution ( $question->getSolution () ) );
+		$form->addItem ( $factory->testCodeField ( $question->getTestCode () ) );
 		
-		// #7.1
-		// *neu* Die Musterloesung
-		$this->object->getPlugin ()->includeClass ( "class.ilProgrammingTextAreaInputGUI.php" );
-		$solution = new ilProgrammingTextAreaInputGUI ( $this->object->getPlugin ()->txt ( "solution" ), "solution" );
-		// $solution->setValue($this->object->prepareTextareaOutput($this->object->getSolution()));
-		$solution->setValue ( $this->object->getSolution () );
-		// $solution->setRequired(true);
-		$solution->setRequired ( true );
-		$solution->setRows ( 10 );
-		$solution->setCols ( 80 );
-		$solution->setInfo ( $this->object->getPlugin ()->txt ( "solutioninfo" ) );
-		$form->addItem ( $solution );
+		// @note move buttons closer to code
+		$form->addCommandButton ( "compileTeacherCode", $plugin->txt ( "compile" ) );
+		$form->addCommandButton ( "runTeacherCode", $plugin->txt ( "run" ) );
 		
-		// Fuege Button hinzu, 1. Parameter ist Methode die nach Abschicken aufgerufen wird, 2. Parameter ist der Text
-		// Mit dieser Methode landen die Buttons immer ganz unten neben Speichern
-		$form->addCommandButton ( "compile", $this->object->getPlugin ()->txt ( "compile" ) );
+		$form->addItem ( $factory->methodTypeRequirements ( $question->getCheckRecursive (), $question->getForbidRecursive (), $question->getCheckIterative (), $question->getForbidIterative () ) );
+		$form->addItem ( $factory->parameters($question->getTestParameterset () , $question->getSelfAssessmentEditingMode ()) );
 		
-		// *neu* Iterativ/Rekursiv?
-		$radio_prop = new ilRadioGroupInputGUI ( $this->object->getPlugin ()->txt ( 'codestructure' ), "structure" );
-		// $radio_prop->setInfo($this->object->getPlugin()->txt('structureinfo'));
-		
-		$op = new ilRadioOption ( $this->object->getPlugin ()->txt ( 'nostructure' ), "none", $this->object->getPlugin ()->txt ( 'nostructureinfo' ) );
-		$radio_prop->addOption ( $op );
-		
-
-		$op = new ilRadioOption ( $this->object->getPlugin ()->txt ( 'recursive' ), "recursive", $this->object->getPlugin ()->txt ( 'recursiveinfo' ) );
-		
-		// nest text input in first option
-		// $text_prop = new ilTextInputGUI("Text Input", "ti2");
-		// $text_prop->setInfo("This is the info text of subitem 'Text Input' of Option 1.");
-		// $op->addSubItem($text_prop);
-		
-		$radio_prop->addOption ( $op );
-		
-		$op = new ilRadioOption ( $this->object->getPlugin ()->txt ( 'recursivenoiterative' ), "recursivenoiterative", $this->object->getPlugin ()->txt ( 'recursivenoiterativeinfo' ) );
-		$radio_prop->addOption ( $op );
-		
-		$op = new ilRadioOption ( $this->object->getPlugin ()->txt ( 'iterative' ), "iterative", $this->object->getPlugin ()->txt ( 'iterativeinfo' ) );
-		$radio_prop->addOption ( $op );
-		
-		$op = new ilRadioOption ( $this->object->getPlugin ()->txt ( 'iterativenorecursive' ), "iterativenorecursive", $this->object->getPlugin ()->txt ( 'iterativenorecursiveinfo' ) );
-		$radio_prop->addOption ( $op );
-		
-		// $cb_prop = new ilCheckboxInputGUI("Checkbox", "cbox2");
-		if ($this->object->getCheckRecursive ()) {
-			$radio_prop->setValue ( $this->object->getForbidIterative()?"recursivenoiterative":"recursive" );
-		} elseif ($this->object->getCheckIterative ()) {
-			$radio_prop->setValue ( $this->object->getForbidRecursive()?"iterativenorecursive":"iterative" );
-		} else {
-			$radio_prop->setValue ( "none" );
+		if ($question->getId ()) {
+			$form->addItem ( $factory->hiddenId($question->getId ()) );
 		}
 		
-		// $cb_prop->setChecked(true);
-		// $cb_prop->setInfo("bla!");
-		// $op->addSubItem($cb_prop);
 		
+		// backmatter
 		
-		$form->addItem ( $radio_prop );
-		
-		// *neu* zu testende Parameter, beliebig viele Felder mit einzelner Punktzahl sollte moeglich sein
-		// siehe Multiple Choice
-		// include_once "./Modules/TestQuestionPool/classes/class.ilProgQuestionParaInputGUI.php";
-		// include_once "./Customizing/global/plugin/Modules/TestQuestionPool/Questions/assProgQuestion/classes/class.ilProgQuestionParaInputGUI.php";
-		include_once 'class.ilProgQuestionParaInputGUI.php';
-		// $choices = new ilProgQuestionParaInputGUI($this->lng->txt( "answers" ), "choice");
-		$choices = new ilProgQuestionParaInputGUI ( $this->object->getPlugin ()->txt ( "testparams" ), "choice" );
-		// $choices->setRequired( true );
-		$choices->setRequired ( false );
-		$choices->setQuestionObject ( $this->object );
-		$choices->setSingleline ( true );
-		$choices->setAllowMove ( false );
-		$choices->setInfo ( $this->object->getPlugin ()->txt ( "paraminfo" ) );
-		if ($this->object->getSelfAssessmentEditingMode ()) {
-			$choices->setSize ( 40 );
-			$choices->setMaxLength ( 800 );
-		}
-		if (count ( $this->object->getTestParameterset () ) < 1)
-			$this->object->addTestParameterset ( "", 0, 0 );
-		$choices->setValues ( $this->object->getTestParameterset () );
-		$form->addItem ( $choices );
-		
-		// #8
-		if ($this->object->getId ()) {
-			$hidden = new ilHiddenInputGUI ( "", "ID" );
-			$hidden->setValue ( $this->object->getId () );
-			$form->addItem ( $hidden );
-		}
-		
-		// #9
 		$this->addQuestionFormCommandButtons ( $form );
 		
 		// #10
@@ -365,69 +236,103 @@ class assProgQuestionGUI extends assQuestionGUI {
 		if ($save) {
 			$form->setValuesByPost ();
 			$errors = ! $form->checkInput ();
-			$form->setValuesByPost (); // again, because checkInput now performs the whole stripSlashes handling and we need this if we don't want to have duplication of backslashes
+			//$form->setValuesByPost (); // again, because checkInput now performs the whole stripSlashes handling and we need this if we don't want to have duplication of backslashes
 			if ($errors)
 				$checkonly = false;
 		}
 		
 		// #11
-		if (! $checkonly)
+		if (! $checkonly) {
 			$this->tpl->setVariable ( "QUESTION_DATA", $form->getHTML () );
+		}
+		
 		return $errors;
 	}
 	
 	/**
-	 * selbsterstellte Funktion -> ProgQuestion spezifisch
-	 * taucht nicht im Beispiel-Plugin auf
-	 *
-	 * NEU: Compilieren des eingegebenen Codes
-	 * Name muss mit Angabe des CommandButtons im Formular uebereinstimmen
-	 * 
-	 * @author Matthias Lohmann
+	 * Compiles the code from the authoring view.
+	 * The feedback is displayed to the author.
 	 */
-	function compile() {
+	function compileTeacherCode() {
 		// Erst mal speichern
 		$this->writePostData ( true );
 		$this->object->saveToDb ();
 		
-		// binde den Connector zum Bewertungssystem ein
-		$this->object->getPlugin ()->includeClass ( "class.ilAssProgQuestionRatingSystemConnector.php" );
-		$connector = new ilAssProgQuestionRatingSystemConnector ($this->object->getPlugin());
-		// Parameter flach machen
-		$params = array ();
-		foreach ( $this->object->getTestParameterset () as $paramObject ) {
-			// $params .= $paramObject->getAnswertext() .';';
-			$params [] = $paramObject->getAnswertext ();
+		// evaluate the code
+		$this->object->getPlugin ()->includeClass ( "class.ilAssProgQuestionEvalConnection.php" );
+		$type = $this->object->getProgQuestionType();
+		switch ( $type ) {
+			case "function_original":
+				$result = ilAssProgQuestionEvalConnection::compileCode ( $this->object, null, 'teacher' );
+				break;
+			case "testng":
+					$result = ilAssProgQuestionEvalConnection::compileTestNG ( $this->object );
+					break;
+			default:
+				$result['type'] = 'failure';
+				$result['message'] = "ERROR: Backend does not know how to handle the question type: ".$type;
 		}
-		// sende Programmcode an das Bewertungssystem zum Kompilieren
-		$result = $connector->compile ( $this->object->getSolution (), $params );
+		$this->handleResult ( $result );
+	}
+	
+	/**
+	 * Compiles and runs the author code with the given parameters.
+	 * The feedback is presented to the author. In particular the return values are shown, or the error that occured.
+	 */
+	function runTeacherCode() {
+		// Erst mal speichern
+		$this->writePostData ( true );
+		$this->object->saveToDb ();
 		
-		// Ergebnis mitteilen
+		// evaluate the code
+		$this->object->getPlugin ()->includeClass ( "class.ilAssProgQuestionEvalConnection.php" );
+		$type = $this->object->getProgQuestionType();
+		switch ( $type ) {
+			case "function_original":
+				$result = ilAssProgQuestionEvalConnection::runCode ( $this->object, null, 'teacher' );
+				break;
+			case "testng":
+					$result = ilAssProgQuestionEvalConnection::runTestNG ( $this->object );
+					break;
+			default:
+				$result['message'] = "ERROR: Backend does not know how to handle the question type: ".$type;
+		}
+		$this->handleResult ( $result );
+	}
+	
+	/**
+	 * The function parses the returned xml and renders the information to the authoring view.
+	 *
+	 * @param (string=>string) $result        	
+	 */
+	function handleResult($result) {
+		// handle the result or error
 		$type = $result ['type'];
 		switch ($type) {
 			case 'success' :
-				ilUtil::sendSuccess ( nl2br ( htmlspecialchars ( $result ['message'] . "\n\n" . $result ['paramsreturn'] ) ) );
+				ilUtil::sendSuccess ( nl2br ( htmlspecialchars ( $result ['message'] ) ) ); // . "\n\n" . $result ['paramsreturn'] 
 				break;
 			case 'failure' :
+			case 'compile error' :
 				ilUtil::sendFailure ( nl2br ( htmlspecialchars ( $result ['message'] . "\n\n" . $result ['diagnostics'] ) ) );
 				break;
 			default :
 				ilUtil::sendInfo ( nl2br ( htmlspecialchars ( $result ['message'] ) ) );
 		}
-		// Ruft wieder das Formular auf
+		
+		// update the displayed question
 		$this->editQuestion ();
 	}
 	
 	/**
-	 * Ueberprueft, ob alle Felder beim Eingeben der Frage durch den Fragensteller ausgefuellt wurden.
+	 * Looks if all required fields have a value.
 	 *
-	 * selbsterstelle Funktion???
-	 * taucht nicht im Beispiel-Plugin auf
+	 * @return boolean
 	 */
 	function checkInput() {
 		$cmd = $this->ctrl->getCmd ();
 		
-		if ((! $_POST ["title"]) or (! $_POST ["author"]) or (! $_POST ["question"]) or (! strlen ( $_POST ["points"] ))) {
+		if ((! $_POST ["quest_type"]) or (! $_POST ["title"]) or (! $_POST ["author"]) or (! $_POST ["question"]) or (! strlen ( $_POST ["points"] ))) {
 			$this->addErrorMessage ( $this->lng->txt ( "fill_out_all_required_fields" ) );
 			return FALSE;
 		}
@@ -436,117 +341,110 @@ class assProgQuestionGUI extends assQuestionGUI {
 	}
 	
 	/**
-	 * check!
 	 *
-	 * Wird beim Starten des Tests von Studenten zur Beantwortung als erstes aufgerufen und zeigt die Frage im Test-Modus
+	 * Renders the test output of the question.
+	 * {@inheritdoc}
+	 *
+	 * @see assQuestionGUI::outQuestionForTest()
 	 */
-	function outQuestionForTest($formaction, $active_id, $pass = NULL, $is_postponed = FALSE, $use_post_solutions = FALSE, $show_feedback = FALSE) {
-		$test_output = $this->getTestOutput ( $active_id, $pass, $is_postponed, $use_post_solutions, $show_feedback );
-		$this->tpl->setVariable ( "QUESTION_OUTPUT", $test_output );
-		$this->tpl->setVariable ( "FORMACTION", $formaction );
+	function getTestOutput($active_id, $pass = NULL, $is_postponed = FALSE, $use_post_solutions = FALSE, $show_feedback = FALSE) {
+		$test_output = $this->renderStudentView ( $active_id, $pass, $is_postponed, $use_post_solutions, $show_feedback );
+		return $test_output;
 	}
 	
 	/**
-	 * Get the question solution output
-	 * 
-	 * @param integer $active_id
-	 *        	The active user id
-	 * @param integer $pass
-	 *        	The test pass
-	 * @param boolean $graphicalOutput
-	 *        	Show visual feedback for right/wrong answers
-	 * @param boolean $result_output
-	 *        	Show the reached points for parts of the question
-	 * @param boolean $show_question_only
-	 *        	Show the question without the ILIAS content around
-	 * @param boolean $show_feedback
-	 *        	Show the question feedback
-	 * @param boolean $show_correct_solution
-	 *        	Show the correct solution instead of the user solution
-	 * @param boolean $show_manual_scoring
-	 *        	Show specific information for the manual scoring output
-	 * @return The solution output of the question as HTML code
+	 *
+	 * {@inheritdoc}
+	 *
+	 * @see assQuestionGUI::getSolutionOutput()
 	 */
 	function getSolutionOutput($active_id, $pass = NULL, $graphicalOutput = FALSE, $result_output = FALSE, $show_question_only = TRUE, $show_feedback = FALSE, $show_correct_solution = FALSE, $show_manual_scoring = FALSE, $show_question_text = TRUE) {
-		if ($show_correct_solution) {
-			// get the contents of a correct solution
-			// adapt this to your structure of answers
-			$solutions = array (
-					array (
-							// "value1" => $this->plugin->txt("any_text"),
-							// "value2" => $this->plugin->txt("any_text"),
-							"value1" => 'progquest_studentsolution',
-							"value2" => $this->object->getSolution (),
-							"points" => $this->object->getMaximumPoints () 
-					) 
-			);
-		} elseif ($active_id > 0) {
-			// get the answers of the user for the active pass or from the last pass if allowed
-			$solutions = $this->object->getSolutionValues ( $active_id, $pass );
-		} else {
-			// get empty contents
-			// adapt this to your structure of answers
-			$solutions = array (
-					array (
-							"value1" => "progquest_studentsolution",
-							"value2" => "",
-							"points" => "0" 
-					) 
-			);
-		}
-		
-		// loop through the saved values of more records exist
-		// the last record wins
-		// adapt this to your structure of answers
-		foreach ( $solutions as $solution ) {
-			if ($solution ['value1'] == 'progquest_studentsolution') {
-				$value1 = isset ( $solution ["value1"] ) ? $solution ["value1"] : "";
-				$value2 = isset ( $solution ["value2"] ) ? $solution ["value2"] : "";
-				$points = isset ( $solution ["points"] ) ? $solution ["points"] : "0";
-			}
-		}
-		
-		// get the solution template
 		$template = $this->plugin->getTemplate ( "tpl.il_as_qpl_progquestion_output_solution.html" );
+
+		$maxPoints = $this->object->getMaximumPoints ();
 		
-		if ($active_id > 0 and $graphicalOutput) {
-			$points = $this->object->getReachedPoints ( $active_id, $pass ); // Da wir in DB die Points selber gar nicht haben, so abgreifen
-			// output of ok/not ok icons for user entered solutions
-			// in this example we have ony one relevant input field (points)
-			// so we just need to tet the icon beneath this field
-			// question types with partial answers may have a more complex output
-			if ($this->object->getReachedPoints ( $active_id, $pass ) == $this->object->getMaximumPoints ()) {
-				$template->setCurrentBlock ( "icon_ok" );
-				$template->setVariable ( "ICON_OK", ilUtil::getImagePath ( "icon_ok.png" ) );
-				$template->setVariable ( "TEXT_OK", $this->lng->txt ( "answer_is_right" ) );
-				$template->parseCurrentBlock ();
-			} else {
-				$template->setCurrentBlock ( "icon_ok" );
-				$template->setVariable ( "ICON_NOT_OK", ilUtil::getImagePath ( "icon_not_ok.png" ) );
-				$template->setVariable ( "TEXT_NOT_OK", $this->lng->txt ( "answer_is_wrong" ) );
-				$template->parseCurrentBlock ();
-			}
-		}
-		
-		// fill the template variables
-		// adapt this to your structure of answers
-		// $template->setVariable("LABEL_VALUE1", $this->plugin->txt('label_value1'));
-		$template->setVariable ( "LABEL_VALUE2", $this->plugin->txt ( 'solutionoutput_label_solution' ) );
-		$template->setVariable ( "LABEL_POINTS", $this->plugin->txt ( 'solutionoutput_label_points' ) );
-		
-		// $template->setVariable("VALUE1", empty($value1) ? "&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;" : ilUtil::prepareFormOutput($value1));
-		$template->setVariable ( "VALUE2", empty ( $value2 ) ? "&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;" : nl2br(ilUtil::prepareFormOutput ( $value2 ) ));
-		$template->setVariable ( "POINTS", empty ( $points ) ? "&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;" : ilUtil::prepareFormOutput ( $points ) );
-		
-		// TODO this should in most cases ensure different IDs for different elements, but it is not guaranteed
-		$template->setVariable ( "ID", 'cm' . mt_rand () );
-		
-		$questiontext = $this->object->getQuestion ();
 		if ($show_question_text == true) {
+			$questiontext = $this->object->getQuestion ();
+			$template->setCurrentBlock("questiontext");
 			$template->setVariable ( "QUESTIONTEXT", $this->object->prepareTextareaOutput ( $questiontext, TRUE ) );
+			$template->parseCurrentBlock ();
+		}
+	
+		// If an active id is given we print the solution for a student.
+		if ($active_id > 0) {
+			// get the answers of the user for the active pass or from the last pass if allowed
+			$studentSolutions = $this->object->getSolutionValues ( $active_id, $pass );
+			$points = $this->object->getReachedPoints ( $active_id, $pass );
+
+			if ( $graphicalOutput ) {
+				if ( $points == $maxPoints ) {
+					$template->setCurrentBlock ( "icon_ok" );
+					$template->setVariable ( "ICON_OK", ilUtil::getImagePath ( "icon_ok.png" ) );
+					$template->setVariable ( "TEXT_OK", $this->lng->txt ( "answer_is_right" ) );
+					$template->parseCurrentBlock ();
+				} else {
+					$template->setCurrentBlock ( "icon_ok" );
+					$template->setVariable ( "ICON_NOT_OK", ilUtil::getImagePath ( "icon_not_ok.png" ) );
+					$template->setVariable ( "TEXT_NOT_OK", $this->lng->txt ( "answer_is_wrong" ) );
+					$template->parseCurrentBlock ();
+				}
+			}
+
+			
+			foreach ( array_reverse($studentSolutions,true) as $idx => $studentSolution ) {
+				
+				if ( $studentSolution["value1"]=="progquest_studentsolution") {
+				$studentSolution ["value1"] = isset ( $studentSolution ["value1"] ) ? $studentSolution ["value1"] : "";
+				$studentSolution ["value2"]  = isset ( $studentSolution ["value2"] ) ? $studentSolution ["value2"] : "";
+				if ( $pass == NULL) {
+					$studentSolution ["points"] = isset ( $studentSolution ["points"] ) ? $studentSolution ["points"] : "0";
+				} else {
+					$studentSolution ["points"] = $points;
+				}
+				
+				
+				$template->setCurrentBlock("points");
+				$template->setVariable("VALUE_1",$this->plugin->txt ( 'solutionoutput_label_solution' ));
+				$template->setVariable("VALUE_2",$idx + 1);
+				
+				$template->setVariable ( "LABEL_POINTS", $this->plugin->txt( 'solutionoutput_label_points' ));
+				$template->setVariable ( "POINTS", $studentSolution ["points"]);
+				$template->parseCurrentBlock();
+				
+				$template->setCurrentBlock("answer");
+				$template->setVariable ( "SOLUTION", $studentSolution ["value2"] );
+				$template->setVariable ( "ID", 'cm' . $idx );
+				$template->parseCurrentBlock();
+				}
+			}
+			
 		}
 		
-		$template->setVariable ( "QUESTIONTEXT", $this->object->prepareTextareaOutput ( $questiontext, TRUE ) );
+		// show the correct solution if requested
+		if ($show_correct_solution) {
+			$template->setCurrentBlock("label2");
+			$template->setVariable("VALUE_1",$this->plugin->txt ( 'solutionoutput_label_solution' ));
+			$template->parseCurrentBlock();
+			
+			$template->setCurrentBlock("codeblock");
+			$template->setVariable ( "SOLUTION", $this->object->getSolution () );
+			$template->setVariable ( "ID", 'cm' . mt_rand () );
+			$template->parseCurrentBlock ();
+			
+			$template->setCurrentBlock("label2");
+			$template->setVariable("VALUE_1",$this->plugin->txt ( 'testCode' ));
+			$template->parseCurrentBlock();
+			
+			$template->setCurrentBlock("codeblock");
+			$template->setVariable ( "SOLUTION", $this->object->getTestCode() );
+			$template->setVariable ( "ID", 'cm' . mt_rand () );
+			$template->parseCurrentBlock ();
+			
+			$template->setCurrentBlock("points");
+			$template->setVariable ( "LABEL_POINTS", $this->plugin->txt( 'solutionoutput_label_maxpoints' ));
+			$template->setVariable ( "POINTS", $maxPoints);
+			$template->parseCurrentBlock();
+		}
 		
 		$questionoutput = $template->get ();
 		
@@ -566,16 +464,18 @@ class assProgQuestionGUI extends assQuestionGUI {
 	}
 	
 	/**
-	 * check!
-	 * Erstellt die Ausgabe fuer die Fragen-Vorschau
 	 *
-	 * @param string $show_question_only        	
-	 * @return unknown
+	 * {@inheritdoc}
+	 *
+	 * @see assQuestionGUI::getPreview()
 	 */
 	function getPreview($show_question_only = FALSE, $showInlineFeedback = false) {
 		$pl = $this->object->getPlugin ();
 		$template = $pl->getTemplate ( "tpl.il_as_qpl_progquestion_output.html" );
-		$template->setVariable ( "QUESTIONTEXT", $this->object->prepareTextareaOutput ( $this->object->getQuestion (), TRUE ) );
+		$questiontext =  $this->object->getQuestion ();
+		$template->setVariable ( "QUESTIONTEXT", $this->object->prepareTextareaOutput ( $questiontext, TRUE ) );
+		$template->setVariable ( "SOLUTION_ON_WORK", $this->object->getSolution() );
+		$template->setVariable ( "ID", 'cm' . mt_rand () );
 		$questionoutput = $template->get ();
 		if (! $show_question_only) {
 			// get page object output
@@ -585,15 +485,23 @@ class assProgQuestionGUI extends assQuestionGUI {
 	}
 	
 	/**
-	 * check!
-	 * Erstellt die HTML Ausgabe der Frage fuer den Test
+	 * Generates the student view of the question during a test.
 	 *
-	 * Wird von outQuestionForTest aufgerufen beim Starten des Tests aus Studentensicht
+	 * 1. If previous results should be shown, look if some results are in the database.
+	 * 2. Generte the output for the question.
+	 *
+	 * @param unknown $active_id        	
+	 * @param unknown $pass        	
+	 * @param string $is_postponed        	
+	 * @param string $use_post_solutions        	
+	 * @param string $show_feedback        	
+	 * @return mixed
 	 */
-	function getTestOutput($active_id, $pass = NULL, $is_postponed = FALSE, $use_post_solutions = FALSE, $show_feedback = FALSE) {
-		// get the solution of the user for the active pass or from the last pass if allowed
+	function renderStudentView($active_id, $pass = NULL, $is_postponed = FALSE, $use_post_solutions = FALSE, $show_feedback = FALSE) {
 		$user_solution = "";
-		if ($active_id) {
+		$user_params = "";
+		
+		if ($active_id != NULL) {
 			$solutions = NULL;
 			include_once "./Modules/Test/classes/class.ilObjTest.php";
 			if (! ilObjTest::_getUsePreviousAnswers ( $active_id, true )) {
@@ -607,38 +515,55 @@ class assProgQuestionGUI extends assQuestionGUI {
 					$user_solution = $solution_value ['value2'];
 				} elseif (strpos ( $solution_value ['value1'], 'progquest_ratingsystemresponse_' ) === 0) {
 					$rating_system_response [substr ( $solution_value ['value1'], 31 )] = $solution_value ['value2'];
+				} elseif ($solution_value ['value1'] == 'progquest_studentparams' ) {
+					$user_params = $solution_value['value2'];
 				}
-				
-				// $user_solution = $solution_value["value1"];
-				// $rating_system_response = unserialize($solution_value["value2"]);
 			}
 		}
 		
 		// generate the question output
 		$pl = $this->object->getPlugin ();
 		$template = $pl->getTemplate ( "tpl.il_as_qpl_progquestion_output.html" );
-		
-		$template->setVariable ( "SOLUTION_ON_WORK", ilUtil::prepareFormOutput ( $user_solution ) );
+
 		$questiontext = $this->object->getQuestion ();
 		$template->setVariable ( "QUESTIONTEXT", $this->object->prepareTextareaOutput ( $questiontext, TRUE ) );
-		// Setting these variables seems to trigger display of the containing block, too
+		
+		$template->setVariable ( "SOLUTION_ON_WORK", ilUtil::prepareFormOutput ( $user_solution ) );
+		$template->setVariable ( "ID", "cm" . mt_rand () );
+		$template->setVariable ( "READ_ONLY", "false" );
+		
 		$template->setVariable ( "CMD_COMPILE", 'handleQuestionAction' );
 		$template->setVariable ( "TEXT_COMPILE", $pl->txt ( "studcompile" ) );
-		$template->setVariable ( "TEXT_PARAMS", $pl->txt ( "studparams" ) );
+		
+		$template->setVariable ( "CMD_RUN", 'handleQuestionAction' );
+		$template->setVariable ( "TEXT_RUN", $pl->txt ( "run" ) );
+		
+		$template->setVariable( "STUD_PARAMS_INPUT", $user_params) ;
+		
+		$template->setVariable ( "CMD_FEEDBACK", 'handleQuestionAction' );
+		$template->setVariable ( "TEXT_FEEDBACK", $pl->txt ( "feedback" ) );
+		
+		if ( $this->object->getProgQuestionType() == "function_original") {
+			$template->setVariable ( "TEXT_PARAMS", $pl->txt ( "studparams" ) );
+		} else {
+			$template->setVariable ( "TEXT_PARAMS", $pl->txt ( "studmain" ) );
+		}
 		
 		if ($rating_system_response) {
 			// TODO Doppelung mit Edit-Formular, eigene Methode?
 			switch ($rating_system_response ['type']) {
 				case 'success' :
-					ilUtil::sendSuccess ( nl2br ( htmlspecialchars ( $rating_system_response ['message'] . "\n\n" . $rating_system_response ['paramsreturn'] ) ) );
+					ilUtil::sendSuccess ( nl2br ( htmlspecialchars ( $rating_system_response ['message'] ) ) ); // . "\n\n" . $rating_system_response ['paramsreturn'] 
 					break;
 				case 'failure' :
-					ilUtil::sendFailure ( nl2br ( htmlspecialchars ( $rating_system_response ['message'] . "\n\n" . $rating_system_response ['diagnostics'] ) ) );
+					ilUtil::sendFailure ( nl2br ( htmlspecialchars ( $rating_system_response ['message']  ) ) ); // . "\n\n" . $rating_system_response ['diagnostics']
+					break;
+				case 'warning' :
+					ilUtil::sendQuestion ( nl2br ( htmlspecialchars ( $rating_system_response ['message'] ) ) );
 					break;
 				default :
 					ilUtil::sendInfo ( nl2br ( htmlspecialchars ( $rating_system_response ['message'] ) ) );
 			}
-			// $template->setVariable("RATING_SYSTEM_RESPONSE", $this->object->getRatingSystemResponse());
 		}
 		
 		$questionoutput = $template->get ();
@@ -649,13 +574,10 @@ class assProgQuestionGUI extends assQuestionGUI {
 	}
 	
 	/**
-	 * Sets the ILIAS tabs for this question type
-	 * aufgerufen von ilObjTestGUI und ilObjQuestionPoolGUI
 	 *
-	 * check!
-	 * Funktion exakt identisch zu der gleichen Funktion im Beispiel-Plugin
+	 * {@inheritdoc}
 	 *
-	 * @access public
+	 * @see assQuestionGUI::setQuestionTabs()
 	 */
 	function setQuestionTabs() {
 		global $rbacsystem, $ilTabs;
@@ -753,9 +675,11 @@ class assProgQuestionGUI extends assQuestionGUI {
 	}
 	
 	/**
-	 * Returns the answer specific feedback for the question
+	 * Returns the answer specific feedback for the question.
 	 *
-	 * check!
+	 * {@inheritdoc}
+	 *
+	 * @see assQuestionGUI::getSpecificFeedbackOutput()
 	 *
 	 * @param integer $active_id
 	 *        	Active ID of the user

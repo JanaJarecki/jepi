@@ -1,0 +1,36 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<progquestion>
+    <type>testng</type>
+    <action>runtestng</action>
+    <solution>
+        <code type="class" id="0" checkmethodtype="false">public class MyClass {&#xD;
+            public int getValue() { return 42; }&#xD;
+            public static void main(String... args) {&#xD;
+            System.out.println("bli bla");&#xD;
+            for( int i=0; i==i; ++i) {}&#xD;
+            }&#xD;
+            }</code>
+    </solution>
+    <testgroup>
+        <code type="testcode" id="0" checkmethodtype="false">import org.testng.Assert;&#xD;
+            import org.testng.annotations.Test;&#xD;
+            import java.lang.reflect.Field;&#xD;
+            import java.lang.reflect.Modifier;&#xD;
+            &#xD;
+            class AssProgQuestionTestNG {&#xD;
+            @Test&#xD;
+            public void initialValueTest() {&#xD;
+            MyClass m = new MyClass();&#xD;
+            Assert.assertEquals(42,m.getValue());&#xD;
+            }&#xD;
+            &#xD;
+            @Test&#xD;
+            public void privateTest() {&#xD;
+            for (Field f: MyClass.class.getFields()) {&#xD;
+            Assert.assertTrue(Modifier.isPrivate(f.getModifiers()));&#xD;
+            }&#xD;
+            }&#xD;
+            }</code>
+        <test id="0" name="initialValueTest" description="B" points="1" />
+    </testgroup>
+</progquestion>
