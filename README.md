@@ -19,7 +19,9 @@ This plugin was inspired by the assExampleQuestion plugin developed by:
 
 * Fred Neumann, fred.neumann-at-fau.de
 
-## Authors ##
+## Contributors ##
+
+[Studer + Raimann AG](https://studer-raimann.ch/)
 
 Universität Köln, uni-koeln.de :
 
