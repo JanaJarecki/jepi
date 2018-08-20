@@ -3,16 +3,61 @@
 include_once "./Modules/TestQuestionPool/classes/export/qti12/class.assQuestionExport.php";
 
 /**
- * Example question export
+ * 
+ * Export class to export the JEPI question type.
+ * @author Andreas Morel-Forster
  *
- * @author     Fred Neumann <fred.neumann@fau.de>
- * @version    $Id:  $
- * @ingroup    ModulesTestQuestionPool
  */
 class assProgQuestionExport extends assQuestionExport {
 
+	
 	/**
-	 * Returns a QTI xml representation of the question
+	 * 
+	 * Write label and value in QTI xml format.
+	 * @param ilXmlWriter $writer XML writer.
+	 * @param string $label Label of the value.
+	 * @param string $value Value to write.
+	 */
+	private static function writeMetaDataField($writer, $label,$value) {
+			$writer->xmlStartTag("qtimetadatafield");
+			$writer->xmlElement("fieldlabel", NULL, $label);
+			$writer->xmlElement("fieldentry", NULL, $value);
+			$writer->xmlEndTag("qtimetadatafield");
+	}
+	
+	/**
+	 * 
+	 * Write a boolean flag in QTI xml format.
+	 * @param ilXmlWriter $writer XML writer.
+	 * @param string $label Label of the flag.
+	 * @param boolean $flag Boolean flag.
+	 */
+	private static function writeBooleanFlag($writer,$label,$flag) {
+		self::writeMetaDataField($writer,$label,strval((int)$flag));
+	}
+	
+	/**
+	 * 
+	 * Write a set of test parameters as QTI xml representation.
+	 * @param ilXmlWriter $writer XML writer.
+	 * @param array[assProgQuestionParameters] $parameter_set Set of parameters.
+	 */
+	private static function writeTestParameters($writer,$parameter_set) {
+		self::writeMetaDataField($writer, "NUMTESTPARAMSETS", strval(count($parameter_set)));
+		foreach( $parameter_set as $key => $parameters ) {
+			self::writeMetaDataField($writer,"TESTPARAMETER_".strval($key),$parameters->getParams());
+			self::writeMetaDataField($writer,"TESTPARAMETERPOINTS_".strval($key),strval($parameters->getPoints()));
+			self::writeMetaDataField($writer,"TESTPARAMETERORDER_".strval($key),strval($parameters->getOrder()));
+		}
+	}
+	
+	private static function writeEstimatedWorkingTime($writer,$time) {
+		$duration = sprintf("P0Y0M0DT%dH%dM%dS", $time["h"], $time["m"], $time["s"]);
+		$writer->xmlElement("duration", NULL, $duration);
+	}
+	
+	/**
+	 * Returns a QTI xml representation of the question.
 	 *
 	 * @return string The QTI xml representation of the question
 	 * @access public
@@ -21,167 +66,55 @@ class assProgQuestionExport extends assQuestionExport {
 		global $ilias;
 
 		include_once("./Services/Xml/classes/class.ilXmlWriter.php");
-		$a_xml_writer = new ilXmlWriter;
-		// set xml header
-		$a_xml_writer->xmlHeader();
-		$a_xml_writer->xmlStartTag("questestinterop");
+		$writer = new ilXmlWriter;
+		$writer->xmlHeader();
+		$writer->xmlStartTag("questestinterop");
 		$attrs = array(
 			"ident" => "il_" . IL_INST_ID . "_qst_" . $this->object->getId(),
 			"title" => $this->object->getTitle(),
 			"maxattempts" => $this->object->getNrOfTries()
 		);
-		$a_xml_writer->xmlStartTag("item", $attrs);
-		// add question description
-		$a_xml_writer->xmlElement("qticomment", NULL, $this->object->getComment());
-		// add estimated working time
-		$workingtime = $this->object->getEstimatedWorkingTime();
-		$duration = sprintf("P0Y0M0DT%dH%dM%dS", $workingtime["h"], $workingtime["m"], $workingtime["s"]);
-		$a_xml_writer->xmlElement("duration", NULL, $duration);
-		// add ILIAS specific metadata
-		$a_xml_writer->xmlStartTag("itemmetadata");
-		$a_xml_writer->xmlStartTag("qtimetadata");
+		$writer->xmlStartTag("item", $attrs);
+		
+		$writer->xmlElement("qticomment", NULL, $this->object->getComment());
+		self::writeEstimatedWorkingTime($writer, $this->object->getEstimatedWorkingTime());
+		
+		$writer->xmlStartTag("itemmetadata");
+		$writer->xmlStartTag("qtimetadata");
 
-		//Die Ilias-Version wird exportiert
-		$a_xml_writer->xmlStartTag("qtimetadatafield");
-		$a_xml_writer->xmlElement("fieldlabel", NULL, "ILIAS_VERSION");
-		$a_xml_writer->xmlElement("fieldentry", NULL, $ilias->getSetting("ilias_version"));
-		$a_xml_writer->xmlEndTag("qtimetadatafield");
-		//Der Fragetyp wird exportiert
-		$a_xml_writer->xmlStartTag("qtimetadatafield");
-		$a_xml_writer->xmlElement("fieldlabel", NULL, "QUESTIONTYPE");
-		$a_xml_writer->xmlElement("fieldentry", NULL, $this->object->getQuestionType());
-		$a_xml_writer->xmlEndTag("qtimetadatafield");
-		//Der Autor der Frage wird exportiert
-		$a_xml_writer->xmlStartTag("qtimetadatafield");
-		$a_xml_writer->xmlElement("fieldlabel", NULL, "AUTHOR");
-		$a_xml_writer->xmlElement("fieldentry", NULL, $this->object->getAuthor());
-		$a_xml_writer->xmlEndTag("qtimetadatafield");
-		//Die Maximalpunktzahl wird exportiert
-		$a_xml_writer->xmlStartTag("qtimetadatafield");
-		$a_xml_writer->xmlElement("fieldlabel", NULL, "POINTS");
-		$a_xml_writer->xmlElement("fieldentry", NULL, $this->object->getPoints());
-		$a_xml_writer->xmlEndTag("qtimetadatafield");
-		//NEW - Die Musterloesung wird exportiert
-		$a_xml_writer->xmlStartTag("qtimetadatafield");
-		$a_xml_writer->xmlElement("fieldlabel", NULL, "SOLUTION");
-		$a_xml_writer->xmlElement("fieldentry", NULL, $this->object->getSolution());
-		$a_xml_writer->xmlEndTag("qtimetadatafield");
-		//NEW - Die Anzahl der Testparametersets wird exportiert
-		$a_xml_writer->xmlStartTag("qtimetadatafield");
-		$a_xml_writer->xmlElement("fieldlabel", NULL, "NUMTESTPARAMSETS");
-		$a_xml_writer->xmlElement("fieldentry", NULL, $this->object->getNumberOfTestParametersets());
-		$a_xml_writer->xmlEndTag("qtimetadatafield");
+		self::writeMetaDataField($writer, "ILIAS_VERSION", $ilias->getSetting("ilias_version"));
+		self::writeMetaDataField($writer, "QUESTIONTYPE", $this->object->getQuestionType());
+		self::writeMetaDataField($writer, "AUTHOR", $this->object->getAuthor());
+		self::writeMetaDataField($writer, "POINTS", $this->object->getPoints());
+		self::writeMetaDataField($writer, "SOLUTION", $this->object->getSolution());
+		
+		// write question specific fields
+		self::writeTestParameters($writer,$this->object->getTestParameterSet());
+		self::writeBooleanFlag($writer, "CHECKITERATIVE", $this->object->getCheckIterative());
+		self::writeBooleanFlag($writer, "CHECKRECURSIVE", $this->object->getCheckRecursive());
+		self::writeBooleanFlag($writer, "FORBIDITERATIVE", $this->object->getForbidIterative());
+		self::writeBooleanFlag($writer, "FORBIDRECURSIVE", $this->object->getForbidRecursive());
 
-		for ($i = 0; $i < intval($this->object->getNumberOfTestparametersets()); $i ++) {
-			//NEW - Die Testparameter werden exportiert
-			$a_xml_writer->xmlStartTag("qtimetadatafield");
-
-			$label_name_params = "TESTPARAMETER_";
-			$label_name_params .= strval($i);
-
-			$a_xml_writer->xmlElement("fieldlabel", NULL, $label_name_params);
-			$a_xml_writer->xmlElement("fieldentry", NULL, $this->object->getTestParameterToXML($i));
-			$a_xml_writer->xmlEndTag("qtimetadatafield");
-			//NEW - Die Punkte fuer die Testparameter werden exportiert
-			$a_xml_writer->xmlStartTag("qtimetadatafield");
-
-			$label_name_points = "TESTPARAMETERPOINTS_";
-			$label_name_points .= strval($i);
-
-			$a_xml_writer->xmlElement("fieldlabel", NULL, $label_name_points);
-			$a_xml_writer->xmlElement("fieldentry", NULL, $this->object->getTestParameterPointsToXML($i));
-			$a_xml_writer->xmlEndTag("qtimetadatafield");
-			//NEW - Die Order fuer die Testparameter wird exportiert
-			$a_xml_writer->xmlStartTag("qtimetadatafield");
-
-			$label_name_order = "TESTPARAMETERORDER_";
-			$label_name_order .= strval($i);
-
-			$a_xml_writer->xmlElement("fieldlabel", NULL, $label_name_order);
-			$a_xml_writer->xmlElement("fieldentry", NULL, $this->object->getTestParameterOrderToXML($i));
-			$a_xml_writer->xmlEndTag("qtimetadatafield");
-			//NEW - Der Imagepfad fuer die Testparameter wird exportiert
-			$a_xml_writer->xmlStartTag("qtimetadatafield");
-
-			$label_name_image = "TESTPARAMETERIMAGE_";
-			$label_name_image .= strval($i);
-
-			$a_xml_writer->xmlElement("fieldlabel", NULL, $label_name_image);
-			$a_xml_writer->xmlElement("fieldentry", NULL, $this->object->getTestParameterImageToXML($i));
-			$a_xml_writer->xmlEndTag("qtimetadatafield");
-		}
-
-		//NEW - checkIterative wird exportiert
-		$a_xml_writer->xmlStartTag("qtimetadatafield");
-		$a_xml_writer->xmlElement("fieldlabel", NULL, "CHECKITERATIVE");
-
-		if ($this->object->getCheckIterative()) {
-			$checkIterative = "1";
-		} else {
-			$checkIterative = "0";
-		}
-
-		$a_xml_writer->xmlElement("fieldentry", NULL, $checkIterative);
-		$a_xml_writer->xmlEndTag("qtimetadatafield");
-
-		//NEW - checkRecursive wird exportiert
-		$a_xml_writer->xmlStartTag("qtimetadatafield");
-		$a_xml_writer->xmlElement("fieldlabel", NULL, "CHECKRECURSIVE");
-
-		if ($this->object->getCheckRecursive()) {
-			$checkRecursive = "1";
-		} else {
-			$checkRecursive = "0";
-		}
-
-		$a_xml_writer->xmlElement("fieldentry", NULL, $checkRecursive);
-		$a_xml_writer->xmlEndTag("qtimetadatafield");
-
-		//NEW - forbidIterative wird exportiert
-		$a_xml_writer->xmlStartTag("qtimetadatafield");
-		$a_xml_writer->xmlElement("fieldlabel", NULL, "FORBIDITERATIVE");
-
-		if ($this->object->getForbidIterative()) {
-			$forbidIterative = "1";
-		} else {
-			$forbidIterative = "0";
-		}
-
-		$a_xml_writer->xmlElement("fieldentry", NULL, $forbidIterative);
-		$a_xml_writer->xmlEndTag("qtimetadatafield");
-
-		//NEW - forbidRecursive wird exportiert
-		$a_xml_writer->xmlStartTag("qtimetadatafield");
-		$a_xml_writer->xmlElement("fieldlabel", NULL, "FORBIDRECURSIVE");
-
-		if ($this->object->getForbidRecursive()) {
-			$forbidRecursive = "1";
-		} else {
-			$forbidRecursive = "0";
-		}
-
-		$a_xml_writer->xmlElement("fieldentry", NULL, $forbidRecursive);
-		$a_xml_writer->xmlEndTag("qtimetadatafield");
 
 		// additional content editing information
-		$this->addAdditionalContentEditingModeInformation($a_xml_writer);
-		$this->addGeneralMetadata($a_xml_writer);
+		$this->addAdditionalContentEditingModeInformation($writer);
+		$this->addGeneralMetadata($writer);
 
-		$a_xml_writer->xmlEndTag("qtimetadata");
-		$a_xml_writer->xmlEndTag("itemmetadata");
+		$writer->xmlEndTag("qtimetadata");
+		$writer->xmlEndTag("itemmetadata");
 
 		// PART I: qti presentation
 		$attrs = array(
 			"label" => $this->object->getTitle()
 		);
-		$a_xml_writer->xmlStartTag("presentation", $attrs);
+		$writer->xmlStartTag("presentation", $attrs);
 		// add flow to presentation
-		$a_xml_writer->xmlStartTag("flow");
+		$writer->xmlStartTag("flow");
 		// add material with question text to presentation
-		$this->object->addQTIMaterial($a_xml_writer, $this->object->getQuestion());
+		$this->object->addQTIMaterial($writer, $this->object->getQuestion());
 
-		$a_xml_writer->xmlEndTag("flow");
-		$a_xml_writer->xmlEndTag("presentation");
+		$writer->xmlEndTag("flow");
+		$writer->xmlEndTag("presentation");
 
 		// PART III: qti itemfeedback
 		$feedback_allcorrect = $this->object->feedbackOBJ->getGenericFeedbackExportPresentation($this->object->getId(), true);
@@ -192,43 +125,43 @@ class assProgQuestionExport extends assQuestionExport {
 			"ident" => "Correct",
 			"view" => "All"
 		);
-		$a_xml_writer->xmlStartTag("itemfeedback", $attrs);
+		$writer->xmlStartTag("itemfeedback", $attrs);
 		// qti flow_mat
-		$a_xml_writer->xmlStartTag("flow_mat");
-		$a_xml_writer->xmlStartTag("material");
-		$a_xml_writer->xmlElement("mattext");
-		$a_xml_writer->xmlEndTag("material");
-		$a_xml_writer->xmlEndTag("flow_mat");
-		$a_xml_writer->xmlEndTag("itemfeedback");
+		$writer->xmlStartTag("flow_mat");
+		$writer->xmlStartTag("material");
+		$writer->xmlElement("mattext");
+		$writer->xmlEndTag("material");
+		$writer->xmlEndTag("flow_mat");
+		$writer->xmlEndTag("itemfeedback");
 		if (strlen($feedback_allcorrect)) {
 			$attrs = array(
 				"ident" => "response_allcorrect",
 				"view" => "All"
 			);
-			$a_xml_writer->xmlStartTag("itemfeedback", $attrs);
+			$writer->xmlStartTag("itemfeedback", $attrs);
 			// qti flow_mat
-			$a_xml_writer->xmlStartTag("flow_mat");
-			$this->object->addQTIMaterial($a_xml_writer, $feedback_allcorrect);
-			$a_xml_writer->xmlEndTag("flow_mat");
-			$a_xml_writer->xmlEndTag("itemfeedback");
+			$writer->xmlStartTag("flow_mat");
+			$this->object->addQTIMaterial($writer, $feedback_allcorrect);
+			$writer->xmlEndTag("flow_mat");
+			$writer->xmlEndTag("itemfeedback");
 		}
 		if (strlen($feedback_onenotcorrect)) {
 			$attrs = array(
 				"ident" => "response_onenotcorrect",
 				"view" => "All"
 			);
-			$a_xml_writer->xmlStartTag("itemfeedback", $attrs);
+			$writer->xmlStartTag("itemfeedback", $attrs);
 			// qti flow_mat
-			$a_xml_writer->xmlStartTag("flow_mat");
-			$this->object->addQTIMaterial($a_xml_writer, $feedback_onenotcorrect);
-			$a_xml_writer->xmlEndTag("flow_mat");
-			$a_xml_writer->xmlEndTag("itemfeedback");
+			$writer->xmlStartTag("flow_mat");
+			$this->object->addQTIMaterial($writer, $feedback_onenotcorrect);
+			$writer->xmlEndTag("flow_mat");
+			$writer->xmlEndTag("itemfeedback");
 		}
 
-		$a_xml_writer->xmlEndTag("item");
-		$a_xml_writer->xmlEndTag("questestinterop");
+		$writer->xmlEndTag("item");
+		$writer->xmlEndTag("questestinterop");
 
-		$xml = $a_xml_writer->xmlDumpMem(false);
+		$xml = $writer->xmlDumpMem(false);
 		if (!$a_include_header) {
 			$pos = strpos($xml, "?>");
 			$xml = substr($xml, $pos + 2);

@@ -44,6 +44,8 @@ class assProgQuestionGUI extends assQuestionGUI {
 	const CMD_ASSESSMENT = 'assessment';
 	const CMD_COMPILE_TEACHER_CODE = 'compileTeacherCode';
 	const CMD_RUN_TEACHER_CODE = 'runTeacherCode';
+	const CMD_PREVIEW = 'preview';
+	
 	private $newUnitId;
 	/**
 	 *
@@ -441,20 +443,20 @@ class assProgQuestionGUI extends assQuestionGUI {
 
 		// show the correct solution if requested
 		if ($show_correct_solution) {
-			$template->setCurrentBlock("label2");
+			$template->setCurrentBlock("answer_title");
 			$template->setVariable("VALUE_1", $this->plugin->txt('solutionoutput_label_solution'));
 			$template->parseCurrentBlock();
 
-			$template->setCurrentBlock("codeblock");
+			$template->setCurrentBlock("answer");
 			$template->setVariable("SOLUTION", $this->object->getSolution());
 			$template->setVariable("ID", 'cm' . mt_rand());
 			$template->parseCurrentBlock();
 
-			$template->setCurrentBlock("label2");
+			$template->setCurrentBlock("answer_title");
 			$template->setVariable("VALUE_1", $this->plugin->txt('testCode'));
 			$template->parseCurrentBlock();
 
-			$template->setCurrentBlock("codeblock");
+			$template->setCurrentBlock("answer");
 			$template->setVariable("SOLUTION", $this->object->getTestCode());
 			$template->setVariable("ID", 'cm' . mt_rand());
 			$template->parseCurrentBlock();
@@ -633,8 +635,8 @@ class assProgQuestionGUI extends assQuestionGUI {
 			}
 
 			// preview page
-			$ilTabs->addTarget("preview", $this->ctrl->getLinkTargetByClass(ilAssQuestionPageGUI::class, ilAssQuestionPageGUI::CMD_PREVIEW), array(
-				ilAssQuestionPageGUI::CMD_PREVIEW
+			$ilTabs->addTarget("preview", $this->ctrl->getLinkTargetByClass(ilAssQuestionPageGUI::class, self::CMD_PREVIEW), array(
+				self::CMD_PREVIEW
 			), ilAssQuestionPageGUI::class, "", $force_active); // TODO: Translate
 		}
 

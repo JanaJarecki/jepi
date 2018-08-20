@@ -70,7 +70,7 @@ class ilProgrammingTextAreaInputGUI extends ilTextAreaInputGUI {
 				}
 
 				$ttpl->touchBlock("prop_ta_w");
-				$ttpl->setCurrentBlock("prop_textarea");
+				//$ttpl->setCurrentBlock("prop_textarea");
 				$ttpl->setVariable("ROWS", $this->getRows());
 			} else {
 				$ttpl->touchBlock("no_rteditor");
@@ -83,7 +83,7 @@ class ilProgrammingTextAreaInputGUI extends ilTextAreaInputGUI {
 					$ttpl->touchBlock("prop_ta_w");
 				}
 
-				$ttpl->setCurrentBlock("prop_textarea"); // TODO: block not found, even though plugin template?
+				//$ttpl->setCurrentBlock("prop_textarea"); // TODO: block not found, even though plugin template?
 				$ttpl->setVariable("ROWS", $this->getRows());
 			}
 			if (!$this->getDisabled()) {

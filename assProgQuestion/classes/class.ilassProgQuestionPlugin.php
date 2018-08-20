@@ -2,9 +2,9 @@
 include_once "./Modules/TestQuestionPool/classes/class.ilQuestionsPlugin.php";
 //require_once __DIR__ . "/class.assProgQplQstMathematikOnlineQuestion.php";
 //require_once __DIR__ . "/class.assProgQplQstMoQuestion.php";
-require_once __DIR__ . "/class.assProgQplQstProgConfig.php";
-require_once __DIR__ . "/class.assProgQplQstProgParams.php";
-require_once __DIR__ . "/class.assProgQplQstProgQuest.php";
+//require_once __DIR__ . "/class.assProgQplQstProgConfig.php";
+//require_once __DIR__ . "/class.assProgQplQstProgParams.php";
+//require_once __DIR__ . "/class.assProgQplQstProgQuest.php";
 
 /**
  * Die Basisklasse des Programmierfragenplugins.

@@ -1,5 +1,7 @@
 <?php
 
+require_once __DIR__ . "/class.assProgQuestionDBConnection.php";
+
 /**
  * Die Klasse fuer den Konfigurationsbildschirm der Programmmierfrage mit der Eingabe der URL des Bewertungssystems.
  *
@@ -12,7 +14,7 @@ class assProgQuestionConfig {
 		if (!$getDefaults) {
 			global $ilDB;
 			$settings = array();
-			$query = 'SELECT * FROM ' . assProgQplQstProgConfig::TABLE_NAME;
+			$query = 'SELECT * FROM ' . assProgQuestionDBConnection::CONFIG_TABLE_NAME;
 
 			$result = $ilDB->query($query);
 			while ($row = $ilDB->fetchAssoc($result)) {
@@ -33,7 +35,7 @@ class assProgQuestionConfig {
 	 */
 	private function saveToDB($parameter_name, $value) {
 		global $ilDB;
-		$ilDB->replace(assProgQplQstProgConfig::TABLE_NAME, array(
+		$ilDB->replace(assProgQuestionDBConnection::CONFIG_TABLE_NAME, array(
 			'name' => array( 'text', $parameter_name )
 		), array(
 			'value' => array( 'clob', $value ),

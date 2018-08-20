@@ -18,21 +18,21 @@ class assProgQuestionParameters {
 	protected $state;
 	protected $id;
 	protected $points;
-
-
+	
 	/**
+	 * 
 	 * assProgQuestionParameters constructor
-	 *
-	 * The constructor takes possible arguments an creates an instance of the ASS_AnswerBinaryStateImage object.
-	 *
-	 * @param string  $answertext A string defining the answer text
-	 * @param double  $points     The number of points given for the selected answer
-	 * @param integer $order      A nonnegative value representing a possible display or sort order
-	 * @param integer $state      A integer value indicating the state of the answer
-	 * @param string  $a_image    The image filename
-	 * @param integer $id         The database id of the answer
-	 *
-	 * @return ASS_AnswerBinaryStateImage
+	 * 
+	 * The constructor takes possible arguments an creates an instance of the assProgQuestionParameters object.
+	 * 
+	 * @param string $name
+	 * @param string $params
+	 * @param double $points
+	 * @param integer $order
+	 * @param integer $state
+	 * @param integer $id$
+	 * 
+	 * @return assProgQuestionParameters
 	 */
 	public function __construct($name = "", $params = "", $points = 0.0, $order = 0, $state = 0, $id = - 1) {
 		$this->name = $name;
@@ -47,7 +47,7 @@ class assProgQuestionParameters {
 	public function getName() { return $this->name; }
 
 
-	public function getparams() { return $this->params; }
+	public function getParams() { return $this->params; }
 
 
 	public function getPoints() { return $this->points; }
@@ -63,4 +63,5 @@ class assProgQuestionParameters {
 
 
 	public function getId() { return $this->id; }
+	
 }

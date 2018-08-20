@@ -435,7 +435,7 @@ class ilAssProgQuestionEvalConnection {
 	 * @author Matthias Lohmann
 	 */
 	private function sendMessage($message, $address, &$errno, &$errstr) {
-		$connection = stream_socket_client($address, $errno, $errstr, 1);
+		$connection = stream_socket_client($address, $errno, $errstr, 1.0);
 
 		if (!$connection) {
 			return false;

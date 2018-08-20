@@ -22,6 +22,15 @@
  */
 class assProgQuestionDBConnection {
 
+	
+	const STUDENT_SOLUTION_TABLE_NAME = 'tst_solutions';
+	const BASIC_QUESTION_TABLE_NAME = 'qpl_questions';
+	
+	const QUESTION_TABLE_NAME = 'il_qpl_qst_prog_quest';
+	const PARAMS_TABLE_NAME = 'il_qpl_qst_prog_params';
+	const CONFIG_TABLE_NAME = 'il_qpl_qst_prog_config';
+	
+	
 	/**
 	 *
 	 * @param unknown $prog_question
@@ -30,7 +39,7 @@ class assProgQuestionDBConnection {
 	 */
 	public static function loadStudentSolution($prog_question, $active_id, $pass) {
 		global $ilDB;
-		$result = $ilDB->queryF("SELECT * FROM tst_solutions WHERE active_fi = %s AND question_fi = %s AND pass = %s", array(
+		$result = $ilDB->queryF("SELECT * FROM ". self::STUDENT_SOLUTION_TABLE_NAME ." WHERE active_fi = %s AND question_fi = %s AND pass = %s", array(
 			'integer',
 			'integer',
 			'integer'
@@ -62,7 +71,7 @@ class assProgQuestionDBConnection {
 		global $ilDB;
 		// save additional data
 		// Musterloesung
-		$affectedRows = $ilDB->manipulateF("DELETE FROM " . assProgQplQstProgQuest::TABLE_NAME . " WHERE question_fi = %s", array(
+		$affectedRows = $ilDB->manipulateF("DELETE FROM " . self::QUESTION_TABLE_NAME . " WHERE question_fi = %s", array(
 			"integer"
 		), array(
 			$prog_question->getId()
@@ -87,7 +96,7 @@ class assProgQuestionDBConnection {
 		// ( string ) $prog_question->getProgQuestionType (),
 		// ( string ) $prog_question->getTestCode ()
 		// ) );
-		$affectedRows = $ilDB->insert(assProgQplQstProgQuest::TABLE_NAME, array(
+		$affectedRows = $ilDB->insert(self::QUESTION_TABLE_NAME, array(
 			"question_fi" => array(
 				'integer',
 				$prog_question->getId()
@@ -132,7 +141,7 @@ class assProgQuestionDBConnection {
 	public static function saveParamsToDb($prog_question) {
 		global $ilDB;
 
-		$ilDB->manipulateF("DELETE FROM " . assProgQplQstProgParams::TABLE_NAME . " WHERE question_fi = %s", array(
+		$ilDB->manipulateF("DELETE FROM " . self::PARAMS_TABLE_NAME . " WHERE question_fi = %s", array(
 			'integer'
 		), array(
 			$prog_question->getId()
@@ -145,9 +154,9 @@ class assProgQuestionDBConnection {
 			 */
 			// $answer_obj = $prog_question->getTestParameterSet()[$key]; // @TODO: bringt das was? sieht redundant aus.
 			if ($answer_obj->getParams() != NULL) {
-				$next_id = $ilDB->nextId(assProgQplQstProgParams::TABLE_NAME);
+				$next_id = $ilDB->nextId(self::PARAMS_TABLE_NAME);
 				// answer_id,question_fi,params,points,aorder
-				$ilDB->manipulateF("INSERT INTO " . assProgQplQstProgParams::TABLE_NAME
+				$ilDB->manipulateF("INSERT INTO " . self::PARAMS_TABLE_NAME
 					. " (answer_id, question_fi, paramset_name, params, points, aorder) VALUES (%s, %s, %s, %s, %s, %s)", array(
 					'integer',
 					'integer',
@@ -174,7 +183,7 @@ class assProgQuestionDBConnection {
 	public static function loadAssQuestion($prog_question, $question_id) {
 		global $ilDB;
 
-		$result = $ilDB->queryF("SELECT qpl_questions.* FROM qpl_questions WHERE question_id = %s", array(
+		$result = $ilDB->queryF("SELECT " . self::BASIC_QUESTION_TABLE_NAME . ".* FROM " . self::BASIC_QUESTION_TABLE_NAME . " WHERE question_id = %s", array(
 			'integer'
 		), array(
 			$question_id
@@ -210,7 +219,7 @@ class assProgQuestionDBConnection {
 		// ProgQuestion spezifisch -> Musterloesung und Parameter
 		// load additional data
 		// Solution
-		$result = $ilDB->queryF("SELECT * FROM " . assProgQplQstProgQuest::TABLE_NAME . " WHERE question_fi = %s", array(
+		$result = $ilDB->queryF("SELECT * FROM " . self::QUESTION_TABLE_NAME . " WHERE question_fi = %s", array(
 			'integer'
 		), array(
 			$question_id
@@ -238,7 +247,7 @@ class assProgQuestionDBConnection {
 	public static function loadParams($prog_question, $question_id) {
 		global $ilDB;
 
-		$result = $ilDB->queryF("SELECT * FROM " . assProgQplQstProgParams::TABLE_NAME . " WHERE question_fi = %s", array(
+		$result = $ilDB->queryF("SELECT * FROM " . self::PARAMS_TABLE_NAME . " WHERE question_fi = %s", array(
 			'integer'
 		), array(
 			$question_id
