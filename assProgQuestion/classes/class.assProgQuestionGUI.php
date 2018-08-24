@@ -47,16 +47,13 @@ class assProgQuestionGUI extends assQuestionGUI {
 	const CMD_PREVIEW = 'preview';
 	
 	private $newUnitId;
-	/**
-	 *
-	 * @var ilassProgQuestionPlugin plugin object
-	 */
+
+	/** @var ilassProgQuestionPlugin plugin object */
 	var $plugin = NULL;
-	/**
-	 *
-	 * @var assProgQuestion question object
-	 */
+
+	/** @var assProgQuestion question object */
 	var $object = NULL;
+
 	private $quest_types = array(
 		"function_original",
 		"testng"
@@ -66,13 +63,7 @@ class assProgQuestionGUI extends assQuestionGUI {
 	/**
 	 * assProgQuestionGUI constructor
 	 *
-	 * The constructor takes possible arguments an creates an instance of the assProgQuestionGUI object.
-	 *
-	 * check!
-	 *
-	 * @param integer $id
-	 *            The database id of a single choice question object
-	 *
+	 * @param integer $id The database id of a single choice question object
 	 * @access public
 	 */
 	function __construct($id = - 1) {
@@ -89,9 +80,7 @@ class assProgQuestionGUI extends assQuestionGUI {
 	}
 
 
-	function getCommand($cmd) {
-		return $cmd;
-	}
+	function getCommand($cmd) { return $cmd; }
 
 
 	/**
@@ -271,19 +260,18 @@ class assProgQuestionGUI extends assQuestionGUI {
 	 * The feedback is displayed to the author.
 	 */
 	function compileTeacherCode() {
-		// Erst mal speichern
 		$this->writePostData(true);
 		$this->object->saveToDb();
 
 		// evaluate the code
-		$this->object->getPlugin()->includeClass("class.ilAssProgQuestionEvalConnection.php");
+		$this->object->getPlugin()->includeClass("class.assProgQuestionEvalConnection.php");
 		$type = $this->object->getProgQuestionType();
 		switch ($type) {
 			case "function_original":
-				$result = ilAssProgQuestionEvalConnection::compileCode($this->object, NULL, 'teacher');
+				$result = assProgQuestionEvalConnection::compileCode($this->object, NULL, 'teacher');
 				break;
 			case "testng":
-				$result = ilAssProgQuestionEvalConnection::compileTestNG($this->object);
+				$result = assProgQuestionEvalConnection::compileTestNG($this->object);
 				break;
 			default:
 				$result['type'] = 'failure';
@@ -303,14 +291,14 @@ class assProgQuestionGUI extends assQuestionGUI {
 		$this->object->saveToDb();
 
 		// evaluate the code
-		$this->object->getPlugin()->includeClass("class.ilAssProgQuestionEvalConnection.php");
+		$this->object->getPlugin()->includeClass("class.assProgQuestionEvalConnection.php");
 		$type = $this->object->getProgQuestionType();
 		switch ($type) {
 			case "function_original":
-				$result = ilAssProgQuestionEvalConnection::runCode($this->object, NULL, 'teacher');
+				$result = assProgQuestionEvalConnection::runCode($this->object, NULL, 'teacher');
 				break;
 			case "testng":
-				$result = ilAssProgQuestionEvalConnection::runTestNG($this->object);
+				$result = assProgQuestionEvalConnection::runTestNG($this->object);
 				break;
 			default:
 				$result['message'] = "ERROR: Backend does not know how to handle the question type: " . $type;

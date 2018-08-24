@@ -35,6 +35,7 @@ include_once "./Modules/Test/classes/inc.AssessmentConstants.php";
 class assProgQuestion extends assQuestion {
 
 	private $plugin;
+
 	// authored parameters of the question
 	private $prog_question_type = "";
 	private $solution = "";
@@ -45,12 +46,13 @@ class assProgQuestion extends assQuestion {
 	private $check_iterative = false;
 	private $forbid_recursive = false;
 	private $forbid_iterative = false;
+
 	// student answers
 	private $answer = "";
 	private $student_values = array();
 
 
-	/**
+    /**
 	 * assProgQuestion Konstruktor
 	 *
 	 * Der Konstruktor erwartet verschiedene Argumente und erstellt dann eine Instanz der Programmierfrage.
@@ -75,7 +77,6 @@ class assProgQuestion extends assQuestion {
 		$this->getPlugin();
 	}
 
-
 	/**
 	 * Liefert das Plugin-Objekt zurueck.
 	 *
@@ -90,123 +91,175 @@ class assProgQuestion extends assQuestion {
 		return $this->plugin;
 	}
 
+    /**
+     * Gibt wahr zurueck, wenn die Frage fertig zum beantworten ist.
+     *
+     * @return boolean True, if the single choice question is complete for use, otherwise false
+     * @access public
+     */
+    function isComplete() {
+        if (($this->title) and ($this->author) and ($this->question) and ($this->getMaximumPoints() > 0)) {
+            return true;
+        } else {
+            return false;
+        }
+    }
 
-	/**
-	 * Loescht alle Parameter im TestParameterset.
-	 */
-	public function flushParams() {
-		$this->test_parameterset = array();
-	}
+    /** {@inheritdoc} */
+    function getQuestionType() { return ilassProgQuestionPlugin::PLUGIN_NAME; }
 
+    /** {@inheritdoc} */
+    function getMaximumPoints() { return $this->points; }
 
-	/**
-	 * Gibt wahr zurueck, wenn die Frage fertig zum beantworten ist.
-	 *
-	 * @return boolean True, if the single choice question is complete for use, otherwise false
-	 * @access public
-	 */
-	function isComplete() {
-		if (($this->title) and ($this->author) and ($this->question) and ($this->getMaximumPoints() > 0)) {
-			return true;
-		} else {
-			return false;
-		}
-	}
+    /** {@inheritdoc} */
+    protected function reworkWorkingData($active_id, $pass, $obligationsAnswered, $authorized) { }
 
+    public function getProgQuestionType() { return $this->prog_question_type; }
+    public function setProgQuestionType($type) { $this->prog_question_type = ( string )$type; }
 
-	/**
-	 * Save the question data to the database.
-	 *
-	 * @access public
-	 */
-	function saveToDb($original_id = "") {
-		$this->getPlugin()->includeClass("class.assProgQuestionDBConnection.php");
-		$this->saveQuestionDataToDb($original_id);
-		assProgQuestionDBConnection::saveassProgQuestion($this);
-		assProgQuestionDBConnection::saveParamsToDb($this);
-		parent::saveToDb($original_id);
-	}
+    public function getSolution() { return $this->solution; }
+    public function setSolution($code) { $this->solution = $code; }
 
+    public function getTestCode() { return $this->test_code; }
+    public function setTestCode($code) { $this->test_code = $code; }
 
-	/**
-	 * Loads the question data from the database.
-	 *
-	 * @param integer $question_id
-	 *            A unique key which defines the multiple choice test in the database
-	 *
-	 * @access public
-	 */
-	function loadFromDb($question_id) {
-		$this->getPlugin()->includeClass("class.assProgQuestionDBConnection.php");
-		$validQuestion = assProgQuestionDBConnection::loadAssQuestion($this, $question_id);
-		if ($validQuestion) {
-			$validProgQuestion = assProgQuestionDBConnection::loadAssProgQuestion($this, $question_id);
-			if ($validProgQuestion) {
-				assProgQuestionDBConnection::loadParams($this, $question_id);
-				parent::loadFromDb($question_id);
-			}
-		}
-	}
+    public function getCheckRecursive() { return $this->check_recursive; }
+    public function setCheckRecursive($r) { $this->check_recursive = ( boolean )$r; }
+
+    public function getCheckIterative() { return $this->check_iterative; }
+    public function setCheckIterative($i) { $this->check_iterative = ( boolean )$i; }
+
+    public function getForbidIterative() { return $this->forbid_iterative; }
+    public function setForbidIterative($i) { $this->forbid_iterative = ( boolean )$i; }
+
+    public function getForbidRecursive() { return $this->forbid_recursive; }
+    public function setForbidRecursive($r) { $this->forbid_recursive = ( boolean )$r; }
 
 
-	/**
-	 *
-	 * {@inheritdoc}
-	 *
-	 * @see assQuestion::duplicate()
-	 */
-	function duplicate($for_test = true, $title = "", $author = "", $owner = "", $testObjId = NULL) {
-		if ($this->id <= 0) {
-			// The question has not been saved. It cannot be duplicated
-			return;
-		}
-		// duplicate the question in database
-		$this_id = $this->getId();
-		$thisObjId = $this_id;
-		$clone = $this;
-		include_once("./Modules/TestQuestionPool/classes/class.assQuestion.php");
-		$original_id = assQuestion::_getOriginalId($this->id);
-		$clone->id = - 1;
-		if ($title) {
-			$clone->setTitle($title);
-		}
+    /** Clears the array of test parameters. */
+    public function flushParams() { $this->test_parameterset = array(); }
 
-		if ($author) {
-			$clone->setAuthor($author);
-		}
-		if ($owner) {
-			$clone->setOwner($owner);
-		}
+    /**
+     * Returns the array of test parameters.
+     * @return array
+     */
+    public function getTestParameterset() {
+        return $this->test_parameterset;
+    }
 
-		if ($for_test) {
-			$clone->saveToDb($original_id);
-		} else {
-			$clone->saveToDb();
-		}
-
-		// copy question page content
-		$clone->copyPageOfQuestion($this_id);
-
-		// copy XHTML media objects
-		$clone->copyXHTMLMediaObjectsOfQuestion($this_id);
-
-		$clone->onDuplicate($thisObjId, $this_id, $clone->getObjId(), $clone->getId());
-
-		return $clone->id;
-	}
+    /**
+     * Adds new test parameters.
+     *
+     * @param string $answertext
+     * @param real   $points
+     * @param number $order
+     * @param string $answerimage
+     */
+    function addTestParameterset($name = "", $answertext = "", $points = 0.0, $order = 0) {
+        $this->getPlugin()->includeClass("class.assProgQuestionParameters.php");
+        if (array_key_exists($order, $this->test_parameterset)) {
+            // insert answer
+            $answer = new assProgQuestionParameters ($name, $answertext, $points, $order);
+            $newchoices = array();
+            for ($i = 0; $i < $order; $i ++) {
+                array_push($newchoices, $this->test_parameterset [$i]);
+            }
+            array_push($newchoices, $answer);
+            for ($i = $order; $i < count($this->test_parameterset); $i ++) {
+                $changed = $this->test_parameterset [$i];
+                $changed->setOrder($i + 1);
+                array_push($newchoices, $changed);
+            }
+            $this->test_parameterset = $newchoices;
+        } else {
+            // add answer
+            $answer = new assProgQuestionParameters ($name, $answertext, $points, count($this->answers));
+            array_push($this->test_parameterset, $answer);
+        }
+    }
 
 
-	/**
-	 *
-	 * @access public
-	 * @see    $points
-	 */
-	function getMaximumPoints() {
-		return $this->points;
-	}
+    /**
+     * Save the question data to the database.
+     */
+    public function saveToDb($original_id = "") {
+        $this->getPlugin()->includeClass("class.assProgQuestionDBConnection.php");
+        $this->saveQuestionDataToDb($original_id);
+        assProgQuestionDBConnection::saveassProgQuestion($this);
+        assProgQuestionDBConnection::saveParamsToDb($this);
+        parent::saveToDb($original_id);
+    }
 
 
-	/**
+    /**
+     * Loads the question data from the database.
+     *
+     * @param integer $question_id
+     *            A unique key which defines the multiple choice test in the database
+     */
+    public function loadFromDb($question_id) {
+        $this->getPlugin()->includeClass("class.assProgQuestionDBConnection.php");
+        $validQuestion = assProgQuestionDBConnection::loadAssQuestion($this, $question_id);
+        if ($validQuestion) {
+            $validProgQuestion = assProgQuestionDBConnection::loadAssProgQuestion($this, $question_id);
+            if ($validProgQuestion) {
+                assProgQuestionDBConnection::loadParams($this, $question_id);
+                parent::loadFromDb($question_id);
+            }
+        }
+    }
+
+
+    /**
+     * Duplicates the question.
+     *
+     * {@inheritdoc}
+     *
+     * @see assQuestion::duplicate()
+     */
+    function duplicate($for_test = true, $title = "", $author = "", $owner = "", $testObjId = NULL) {
+        if ($this->id <= 0) {
+            // The question has not been saved. It cannot be duplicated
+            return;
+        }
+        // duplicate the question in database
+        $this_id = $this->getId();
+        $thisObjId = $this_id;
+        $clone = $this;
+        include_once("./Modules/TestQuestionPool/classes/class.assQuestion.php");
+        $original_id = assQuestion::_getOriginalId($this->id);
+        $clone->id = - 1;
+        if ($title) {
+            $clone->setTitle($title);
+        }
+
+        if ($author) {
+            $clone->setAuthor($author);
+        }
+        if ($owner) {
+            $clone->setOwner($owner);
+        }
+
+        if ($for_test) {
+            $clone->saveToDb($original_id);
+        } else {
+            $clone->saveToDb();
+        }
+
+        // copy question page content
+        $clone->copyPageOfQuestion($this_id);
+
+        // copy XHTML media objects
+        $clone->copyXHTMLMediaObjectsOfQuestion($this_id);
+
+        $clone->onDuplicate($thisObjId, $this_id, $clone->getObjId(), $clone->getId());
+
+        return $clone->id;
+    }
+
+
+
+    /**
 	 * Get the points for the provided solution.
 	 * The solution is added to the DB and then sent to the rating system. The points
 	 * are then
@@ -247,11 +300,11 @@ class assProgQuestion extends assQuestion {
 					$points [] = $paramObject->getPoints();
 				}
 
-				$this->getPlugin()->includeClass("class.ilAssProgQuestionEvalConnection.php");
+				$this->getPlugin()->includeClass("class.assProgQuestionEvalConnection.php");
 				$reachedpoints = 0;
 				switch ($this->getProgQuestionType()) {
 					case "function_original" :
-						$ratingsystemresult = ilAssProgQuestionEvalConnection::compareCode($this, $studentcode);
+						$ratingsystemresult = assProgQuestionEvalConnection::compareCode($this, $studentcode);
 						if (isset ($ratingsystemresult ['points'])) {
 							$fulfillsRec = !$this->getCheckRecursive() || $ratingsystemresult ['recursive'];
 							$followNotRec = !$this->getForbidRecursive() || !$ratingsystemresult ['recursive'];
@@ -263,7 +316,7 @@ class assProgQuestion extends assQuestion {
 						}
 						break;
 					case "testng" :
-						$ratingsystemresult = ilAssProgQuestionEvalConnection::runTestNG($this, $studentcode);
+						$ratingsystemresult = assProgQuestionEvalConnection::runTestNG($this, $studentcode);
 						if (isset ($ratingsystemresult ['points'])) {
 							$reachedpoints = $ratingsystemresult ['points'];
 						}
@@ -277,20 +330,60 @@ class assProgQuestion extends assQuestion {
 	}
 
 
-	/**
-	 * Calculate the reached points for a submitted user input
-	 *
-	 * @param
-	 *            mixed user input (scalar, object or array)
-	 *
-	 * @TODO: implement this new required function
-	 *       // This function is not pre-defined in assQuestion but must be present in a question type for "check"
-	 *       // functionality on a question pools "preview" screen. It gets a posted user solution and calculates
-	 *       // the reached points for it. The actual data type of solution is not defined but must match the type
-	 *       // returned by getSolutionSubmit().
-	 */
-	public function calculateReachedPointsforSolution($solution) {
-	}
+    /**
+     *
+     * @param string $code
+     */
+    private function handleStudentCode($code) {
+        $result = array();
+        $action = $_POST ['cmd'] ['handleQuestionAction'];
+        $params = $_POST ['prog_params'];
+        $type = $this->getProgQuestionType();
+
+        $this->getPlugin()->includeClass("class.assProgQuestionEvalConnection.php");
+        switch ($action) {
+            case "Compile" :
+                switch ($type) {
+                    case "function_original" :
+                        $result = assProgQuestionEvalConnection::compileCode($this, $code, 'student');
+                        break;
+                    case "testng" :
+                        $result = assProgQuestionEvalConnection::compileTestNG($this, $code);
+                        break;
+                }
+                break;
+            case "Run" :
+                switch ($type) {
+                    case "function_original" :
+                        $result = assProgQuestionEvalConnection::runCode($this, $code, 'student', array(
+                            $params
+                        ));
+                        break;
+                    case "testng" :
+                        $result = assProgQuestionEvalConnection::runStudentTestNG($this, $code, array(
+                            $params
+                        ));
+                        break;
+                }
+                break;
+            case "Feedback" :
+                switch ($type) {
+                    case "function_original" :
+                        $result = assProgQuestionEvalConnection::feedbackCode($this, $code, 'student', array(
+                            $params
+                        ));
+                        break;
+                    case "testng" :
+                        $result = assProgQuestionEvalConnection::feedbackStudentTestNG($this, $code, array(
+                            $params
+                        ));
+                        break;
+                }
+                break;
+        }
+
+        return $result;
+    }
 
 	/**
 	 * Speichert die Eingabe des Studenten in der Datenbank
@@ -354,62 +447,6 @@ class assProgQuestion extends assQuestion {
 		}
 
 		return true;
-	}
-
-
-	/**
-	 *
-	 * @param string $code
-	 */
-	private function handleStudentCode($code) {
-		$result = array();
-		$action = $_POST ['cmd'] ['handleQuestionAction'];
-		$params = $_POST ['prog_params'];
-		$type = $this->getProgQuestionType();
-
-		$this->getPlugin()->includeClass("class.ilAssProgQuestionEvalConnection.php");
-		switch ($action) {
-			case "Compile" :
-				switch ($type) {
-					case "function_original" :
-						$result = ilAssProgQuestionEvalConnection::compileCode($this, $code, 'student');
-						break;
-					case "testng" :
-						$result = ilAssProgQuestionEvalConnection::compileTestNG($this, $code);
-						break;
-				}
-				break;
-			case "Run" :
-				switch ($type) {
-					case "function_original" :
-						$result = ilAssProgQuestionEvalConnection::runCode($this, $code, 'student', array(
-							$params
-						));
-						break;
-					case "testng" :
-						$result = ilAssProgQuestionEvalConnection::runStudentTestNG($this, $code, array(
-							$params
-						));
-						break;
-				}
-				break;
-			case "Feedback" :
-				switch ($type) {
-					case "function_original" :
-						$result = ilAssProgQuestionEvalConnection::feedbackCode($this, $code, 'student', array(
-							$params
-						));
-						break;
-					case "testng" :
-						$result = ilAssProgQuestionEvalConnection::feedbackStudentTestNG($this, $code, array(
-							$params
-						));
-						break;
-				}
-				break;
-		}
-
-		return $result;
 	}
 
 
@@ -478,328 +515,44 @@ class assProgQuestion extends assQuestion {
 	}
 
 
-	/**
-	 * Bearbeitet die schon gespeichert Daten, wenn noetig.
-	 *
-	 * Diese Funktion wird benoetigt, bleibt aber normalerweise leer.
-	 *
-	 * @abstract
-	 *
-	 * @access protected
-	 *
-	 * @param integer $active_id
-	 * @param integer $pass
-	 * @param boolean $obligationsAnswered
-	 * @param bool    $authorized
-	 */
-	protected function reworkWorkingData($active_id, $pass, $obligationsAnswered, $authorized) {
-		// normally nothing need to be reworked
-		// METHODE WIRD BENOETIGT! (abstrakte Methode in Oberklasse)
-	}
+    /**
+     * Erstellt eine Frage aus einer QTI Datei.
+     * Erhaelt Parameter von einem QTI Parser und erstellt ein ILIAS Fragenobjekt.
+     *
+     * @param object  $item
+     *            The QTI item object
+     * @param integer $questionpool_id
+     *            The id of the parent questionpool
+     * @param integer $tst_id
+     *            The id of the parent test if the question is part of a test
+     * @param object  $tst_object
+     *            A reference to the parent test object
+     * @param integer $question_counter
+     *            A reference to a question counter to count the questions of an imported question pool
+     * @param array   $import_mapping
+     *            An array containing references to included ILIAS objects
+     *
+     * @access public
+     */
+    function fromXML(&$item, &$questionpool_id, &$tst_id, &$tst_object, &$question_counter, &$import_mapping) {
+        $this->getPlugin()->includeClass("import/qti12/class.assProgQuestionImport.php");
+        $import = new assProgQuestionImport ($this);
+        $import->fromXML($item, $questionpool_id, $tst_id, $tst_object, $question_counter, $import_mapping);
+    }
 
 
-	/**
-	 * Gibt den Fragetypen der Frage zurueck
-	 *
-	 * @return integer The question type of the question
-	 * @access public
-	 */
-	function getQuestionType() {
-		return ilassProgQuestionPlugin::PLUGIN_NAME;
-	}
-
-
-	/**
-	 * Erstellt eine Frage aus einer QTI Datei.
-	 * Erhaelt Parameter von einem QTI Parser und erstellt ein ILIAS Fragenobjekt.
-	 *
-	 * @param object  $item
-	 *            The QTI item object
-	 * @param integer $questionpool_id
-	 *            The id of the parent questionpool
-	 * @param integer $tst_id
-	 *            The id of the parent test if the question is part of a test
-	 * @param object  $tst_object
-	 *            A reference to the parent test object
-	 * @param integer $question_counter
-	 *            A reference to a question counter to count the questions of an imported question pool
-	 * @param array   $import_mapping
-	 *            An array containing references to included ILIAS objects
-	 *
-	 * @access public
-	 */
-	function fromXML(&$item, &$questionpool_id, &$tst_id, &$tst_object, &$question_counter, &$import_mapping) {
-		$this->getPlugin()->includeClass("import/qti12/class.assProgQuestionImport.php");
-		$import = new assProgQuestionImport ($this);
-		$import->fromXML($item, $questionpool_id, $tst_id, $tst_object, $question_counter, $import_mapping);
-	}
-
-
-	/**
-	 * Returns a QTI xml representation of the question and sets the internal
-	 * domxml variable with the DOM XML representation of the QTI xml representation!
-	 *
-	 * @return string The QTI xml representation of the question
-	 * @access public
-	 */
-	function toXML($a_include_header = true, $a_include_binary = true, $a_shuffle = false, $test_output = false, $force_image_references = false) {
-		$this->getPlugin()->includeClass("export/qti12/class.assProgQuestionExport.php");
-		$export = new assProgQuestionExport ($this);
-
-		return $export->toXML($a_include_header, $a_include_binary, $a_shuffle, $test_output, $force_image_references);
-	}
-
-
-	/**
-	 * Setzt die Loesung
-	 */
-	public function setSolution($code) {
-		$this->solution = $code;
-	}
-
-
-	/**
-	 * Gibt die Loesung der Programmierfrage zurueck.
-	 */
-	public function getSolution() {
-		return $this->solution;
-	}
-
-
-	public function setTestCode($code) {
-		$this->test_code = $code;
-	}
-
-
-	public function getTestCode() {
-		return $this->test_code;
-	}
-
-
-	/**
-	 * Get the submitted user input as a serializable value
-	 *
-	 * @return mixed user input (scalar, object or array)
-	 *
-	 * @TODO: implement this new function (do we need functionality?)
-	 *       // This function is not pre-defined in assQuestion but must be present in a question type for "check"
-	 *       // functionality on a question pools "preview" screen. It should provide the posted user input in a
-	 *       // data structure that can be stored in the user session. The actual data type is not defined but must be
-	 *       // known by the corresponding function calculateReachedPointsforSolution().
-	 */
-	public function getSolutionSubmit() {
-	}
-
-
-	/**
-	 * Setzt, ob auf Rekursion geprueft werden soll.
-	 *
-	 * @param boolean $r
-	 */
-	public function setCheckRecursive($r) {
-		$this->check_recursive = ( boolean )$r;
-	}
-
-
-	/**
-	 * Setzt, ob auf Iteration geprueft werden soll.
-	 *
-	 * @param boolean $i
-	 */
-	public function setCheckIterative($i) {
-		$this->check_iterative = ( boolean )$i;
-	}
-
-
-	/**
-	 * Gibt zurueck, ob der Code auf Rekursion geprueft wird.
-	 *
-	 * @return boolean
-	 */
-	public function getCheckRecursive() {
-		return $this->check_recursive;
-	}
-
-
-	/**
-	 * Gibt zurueck, ob der Code auf Iteration geprueft wird.
-	 *
-	 * @return boolean
-	 */
-	public function getCheckIterative() {
-		return $this->check_iterative;
-	}
-
-
-	/**
-	 * Setzt, ob Rekursion verboten werden soll.
-	 *
-	 * @param boolean $r
-	 */
-	public function setForbidRecursive($r) {
-		$this->forbid_recursive = ( boolean )$r;
-	}
-
-
-	/**
-	 * Setzt, ob Iteration verboten werden soll.
-	 *
-	 * @param boolean $i
-	 */
-	public function setForbidIterative($i) {
-		$this->forbid_iterative = ( boolean )$i;
-	}
-
-
-	/**
-	 * Gibt zurueck, ob Rekursion verboten wurde.
-	 *
-	 * @return boolean
-	 */
-	public function getForbidRecursive() {
-		return $this->forbid_recursive;
-	}
-
-
-	/**
-	 * Gibt zurueck, ob Iteration verboten wurde.
-	 *
-	 * @return boolean
-	 */
-	public function getForbidIterative() {
-		return $this->forbid_iterative;
-	}
-
-
-	/**
-	 * Adds new test parameters.
-	 *
-	 * @param string $answertext
-	 * @param real   $points
-	 * @param number $order
-	 * @param string $answerimage
-	 */
-	function addTestParameterset($name = "", $answertext = "", $points = 0.0, $order = 0) {
-		$this->getPlugin()->includeClass("class.assProgQuestionParameters.php");
-		if (array_key_exists($order, $this->test_parameterset)) {
-			// insert answer
-			$answer = new assProgQuestionParameters ($name, $answertext, $points, $order);
-			$newchoices = array();
-			for ($i = 0; $i < $order; $i ++) {
-				array_push($newchoices, $this->test_parameterset [$i]);
-			}
-			array_push($newchoices, $answer);
-			for ($i = $order; $i < count($this->test_parameterset); $i ++) {
-				$changed = $this->test_parameterset [$i];
-				$changed->setOrder($i + 1);
-				array_push($newchoices, $changed);
-			}
-			$this->test_parameterset = $newchoices;
-		} else {
-			// add answer
-			$answer = new assProgQuestionParameters ($name, $answertext, $points, count($this->answers));
-			array_push($this->test_parameterset, $answer);
-		}
-	}
-
-
-	/**
-	 * Die Anzahl der Testparametersets wird zurueck gegeben.
-	 *
-	 * @return Die Anzahl der Testparametersets als String.
-	 */
-	function getNumberOfTestParametersets() {
-		$number = "";
-		$number .= strval(count($this->test_parameterset));
-
-		return $number;
-	}
-
-
-	/**
-	 * Die Testparameter werden fuer den Export in einen String gepackt.
-	 *
-	 * @param unkown $i
-	 *
-	 * @return Die Testparameter als String.
-	 */
-	function getTestParameterToXML($i) {
-		$parameter = "";
-
-		$parameter .= $this->test_parameterset [$i]->getParams();
-
-		return $parameter;
-	}
-
-
-	/**
-	 * Die Punkte fuer die Testparameter werden fuer den Export in einen String gepackt.
-	 *
-	 * @param unknown $i
-	 *
-	 * @return Die Punkte fuer die Testparameter als String.
-	 */
-	function getTestParameterPointsToXML($i) {
-		$points = "";
-
-		$points .= strval($this->test_parameterset [$i]->getPoints());
-
-		return $points;
-	}
-
-
-	/**
-	 * Die Order der Testparameter wird fuer den Export in einen String gepackt.
-	 *
-	 * @param unknown $i
-	 *
-	 * @return Die Order der Testparameter als String.
-	 */
-	function getTestParameterOrderToXML($i) {
-		$order = "";
-
-		$order .= strval($this->test_parameterset [$i]->getOrder());
-
-		return $order;
-	}
-
-
-	/**
-	 * Gibt das Set von Testparametern zurueck.
-	 */
-	function getTestParameterset() {
-		return $this->test_parameterset;
-	}
-
-
-	/**
-	 * Gibt die Antwort des Bewertungssystems zurueck
-	 */
-	function getEvaluationResponse() {
-		$rating_system_response = ""; // TODO: ?
-
-		return $rating_system_response;
-	}
-
-
-	/**
-	 * Set the type of the programming question.
-	 *
-	 * @param string $type
-	 */
-	function setProgQuestionType($type) {
-		$this->prog_question_type = ( string )$type;
-	}
-
-
-	/**
-	 * Returns the type of the programming question.
-	 *
-	 * @return string
-	 */
-	function getProgQuestionType() {
-		return $this->prog_question_type;
-	}
+    /**
+     * Returns a QTI xml representation of the question and sets the internal
+     * domxml variable with the DOM XML representation of the QTI xml representation!
+     *
+     * @return string The QTI xml representation of the question
+     * @access public
+     */
+    function toXML($a_include_header = true, $a_include_binary = true, $a_shuffle = false, $test_output = false, $force_image_references = false) {
+        $this->getPlugin()->includeClass("export/qti12/class.assProgQuestionExport.php");
+        $export = new assProgQuestionExport($this);
+        return $export->toXML($a_include_header, $a_include_binary, $a_shuffle, $test_output, $force_image_references);
+    }
 
 
 	/**

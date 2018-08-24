@@ -78,8 +78,8 @@ if ($res->numRows () == 0) {
 <?php
 // Erstellung der zusaetzlich benoetigten Tabellen
 // question_fi ist in MO wohl die zugehoerige ID der Frage. Warum heisst das so?
-require_once "Customizing/global/plugins/Modules/TestQuestionPool/Questions/assProgQuestion/classes/class.assProgQplQstProgQuest.php";
-$ilDB->createTable ( assProgQplQstProgQuest::TABLE_NAME, array (
+require_once "Customizing/global/plugins/Modules/TestQuestionPool/Questions/assProgQuestion/classes/class.assProgQuestionDBConnection.php";
+$ilDB->createTable ( assProgQuestionDBConnection::QUESTION_TABLE_NAME, array (
 		'question_fi' => array (
 				'type' => 'integer',
 				'length' => 4,
@@ -93,15 +93,15 @@ $ilDB->createTable ( assProgQplQstProgQuest::TABLE_NAME, array (
 				'notnull' => true 
 		) 
 ), true );
-$ilDB->addPrimaryKey ( assProgQplQstProgQuest::TABLE_NAME, array (
+$ilDB->addPrimaryKey ( assProgQuestionDBConnection::QUESTION_TABLE_NAME, array (
 		'question_fi' 
 ) );
 ?>
 <#5>
 <?php
 // +answer_id, +question_fi, +answertext, +points, ?aorder, -imagefile, ?tstamp
-require_once "Customizing/global/plugins/Modules/TestQuestionPool/Questions/assProgQuestion/classes/class.assProgQplQstProgParams.php";
-$ilDB->createTable ( assProgQplQstProgParams::TABLE_NAME, array (
+require_once "Customizing/global/plugins/Modules/TestQuestionPool/Questions/assProgQuestion/classes/class.assProgQuestionDBConnection.php";
+$ilDB->createTable ( assProgQuestionDBConnection::PARAMS_TABLE_NAME, array (
 		'answer_id' => array (
 				'type' => 'integer',
 				'length' => 4,
@@ -132,25 +132,25 @@ $ilDB->createTable ( assProgQplQstProgParams::TABLE_NAME, array (
 				'notnull' => true 
 		) 
 ), true );
-$ilDB->addPrimaryKey ( assProgQplQstProgParams::TABLE_NAME, array (
+$ilDB->addPrimaryKey ( assProgQuestionDBConnection::PARAMS_TABLE_NAME, array (
 		'answer_id' 
 ) );
 ?>
 <#6>
 <?php
-require_once "Customizing/global/plugins/Modules/TestQuestionPool/Questions/assProgQuestion/classes/class.assProgQplQstProgParams.php";
-$ilDB->createSequence(assProgQplQstProgParams::TABLE_NAME);
+require_once "Customizing/global/plugins/Modules/TestQuestionPool/Questions/assProgQuestion/classes/class.assProgQuestionDBConnection.php";
+$ilDB->createSequence(assProgQuestionDBConnection::PARAMS_TABLE_NAME);
 ?>
 <#7>
 <?php
-require_once "Customizing/global/plugins/Modules/TestQuestionPool/Questions/assProgQuestion/classes/class.assProgQplQstProgQuest.php";
-$ilDB->addTableColumn(assProgQplQstProgQuest::TABLE_NAME, 'check_recursive', array (
+require_once "Customizing/global/plugins/Modules/TestQuestionPool/Questions/assProgQuestion/classes/class.assProgQuestionDBConnection.php";
+$ilDB->addTableColumn(assProgQuestionDBConnection::QUESTION_TABLE_NAME, 'check_recursive', array (
 		'type' => 'integer',
 		'length' => 1,
 		'default' => 0,
 		'notnull' => true
 ));
-$ilDB->addTableColumn(assProgQplQstProgQuest::TABLE_NAME, 'check_iterative', array (
+$ilDB->addTableColumn(assProgQuestionDBConnection::QUESTION_TABLE_NAME, 'check_iterative', array (
 		'type' => 'integer',
 		'length' => 1,
 		'default' => 0,
@@ -159,14 +159,14 @@ $ilDB->addTableColumn(assProgQplQstProgQuest::TABLE_NAME, 'check_iterative', arr
 ?>
 <#8>
 <?php
-require_once "Customizing/global/plugins/Modules/TestQuestionPool/Questions/assProgQuestion/classes/class.assProgQplQstProgQuest.php";
-$ilDB->addTableColumn(assProgQplQstProgQuest::TABLE_NAME, 'forbid_recursive', array (
+require_once "Customizing/global/plugins/Modules/TestQuestionPool/Questions/assProgQuestion/classes/class.assProgQuestionDBConnection.php";
+$ilDB->addTableColumn(assProgQuestionDBConnection::QUESTION_TABLE_NAME, 'forbid_recursive', array (
 		'type' => 'integer',
 		'length' => 1,
 		'default' => 0,
 		'notnull' => true
 ));
-$ilDB->addTableColumn(assProgQplQstProgQuest::TABLE_NAME, 'forbid_iterative', array (
+$ilDB->addTableColumn(assProgQuestionDBConnection::QUESTION_TABLE_NAME, 'forbid_iterative', array (
 		'type' => 'integer',
 		'length' => 1,
 		'default' => 0,
@@ -175,8 +175,8 @@ $ilDB->addTableColumn(assProgQplQstProgQuest::TABLE_NAME, 'forbid_iterative', ar
 ?>
 <#9>
 <?php
-require_once "Customizing/global/plugins/Modules/TestQuestionPool/Questions/assProgQuestion/classes/class.assProgQplQstProgConfig.php";
-$ilDB->createTable ( assProgQplQstProgConfig::TABLE_NAME, array (
+require_once "Customizing/global/plugins/Modules/TestQuestionPool/Questions/assProgQuestion/classes/class.assProgQuestionDBConnection.php";
+$ilDB->createTable ( assProgQuestionDBConnection::CONFIG_TABLE_NAME, array (
 		'name' => array (
 				'type' => 'text',
 				'length' => 30,
@@ -193,8 +193,8 @@ $ilDB->createTable ( assProgQplQstProgConfig::TABLE_NAME, array (
 ?>
 <#10>
 <?php
-require_once "Customizing/global/plugins/Modules/TestQuestionPool/Questions/assProgQuestion/classes/class.assProgQplQstProgQuest.php";
-$ilDB->addTableColumn(assProgQplQstProgQuest::TABLE_NAME, 'quest_type', array (
+require_once "Customizing/global/plugins/Modules/TestQuestionPool/Questions/assProgQuestion/classes/class.assProgQuestionDBConnection.php";
+$ilDB->addTableColumn(assProgQuestionDBConnection::QUESTION_TABLE_NAME, 'quest_type', array (
 		'type' => 'text',
 		'length' => 64,
 		'default' => 'function_original',
@@ -203,15 +203,15 @@ $ilDB->addTableColumn(assProgQplQstProgQuest::TABLE_NAME, 'quest_type', array (
 ?>
 <#11>
 <?php
-require_once "Customizing/global/plugins/Modules/TestQuestionPool/Questions/assProgQuestion/classes/class.assProgQplQstProgQuest.php";
-$ilDB->addTableColumn(assProgQplQstProgQuest::TABLE_NAME, 'test_code', array (
+require_once "Customizing/global/plugins/Modules/TestQuestionPool/Questions/assProgQuestion/classes/class.assProgQuestionDBConnection.php";
+$ilDB->addTableColumn(assProgQuestionDBConnection::QUESTION_TABLE_NAME, 'test_code', array (
 		'type' => 'clob'
 ));
 ?>
 <#12>
 <?php
-require_once "Customizing/global/plugins/Modules/TestQuestionPool/Questions/assProgQuestion/classes/class.assProgQplQstProgParams.php";
-$ilDB->addTableColumn(assProgQplQstProgParams::TABLE_NAME, 'paramset_name', array (
+require_once "Customizing/global/plugins/Modules/TestQuestionPool/Questions/assProgQuestion/classes/class.assProgQuestionDBConnection.php";
+$ilDB->addTableColumn(assProgQuestionDBConnection::PARAMS_TABLE_NAME, 'paramset_name', array (
 		'type' => 'text',
 				'length' => 4000,
 				'default' => '',

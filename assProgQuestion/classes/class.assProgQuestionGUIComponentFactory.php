@@ -148,8 +148,8 @@ class assProgQuestionGUIComponentFactory {
 
 
 	public function solution($text) {
-		$this->plugin->includeClass("class.ilProgrammingTextAreaInputGUI.php");
-		$solution = new ilProgrammingTextAreaInputGUI ($this->txt("solution"), "solution");
+		$this->plugin->includeClass("class.assProgQuestionCodeArea.php");
+		$solution = new assProgQuestionCodeArea ($this->txt("solution"), "solution");
 		$solution->setValue($text);
 		$solution->setRequired(true);
 		$solution->setRows(10);
@@ -161,7 +161,8 @@ class assProgQuestionGUIComponentFactory {
 
 
 	public function testCodeField($code = "") {
-		$testCode = new ilProgrammingTextAreaInputGUI ($this->txt("testCode"), "test_code");
+        $this->plugin->includeClass("class.assProgQuestionCodeArea.php");
+		$testCode = new assProgQuestionCodeArea ($this->txt("testCode"), "test_code");
 		$testCode->setValue($code);
 		$testCode->setRequired(true);
 		$testCode->setRows(10);
@@ -215,10 +216,10 @@ class assProgQuestionGUIComponentFactory {
 
 
 	public function parameters($parameterSet, $testSituation) {
-		include_once 'class.ilProgQuestionParaInputGUI.php';
+		include_once 'class.assProgQuestionParametersInputGUI.php';
 
 		$this->plugin->includeClass("class.assProgQuestionParameters.php");
-		$choices = new ilProgQuestionParaInputGUI ($this->txt("testparams"), "choice");
+		$choices = new assProgQuestionParametersInputGUI ($this->txt("testparams"), "choice");
 		$choices->setRequired(false);
 		//$choices->setQuestionObject ( $question );
 		$choices->setSingleline(true);
