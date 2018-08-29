@@ -22,7 +22,7 @@ class EvaluationSecurityManager extends SecurityManager {
     private String java_path = null;
     private final String SEPERATOR = System.getProperty("file.separator");
     private final String[] CLASS_PATH;
-    private final String[] EXT_DIRS;
+//    private final String[] EXT_DIRS;
 
     public EvaluationSecurityManager(int port) {
         super();
@@ -47,7 +47,7 @@ class EvaluationSecurityManager extends SecurityManager {
         }
 
         CLASS_PATH = System.getProperty("java.class.path").split(":");
-        EXT_DIRS = System.getProperty("java.ext.dirs").split(":");
+//        EXT_DIRS = System.getProperty("java.ext.dirs").split(":");
         SERVERPORT = port;
     }
 
@@ -105,13 +105,13 @@ class EvaluationSecurityManager extends SecurityManager {
                 //Linux:
             } else if (name.equals("/dev/random") || name.equals("/dev/urandom")) {
                 return;
-            } else {
-                for (String extdirs : EXT_DIRS) { //Ersetzt Sun\java... bei Windows?
-                    if (name.startsWith(extdirs)) {
-                        return;
-                    }
-                }
-            }
+            } //else {
+//                for (String extdirs : EXT_DIRS) { //Ersetzt Sun\java... bei Windows?
+//                    if (name.startsWith(extdirs)) {
+//                        return;
+//                    }
+//                }
+//            }
             for (String classPath : CLASS_PATH) {
                 if (name.startsWith(classPath)) {
                     return;
