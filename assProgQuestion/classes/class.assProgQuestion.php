@@ -258,6 +258,20 @@ class assProgQuestion extends assQuestion {
     }
 
 
+    /**
+     * This function copies the question. The function is called e.g. when moving a question from a test to a question
+     * pool.
+     *
+     * Note: Shouldn't this be part of the assQuestion class interface?
+     *
+     * @param $targetParentId
+     * @param string $targetQuestionTitle
+     */
+    function createNewOriginalFromThisDuplicate($targetParentId, $targetQuestionTitle = "") {
+
+        // TODO: IMPLEMENTATION NEEDED.
+    }
+
 
     /**
 	 * Get the points for the provided solution.
