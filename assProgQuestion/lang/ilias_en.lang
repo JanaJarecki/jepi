@@ -61,6 +61,7 @@ quest_type#:#Question type
 function_original#:#Function
 testng#:#Test with TestNG
 error_103#:#UNHANDLED SCENARIO: The evaluation system could not handle your program.
+error_104#:#PROHIBITED IP-ADDRESS: The evaluation system does not allow this IP to send evaluation requests.
 error_105#:#TIMEOUT: The execution of your program took too long and was therefore canceled. Make sure you have no endless loops in your code.
 error_MainMethodNotFound#:#The main method was not accessible. Probably the main method is missing or has a too strict access modifier.
 error_NotExactlyOneMethodFound#:#There was not exactly one function provided. Please make sure you write only a single class and no enclosing class.
