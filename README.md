@@ -6,9 +6,9 @@ This is a question type for the Ilias e-learning platform.
 
 Working but still under development:
 
+* master (ilias-5.3 ready): branch should now work, maybe import / export not fully working yet
 * ilias-4.4.15: branch should work now (fixed interface)
 * ilias-5.0.13: branch is working, additional functionality introduced
-* ilias-5.3: branch should now work, maybe import / export not fully working yet
 
 ## Ongoing ##
 
